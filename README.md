@@ -5,19 +5,75 @@ A library and benchmark suite for Approximate Nearest Neighbor Search (ANNS) in 
 ## Table of Contents
 
 - [Quick Start Guide](#quick-start-guide)
-  - [Docker Support](#docker-support)
-  - [Build Without Docker](#build-without-docker)
-    - [Build with CUDA Support](#build-with-cuda-support)
-    - [Build without CUDA (CPU-Only Version)](#build-without-cuda-cpu-only-version)
-  - [Installing PyCANDY](#installing-pycandy)
-  - [CLion Configuration](#clion-configuration)
-- [Evaluation Scripts](#evaluation-scripts)
+  - [CONDOR-Bench Library](#CONDOR-Bench-Library)
+    - [Build](#build-without-docker)
+      - [Build with CUDA Support](#build-with-cuda-support)
+      - [Build without CUDA (CPU-Only Version)](#build-without-cuda-cpu-only-version)
+    - [Installing PyCANDY](#installing-pycandy)
+  - [Big-ANN-Benchmarks](#Big-ANN-Benchmarks)
+    - [Congestion Track](#Congestion-Track)
+    - [Concurrent Track](#Concurrent-Track)
 - [Additional Information](#additional-information)
 ---
 
 ## Quick Start Guide
 
-### Big-ANN-Benchmarks
+### **CONDOR-Bench Library** (build as Library for Extensive Tracks)
+#### Build 
+##### Build with CUDA Support
+
+To build CANDY and PyCANDY with CUDA support:
+
+```shell
+./buildWithCuda.sh
+```
+
+##### Build without CUDA (CPU-Only Version)
+
+For a CPU-only version:
+
+```shell
+./buildCPUOnly.sh
+```
+
+These scripts will install dependencies and build the project.
+
+#### Installing PyCANDY
+
+After building, you can install PyCANDY to your default Python environment:
+
+```shell
+python3 setup.py install --user
+```
+
+#### Requires BLAS, LAPACK, boost and swig
+
+```shell
+sudo apt install liblapack-dev libblas-dev libboost-all-dev swig
+```
+
+  - Run the following command in your terminal to get the CMake prefix path:
+
+    ```shell
+    python3 -c 'import torch; print(torch.utils.cmake_prefix_path)'
+    ```
+
+
+  - Copy the output path and set it in CLion's CMake settings as:
+
+    ```
+    -DCMAKE_PREFIX_PATH=<output_path>
+    ```
+
+2. **Environment Variable `CUDACXX`:**
+
+  - Manually set the environment variable `CUDACXX` to:
+
+    ```
+    /usr/local/cuda/bin/nvcc
+    ```
+
+### **Big-ANN-Benchmarks** (include Congestion and Concurrent Tracks)
 
 Check [Scripts]https://github.com/intellistream/big-ann-benchmarks/tree/main/scripts in our Big-ANN-Benchmarks.
 
@@ -45,119 +101,6 @@ Check [Scripts]https://github.com/intellistream/big-ann-benchmarks/tree/main/scr
 |---------------------------|-----------------------------------------------------------------------------|
 | `run_concurrent.sh`       | Tests concurrent operations (e.g., read/write) on the benchmark.           |
 
-### CONDOR-Bench (as Library for Extensive Tracks)
-#### Docker Support
-
-We provide Docker support to simplify the setup process.
-
-1. **Navigate to the `./docker` directory:**
-
-   ```shell
-   cd ./docker
-   ```
-
-2. **Build and start the Docker container:**
-
-   ```shell
-   ./start.sh
-   ```
-
-   This script will build the Docker container and start it.
-
-3. **Inside the Docker container, run the build script to install dependencies and build the project:**
-
-  - **With CUDA support:**
-
-    ```shell
-    ./buildWithCuda.sh
-    ```
-
-  - **Without CUDA (CPU-only version):**
-
-    ```shell
-    ./buildCPUOnly.sh
-    ```
-
-### Build Without Docker
-
-If you prefer to build without Docker, follow these steps.
-
-#### Build with CUDA Support
-
-To build CANDY and PyCANDY with CUDA support:
-
-```shell
-./buildWithCuda.sh
-```
-
-#### Build without CUDA (CPU-Only Version)
-
-For a CPU-only version:
-
-```shell
-./buildCPUOnly.sh
-```
-
-These scripts will install dependencies and build the project.
-
-### Installing PyCANDY
-
-After building, you can install PyCANDY to your default Python environment:
-
-```shell
-python3 setup.py install --user
-```
-
-### CLion Configuration
-
-When developing in CLion, you must manually configure:
-
-1. **CMake Prefix Path:**
-
-
-### Requires BLAS, LAPACK, boost and swig
-
-```shell
-sudo apt install liblapack-dev libblas-dev libboost-all-dev swig
-```
-
-  - Run the following command in your terminal to get the CMake prefix path:
-
-    ```shell
-    python3 -c 'import torch; print(torch.utils.cmake_prefix_path)'
-    ```
-
-
-  - Copy the output path and set it in CLion's CMake settings as:
-
-    ```
-    -DCMAKE_PREFIX_PATH=<output_path>
-    ```
-
-2. **Environment Variable `CUDACXX`:**
-
-  - Manually set the environment variable `CUDACXX` to:
-
-    ```
-    /usr/local/cuda/bin/nvcc
-    ```
-
-## Evaluation Scripts
-
-Evaluation scripts are located under `benchmark/scripts`.
-
-To run an evaluation (e.g., scanning the dimensions):
-
-```shell
-cd build/benchmark/scripts/scanIPDimensions
-sudo ls  # Required for perf events
-python3 drawTogether.py 2
-cd ../figures
-```
-
-Figures will be generated in the `figures` directory.
-
----
 
 ## Additional Information
 
