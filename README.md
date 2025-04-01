@@ -19,8 +19,12 @@ A library and benchmark suite for Approximate Nearest Neighbor Search (ANNS) in 
 
 ### Big-ANN-Benchmarks
 
+Check [Scripts]https://github.com/intellistream/big-ann-benchmarks/tree/main/scripts in our Big-ANN-Benchmarks.
+
+#### Congestion Track :
 
 
+#### Concurrent Track :
 
 ### CONDOR-Bench as Library
 #### Docker Support
