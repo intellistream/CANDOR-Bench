@@ -1,6 +1,6 @@
-# CANDY
+# CANDOR-Bench
 
-A library and benchmark suite for Approximate Nearest Neighbor Search (ANNS). This project is compatible with LibTorch.
+A library and benchmark suite for Approximate Nearest Neighbor Search (ANNS) in open-world streaming environments. This project is compatible with LibTorch. And ingestion and concurrent tracks are supported in our big-ann-benchmark extension.
 
 ## Table of Contents
 
@@ -17,7 +17,13 @@ A library and benchmark suite for Approximate Nearest Neighbor Search (ANNS). Th
 
 ## Quick Start Guide
 
-### Docker Support
+### Big-ANN-Benchmarks
+
+
+
+
+### CONDOR-Bench as Library
+#### Docker Support
 
 We provide Docker support to simplify the setup process.
 
