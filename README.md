@@ -10,7 +10,7 @@ A library and benchmark suite for Approximate Nearest Neighbor Search (ANNS) in 
       - [Build with CUDA Support](#build-with-cuda-support)
       - [Build without CUDA (CPU-Only Version)](#build-without-cuda-cpu-only-version)
     - [Installing PyCANDY](#installing-pycandy)
-  - [Big-ANN-Benchmarks](#Big-ANN-Benchmarks)
+  - [Big-ANN-Benchmarks-New-Tracks](#Big-ANN-Benchmarks)
     - [Congestion Track](#Congestion-Track)
     - [Concurrent Track](#Concurrent-Track)
 - [Additional Information](#additional-information)
