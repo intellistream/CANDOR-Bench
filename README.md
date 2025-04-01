@@ -73,7 +73,7 @@ sudo apt install liblapack-dev libblas-dev libboost-all-dev swig
     /usr/local/cuda/bin/nvcc
     ```
 
-### **Big-ANN-Benchmarks** (include Congestion and Concurrent Tracks)
+### **Big-ANN-Benchmarks New Tracks** (include Congestion and Concurrent Tracks)
 
 Check [Scripts]https://github.com/intellistream/big-ann-benchmarks/tree/main/scripts in our Big-ANN-Benchmarks.
 
