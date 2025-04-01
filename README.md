@@ -23,10 +23,29 @@ Check [Scripts]https://github.com/intellistream/big-ann-benchmarks/tree/main/scr
 
 #### Congestion Track :
 
+| Script Name               | Description                                                                 |
+|---------------------------|-----------------------------------------------------------------------------|
+| `run_algorithm_opt.sh`    | Runs the benchmark with algorithm optimization enabled.                    |
+| `run_batchDeletion.sh`    | Tests batch deletion performance on the dataset.                           |
+| `run_batchSizes.sh`       | Evaluates the impact of different batch sizes on performance.              |
+| `run_bulkDeletion.sh`     | Performs bulk deletion operations and measures efficiency.                 |
+| `run_conceptDrifts.sh`    | Simulates concept drifts in the dataset and evaluates model robustness.    |
+| `run_curseDims.sh`        | Analyzes the curse of dimensionality by varying feature dimensions.        |
+| `run_dataVolumes.sh`      | Evaluates performance with varying data volumes.                           |
+| `run_eventRates.sh`       | Tests the system under different event rates (e.g., insertion frequency).  |
+| `run_general.sh`          | Runs a general benchmark with default settings for quick evaluation.       |
+| `run_multiModal.sh`       | Evaluates performance on multi-modal data (e.g., text + image features).   |
+| `run_randomContamination.sh` | Introduces random contamination (noise) into the dataset for testing.    |
+| `run_randomDrop.sh`       | Simulates random data drops to test system resilience.                     |
+| `run_wordContamination.sh`| Adds word-based contamination (e.g., text noise) to the dataset.           |
 
 #### Concurrent Track :
 
-### CONDOR-Bench as Library
+| Script Name               | Description                                                                 |
+|---------------------------|-----------------------------------------------------------------------------|
+| `run_concurrent.sh`       | Tests concurrent operations (e.g., read/write) on the benchmark.           |
+
+### CONDOR-Bench (as Library for Extensive Tracks)
 #### Docker Support
 
 We provide Docker support to simplify the setup process.
