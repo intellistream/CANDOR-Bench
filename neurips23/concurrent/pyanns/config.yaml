@@ -1,0 +1,69 @@
+reddit:
+    pyanns: 
+      docker-tag: neurips23-concurrent-pyanns
+      module: neurips23.concurrent.pyanns.pyanns
+      constructor: pyanns
+      base-args: ["@metric"]
+      run-groups:
+        base:
+          args: |
+            [{"R":32, "L":50, "insert_threads":16, "consolidate_threads":16}]
+          query-args: |
+            [{"Ls":50, "T":8}]
+
+sift:
+    pyanns: 
+      docker-tag: neurips23-concurrent-pyanns
+      module: neurips23.concurrent.pyanns.pyanns
+      constructor: pyanns
+      base-args: ["@metric"]
+      run-groups:
+        base:
+          args: |
+            [{"R":32, "L":50, "insert_threads":16, "consolidate_threads":16}]
+          query-args: |
+            [{"Ls":50, "T":8}]
+
+glove:
+    pyanns: 
+      docker-tag: neurips23-concurrent-pyanns
+      module: neurips23.concurrent.pyanns.pyanns
+      constructor: pyanns
+      base-args: ["@metric"]
+      run-groups:
+        base:
+          args: |
+            [{"R":50, "L":50, "insert_threads":16, "consolidate_threads":16}]
+          query-args: |
+            [{"Ls":300, "T":16},
+             {"Ls":100, "T":16}]
+
+msong:
+    pyanns: 
+      docker-tag: neurips23-concurrent-pyanns
+      module: neurips23.concurrent.pyanns.pyanns
+      constructor: pyanns
+      base-args: ["@metric"]
+      run-groups:
+        base:
+          args: |
+            [{"R":50, "L":50, "insert_threads":16, "consolidate_threads":16}]
+          query-args: |
+            [{"Ls":300, "T":16},
+             {"Ls":100, "T":16}]
+
+text2image-1M:
+    pyanns: 
+      docker-tag: neurips23-concurrent-pyanns
+      module: neurips23.concurrent.pyanns.pyanns
+      constructor: pyanns
+      base-args: ["@metric"]
+      run-groups:
+        base:
+          args: |
+            [{"R":64, "L":500, "buildthreads":32}]
+          query-args: |
+            [{"Ls":30, "T":8},
+             {"Ls":50, "T":8},
+             {"Ls":70, "T":8},
+             {"Ls":100, "T":8}]

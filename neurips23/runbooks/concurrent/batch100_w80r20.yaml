@@ -1,0 +1,84 @@
+reddit:
+  batch_size: 100
+  write_ratio: 0.8
+  random_mode: 0
+  max_pts: 100000
+  1:
+    operation: "initial"
+    start: 0
+    end: 1000
+  2:
+    operation: "insert_and_search"
+    start: 1000
+    end: 100000
+  3:
+    operation: "search"
+  gt_url: "none"
+
+sift:
+  batch_size: 100
+  write_ratio: 0.8
+  random_mode: 0
+  max_pts: 1000000
+  1:
+    operation: "initial"
+    start: 0
+    end: 1000
+  2:
+    operation: "insert_and_search"
+    start: 1000
+    end: 1000000
+  3:
+    operation: "search"
+  gt_url: "none"
+
+glove:
+  batch_size: 100
+  write_ratio: 0.8
+  random_mode: 0
+  max_pts: 1100000
+  1:
+    operation: "initial"
+    start: 0
+    end: 1000
+  2:
+    operation: "insert_and_search"
+    start: 1000
+    end: 1100000
+  3:
+    operation: "search"
+  gt_url: "none"
+
+msong:
+  batch_size: 100
+  write_ratio: 0.8
+  random_mode: 0
+  max_pts: 990000
+  1:
+    operation: "initial"
+    start: 0
+    end: 1000
+  2:
+    operation: "insert_and_search"
+    start: 1000
+    end: 990000
+  3:
+    operation: "search"
+  gt_url: "none"
+
+text2image-1M:
+  batch_size: 100
+  write_ratio: 0.8
+  random_mode: 0
+  max_pts: 1000000
+  1:
+    operation: "initial"
+    start: 0
+    end: 1000
+  2:
+    operation: "insert_and_search"
+    start: 1000
+    end: 1000000
+  3:
+    operation: "search"
+  gt_url: "none"
