@@ -1,0 +1,3 @@
+[submodule "big-ann-benchmarks"]
+	path = big-ann-benchmarks
+	url = https://github.com/intellistream/big-ann-benchmarks.git
