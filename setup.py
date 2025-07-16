@@ -67,8 +67,13 @@ class CMakeBuild(build_ext):
         build_args +=  ['--', '-j'+threads]
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
+        
+        cmake_args.append('-DMKL_PATH=/opt/conda')
+        cmake_args.append('-DMKL_INCLUDE_PATH=/opt/conda/include')
+        
         subprocess.run(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp,check=True)
         subprocess.run(['cmake', '--build', '.'] + build_args, cwd=self.build_temp,check=True)
+        
         # Now copy all *.so files from the build directory to the final installation directory
         so_files = glob.glob(os.path.join(self.build_temp, '*.so'))
         print("so_files:")
