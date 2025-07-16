@@ -45,6 +45,8 @@ RUN /opt/conda/bin/conda config --add channels conda-forge && \
     /opt/conda/bin/conda config --set channel_priority strict && \
     /opt/conda/bin/conda config --set solver libmamba
 
+RUN /opt/conda/bin/conda clean --index-cache -y
+
 RUN /opt/conda/bin/conda --version && \
     /opt/conda/bin/conda config --show channels && \
     /opt/conda/bin/conda config --show solver && \
