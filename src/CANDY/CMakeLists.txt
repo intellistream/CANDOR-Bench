@@ -10,7 +10,7 @@ add_sources(
         OnlinePQIndex.cpp
         #OnlineIVFLSHIndex.cpp
         #OnlineIVFL2HIndex.cpp
-        #        IndexTable.cpp
+        IndexTable.cpp
         #PQIndex.cpp
         HNSWNaiveIndex.cpp
         FaissIndex.cpp
@@ -35,9 +35,9 @@ add_subdirectory(FlannIndex)
 add_subdirectory(LSHAPGIndex)
 add_subdirectory(FlatGPUIndex)
 
-if (ENABLE_CUDA)
-    add_subdirectory(SONG)
-endif ()
+#if (ENABLE_CUDA)
+#    add_subdirectory(SONG)
+#endif ()
 
 if (ENABLE_RAY)
     add_subdirectory(DistributedPartitionIndex)

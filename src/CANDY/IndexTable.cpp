@@ -35,9 +35,9 @@
 #if CANDY_SPTAG == 1
 #include <CANDY/SPTAGIndex.h>
 #endif
-#ifdef ENABLE_CUDA
+//#ifdef ENABLE_CUDA
 // #include <CANDY/SONG/SONG.hpp>
-#endif
+//#endif
 namespace CANDY {
 CANDY::IndexTable::IndexTable() {
   indexMap["null"] = newAbstractIndex();
@@ -62,9 +62,9 @@ CANDY::IndexTable::IndexTable() {
   indexMap["DPG"] = newDPGIndex();
   indexMap["LSHAPG"] = newLSHAPGIndex();
   // indexMap["flatGPU"] = newFlatGPUIndex();
-#ifdef ENABLE_CUDA
+//#ifdef ENABLE_CUDA
   // indexMap["SONG"] = newSONG();
-#endif
+//#endif
 #if CANDY_CL == 1
   // indexMap["cl"] = newCLMMCPPAlgo();
 #endif

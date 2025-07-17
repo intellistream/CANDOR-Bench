@@ -33,7 +33,7 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.30.2/cmake-3.30.2
 
 RUN wget https://www.intel.com/content/www/us/en/developer/tools/oneapi/oneapi-downloads.html -O intel_oneapi.sh # 示例链接
 RUN bash intel_oneapi.sh -y --install-dir=/opt/intel --silent
-ENV MKLROOT="/opt/intel/oneapi/mkl/latest" # 根据实际安装路径调整
+ENV MKLROOT="/opt/intel/oneapi/mkl/latest"
 ENV LD_LIBRARY_PATH="${MKLROOT}/lib/intel64:${LD_LIBRARY_PATH}"
 
 RUN pip install --no-cache-dir \
