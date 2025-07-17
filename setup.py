@@ -32,53 +32,69 @@ class CMakeBuild(build_ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
         cfg = "Debug" if debug else "Release"
-        os.system("python3 -c 'import torch;print(torch.utils.cmake_prefix_path)' >> 1.txt")
-        with open('1.txt', 'r') as file:
-            torchCmake = file.read().rstrip('\n')
-        os.system('rm 1.txt')
-        os.system('nproc >> 1.txt')
-        with open('1.txt', 'r') as file:
-            threads = file.read().rstrip('\n')
-        threads = str(2)
-        os.system('rm 1.txt')
-        #os.system('cd thirdparty&&./makeClean.sh&&./installPAPI.sh')
-        print(threads)
-        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                      '-DPYTHON_EXECUTABLE=' + sys.executable,
-                      '-DCMAKE_PREFIX_PATH='+torchCmake,
-                      '-DENABLE_HDF5=OFF', 
-                      '-DENABLE_PYBIND=ON',
-                      '-DCMAKE_INSTALL_PREFIX=/usr/local/lib',
-                      '-DENABLE_PAPI=OFF',
-                      '-DENABLE_SPTAG=ON',
-                      '-DENABLE_PUCK=ON',
-                      '-DENABLE_DiskANN=ON',
-                      '-DPYBIND=ON',
-                      f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}{os.sep}",
-                      f"-DPYTHON_EXECUTABLE={sys.executable}",
-                      f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
-                      f"-DVERSION_INFO={self.distribution.get_version()}"  # commented out, we want this set in the CMake file
-                   ]
-        
-        cfg = 'Debug' if self.debug else 'Release'
-        cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
+
+        try:
+            torch_cmake_prefix = subprocess.check_output(
+                [sys.executable, "-c", "import torch; print(torch.utils.cmake_prefix_path)"],
+                text=True,
+                encoding='utf-8'
+            ).strip()
+        except subprocess.CalledProcessError as e:
+            print(f"Error getting torch cmake path: {e}")
+            sys.exit(1)
+
+        try:
+            threads_output = subprocess.check_output(["nproc"], text=True, encoding='utf-8').strip()
+            threads = threads_output if threads_output.isdigit() else "2" # <--- threads 在这里被定义和赋值
+        except subprocess.CalledProcessError:
+            threads = "2" # Fallback if nproc fails
+
+        print(f"Using {threads} build threads.") 
+        cmake_args = [
+            f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}{os.sep}',
+            f'-DPYTHON_EXECUTABLE={sys.executable}',
+            f'-DCMAKE_PREFIX_PATH={torch_cmake_prefix}',
+            f'-DCMAKE_BUILD_TYPE={cfg}',
+            f'-DVERSION_INFO={self.distribution.get_version()}',
+
+            '-DENABLE_HDF5=OFF',
+            '-DENABLE_PYBIND=ON',
+            '-DCMAKE_INSTALL_PREFIX=/usr/local/lib',
+            '-DENABLE_PAPI=OFF',
+            '-DENABLE_SPTAG=ON',
+            '-DENABLE_SPTAG=OFF',
+            '-DENABLE_DiskANN=OFF',
+            '-DPYBIND=ON',
+        ]
+
+        mkl_base_path = os.environ.get('MKLROOT', '/opt/conda')
+
+        cmake_args.append(f'-DMKL_PATH={mkl_base_path}')
+        cmake_args.append(f'-DMKL_INCLUDE_PATH={mkl_base_path}/include')
+
+        print(f"DEBUG: Setting -DMKL_PATH={mkl_base_path}")
+        print(f"DEBUG: Setting -DMKL_INCLUDE_PATH={mkl_base_path}/include")
 
         build_args = ['--config', cfg]
-        build_args +=  ['--', '-j'+threads]
+        build_args += ['--', '-j' + threads, 'VERBOSE=1']
+
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-        
-        cmake_args.append('-DMKL_PATH=/opt/conda')
-        cmake_args.append('-DMKL_INCLUDE_PATH=/opt/conda/include')
-        
-        subprocess.run(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp,check=True)
-        subprocess.run(['cmake', '--build', '.'] + build_args, cwd=self.build_temp,check=True)
-        
-        # Now copy all *.so files from the build directory to the final installation directory
+            print(f"DEBUG: Created build directory: {self.build_temp}")
+
+
+        print(f"DEBUG: CMake configure command: {['cmake', ext.sourcedir] + cmake_args}")
+        subprocess.run(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, check=True)
+
+        print(f"DEBUG: CMake build command: {['cmake', '--build', '.'] + build_args}")
+        subprocess.run(['cmake', '--build', '.'] + build_args, cwd=self.build_temp, check=True)
+
         so_files = glob.glob(os.path.join(self.build_temp, '*.so'))
-        print("so_files:")
+        print("Discovered .so files:")
         print(so_files)
         for file in so_files:
+            target_path = os.path.join(extdir, os.path.basename(file))
+            print(f"Copying {file} to {target_path}")
             shutil.copy(file, extdir)
 setup(
     name='PyCANDYAlgo',

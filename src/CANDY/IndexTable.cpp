@@ -21,7 +21,7 @@
 //#include <CANDY/PQIndex.h>
 #include <CANDY/ParallelPartitionIndex.h>
 //#include <CANDY/YinYangGraphIndex.h>
-#include <CANDY/FlatGPUIndex.h>
+// #include <CANDY/FlatGPUIndex.h>
 //#include <CANDY/YinYangGraphSimpleIndex.h>
 #include <include/opencl_config.h>
 #include <include/ray_config.h>
@@ -36,7 +36,7 @@
 #include <CANDY/SPTAGIndex.h>
 #endif
 #ifdef ENABLE_CUDA
-#include <CANDY/SONG/SONG.hpp>
+// #include <CANDY/SONG/SONG.hpp>
 #endif
 namespace CANDY {
 CANDY::IndexTable::IndexTable() {
@@ -61,9 +61,9 @@ CANDY::IndexTable::IndexTable() {
   indexMap["Flann"] = newFlannIndex();
   indexMap["DPG"] = newDPGIndex();
   indexMap["LSHAPG"] = newLSHAPGIndex();
-  indexMap["flatGPU"] = newFlatGPUIndex();
+  // indexMap["flatGPU"] = newFlatGPUIndex();
 #ifdef ENABLE_CUDA
-  indexMap["SONG"] = newSONG();
+  // indexMap["SONG"] = newSONG();
 #endif
 #if CANDY_CL == 1
   // indexMap["cl"] = newCLMMCPPAlgo();
