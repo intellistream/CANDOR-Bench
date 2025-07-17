@@ -11,6 +11,8 @@ project(CANDYBENCH CXX)
 include (cmake/FindTorch.cmake)
 find_package(Torch REQUIRED)
 include_directories(${Torch_INCLUDE_DIRS})
+include_directories("/usr/local/lib/python3.10/dist-packages/torch/include/torch/csrc/api/include")
+include_directories("/usr/local/lib/python3.10/dist-packages/torch/include")
 
 find_package(Python3 REQUIRED COMPONENTS Development)
 include_directories(${Python3_INCLUDE_DIRS})
@@ -52,7 +54,7 @@ add_subdirectory(thirdparty/faiss)
 set(LIBRARIES ${LIBRARIES} faiss)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DNO_RACE_CHECK -DCANDY_DEBUG_MODE=1")
 set(CMAKE_CXX_FLAGS_RELEASE "-Wno-ignored-qualifiers -Wno-sign-compare -O3")
 

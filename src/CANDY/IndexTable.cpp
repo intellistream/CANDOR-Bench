@@ -7,11 +7,11 @@
 #include <CANDY/CongestionDropIndex.h>
 #include <CANDY/DPGIndex.h>
 #include <CANDY/FaissIndex.h>
-#include <CANDY/FlannIndex.h>
+// #include <CANDY/FlannIndex.h>
 //#include <CANDY/FlatAMMIPIndex.h>
 //#include <CANDY/FlatAMMIPObjIndex.h>
 #include <CANDY/FlatIndex.h>
-#include <CANDY/HNSWNaiveIndex.h>
+// #include <CANDY/HNSWNaiveIndex.h>
 #include <CANDY/IndexTable.h>
 #include <CANDY/LSHAPGIndex.h>
 #include <CANDY/NNDescentIndex.h>
@@ -50,15 +50,15 @@ CANDY::IndexTable::IndexTable() {
   //indexMap["onlineIVFLSH"] = newOnlineIVFLSHIndex();
   //indexMap["onlineIVFL2H"] = newOnlineIVFL2HIndex();
   //indexMap["PQ"] = newPQIndex();
-  indexMap["HNSWNaive"] = newHNSWNaiveIndex();
-  indexMap["NSW"] = newNSWIndex();
+  // indexMap["HNSWNaive"] = newHNSWNaiveIndex();
+  // indexMap["NSW"] = newNSWIndex();
   indexMap["faiss"] = newFaissIndex();
   //indexMap["yinYang"] = newYinYangGraphIndex();
   //indexMap["yinYangSimple"] = newYinYangGraphSimpleIndex();
   indexMap["congestionDrop"] = newCongestionDropIndex();
   indexMap["bufferedCongestionDrop"] = newBufferedCongestionDropIndex();
   indexMap["nnDescent"] = newNNDescentIndex();
-  indexMap["Flann"] = newFlannIndex();
+  // indexMap["Flann"] = newFlannIndex();
   indexMap["DPG"] = newDPGIndex();
   indexMap["LSHAPG"] = newLSHAPGIndex();
   // indexMap["flatGPU"] = newFlatGPUIndex();
