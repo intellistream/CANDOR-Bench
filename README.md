@@ -6,11 +6,11 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
 
 - [Project Structure](#Project-Structure)
 - [Datasets and Algorithms](#Datasets-and-Algorithms)
-  - [Summary of Datasets](#1.-Summary-of-Datasets)
-  - [Summary of Algorithms](#2.-Summary-of-Algorithms)
+  - [Summary of Datasets](#Summary-of-Datasets)
+  - [Summary of Algorithms](#Summary-of-Algorithms)
 - [Quick Start Guide](#quick-start-guide)
-  - [Build With Docker](#1.-Build-With-Docker)
-  - [Usage](#2.-Usage)
+  - [Build With Docker](#Build-With-Docker)
+  - [Usage](#Usage)
 <!--   - [Docker Support](#docker-support)
   - [Build Without Docker](#build-without-docker)
     - [Build with CUDA Support](#build-with-cuda-support)
@@ -78,7 +78,7 @@ CANDY-Benchmark/
 
 Our evaluation involves the following datasets and algorithms.
 
-### 1. Summary of Datasets
+### Summary of Datasets
 
 <table>
 <thead>
@@ -114,7 +114,7 @@ Our evaluation involves the following datasets and algorithms.
 </tbody>
 </table>
 
-### 2. Summary of Algorithms
+### Summary of Algorithms
 <table>
 <thead>
   <tr>
@@ -220,7 +220,7 @@ Our evaluation involves the following datasets and algorithms.
 
 ## Quick Start Guide
 
-### 1. Build With Docker
+### Build With Docker
 To build the project using Docker, simply use the provided Dockerfile located in the root directory. This ensures a consistent and reproducible environment for all dependencies and build steps.
 
 You can build the Docker image with:
@@ -468,7 +468,7 @@ Figures will be generated in the `figures` directory.
 
 ---
 -->
-### 2. Usage
+### Usage
 
 All the following operations are performed in the root directory of big-ann-benchmarks.
 
