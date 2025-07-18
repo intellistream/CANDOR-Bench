@@ -1,21 +1,214 @@
-# CANDY
+# CANDOR-Bench: Benchmarking In-Memory Continuous ANNS under Dynamic Open-World Streams
 
-A library and benchmark suite for Approximate Nearest Neighbor Search (ANNS). This project is compatible with LibTorch.
+CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-woRld Streams) is a benchmarking framework designed to evaluate in-memory ANNS algorithms under realistic, dynamic data stream conditions. 
 
 ## Table of Contents
 
+- [Project Structure](#Project-Structure)
 - [Quick Start Guide](#quick-start-guide)
-  - [Docker Support](#docker-support)
+  - [Build Without Docker](Build-Without-Docker)
+  - [Build With Docker](Build-With-Docker)
+- [Usage](#Usage)
+<!--   - [Docker Support](#docker-support)
   - [Build Without Docker](#build-without-docker)
     - [Build with CUDA Support](#build-with-cuda-support)
     - [Build without CUDA (CPU-Only Version)](#build-without-cuda-cpu-only-version)
   - [Installing PyCANDY](#installing-pycandy)
   - [CLion Configuration](#clion-configuration)
-- [Evaluation Scripts](#evaluation-scripts)
-- [Additional Information](#additional-information)
+- [Evaluation Scripts](#evaluation-scripts) -->
+- [Additional Information](#additional-information) 
 ---
 
+## Project Structure
+<!--
+- **[`big-ann-benchmarks/`]**  
+  The core benchmarking framework of CANDOR-Bench, responsible for evaluation logic and stream orchestration.
+
+- **[`GTI/`]**  
+  External project integrated to support the GTI algorithm.
+
+- **[`DiskANN/`]**  
+  External project including FreshDiskANN, Pyanns, and Cufe, adapted for streaming evaluation.
+
+- **[`src/`](./src/)**  
+  Source directory containing the majority of the ANNS algorithms evaluated in the benchmark.
+
+- **[`Dockerfile`](./Dockerfile)**  
+  Provides a fully reproducible Docker environment for deploying and running CANDOR-Bench.
+-->
+```
+CANDY-Benchmark/
+├── benchmark/             
+├── big-ann-benchmarks/             # Core benchmarking framework (Dynamic Open-World conditions)
+│   ├── README.md
+│   ├── algos-2021.yaml
+│   ├── benchmark/
+│   │   ├── algorithms/             # Concurrent Track
+│   │   ├── concurrent/             # Congestion Track
+│   │   ├── congestion/
+│   │   ├── amin.py
+│   │   ├── runner.py
+│   │   └── ……
+│   ├── create_dataset.py
+│   ├── dataset_preparation/
+│   ├── eval/
+│   ├── install/
+│   ├── install.py
+│   ├── logging.conf
+│   ├── neurips21/
+│   ├── neurips23/                  # NeurIPS'23 benchmark configurations and scripts
+│   │   ├── concurrent/             # Concurrent Track
+│   │   ├── congestion/             # Congestion Track
+│   │   ├── filter/
+│   │   ├── ood/
+│   │   ├── runbooks/               # Dynamic benchmark scenario definitions (e.g., T1, T3, etc.)
+│   │   ├── sparse/
+│   │   ├── streaming/              
+│   │   └── ……
+│   └──……
+├── DiskANN/                        # Integrated DiskANN-based algorithms
+├── GTI/                            # Integrated GTI algorithm source
+├── src/                            # Main algorithm implementations
+├── test/
+├── include/                        # C++ header files
+├── doc/
+├── docker/
+├── figures/
+├── cmake/
+├── thirdparty/                     # External dependencies
+├── Dockerfile                      # Docker build recipe
+├── buildCPUOnly.sh
+├── buildWithCuda.sh
+├── requirements.txt
+├── setup.py                        # Python package setup
+├── CMakeLists.txt
+├── README.md
+└── ……
+```
 ## Quick Start Guide
+
+### Build Without Docker
+
+#### 1. Clone the Repository and Initialize Submodules
+
+```bash
+git submodule update --init --recursive
+```
+This pulls in all third-party dependencies, including:
+- DiskANN/ (with FreshDiskANN, Pyanns, Cufe, etc.)
+- GTI/
+- big-ann-benchmarks/
+  
+#### 2. Install System Dependencies
+
+CANDOR-Bench requires a number of system libraries and compilers. You can install them using apt on Ubuntu 22.04:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y --no-install-recommends \
+    python3 python3-pip git build-essential \
+    liblapack-dev libblas-dev libopenblas-dev \
+    libboost-all-dev libnuma-dev \
+    libgflags-dev libgoogle-glog-dev \
+    swig libhdf5-dev libaio-dev \
+    libgoogle-perftools-dev libomp-dev \
+    libtbb-dev libarchive-dev \
+    libcurl4-openssl-dev wget curl gnupg \
+    python3-dev
+```
+**Note:** If you're using another Linux distribution, please install equivalent packages.
+
+#### 3. Install CMake ≥ 3.30
+
+```bash
+wget https://github.com/Kitware/CMake/releases/download/v3.30.2/cmake-3.30.2-linux-x86_64.sh -O cmake.sh
+chmod +x cmake.sh
+sudo ./cmake.sh --skip-license --prefix=/usr/local
+rm cmake.sh
+```
+
+#### 4. Install Intel oneAPI MKL
+
+To enable high-performance math kernel support:
+```bash
+wget -qO - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | \
+    gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+
+echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | \
+    sudo tee /etc/apt/sources.list.d/oneAPI.list
+
+sudo apt-get update
+sudo apt-get install -y intel-oneapi-mkl-devel
+```
+
+Set environment variables:
+```bash
+export MKLROOT="/opt/intel/oneapi/mkl/latest"
+export LD_LIBRARY_PATH="${MKLROOT}/lib/intel64:${LD_LIBRARY_PATH}"
+```
+
+#### 5. Install PyTorch (CPU Version)
+
+We use the CPU version of PyTorch for compatibility and reproducibility:
+```bash
+pip install --no-cache-dir \
+    torch==2.3.0+cpu torchvision==0.18.0+cpu torchaudio==2.3.0+cpu \
+    --index-url https://download.pytorch.org/whl/cpu
+```
+**Note**:If you're using a different Python version, make sure to adjust the paths accordingly.
+Set the Torch_DIR environment variable (modify path based on your Python version if necessary):
+```bash
+export Torch_DIR="/usr/local/lib/python3.10/dist-packages/torch/share/cmake/Torch"
+```
+
+#### 6. Build the Project
+
+```bash
+mkdir -p build_temp && cd build_temp
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j$(nproc)
+```
+
+#### 7. Install Python Interface
+
+```bash
+pip install .
+```
+
+#### 8. Install Python dependencies for big-ann-benchmarks
+
+```bash
+pip install -r requirements_py3.10.txt
+```
+#### 9. Build GTI
+
+```bash
+cd GTI/GTI/extern_libraries/n2
+mkdir build
+make shared_lib
+
+cd ../../
+mkdir bin
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make -j
+```
+
+#### 10. Build DiskANN
+
+```bash
+cd DiskANN
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make -j
+```
+
+### Build With Docker
+Support for building and running CANDOR-Bench via Docker is currently under development. Please stay tuned for updates.
+<!-- 
+## Quick Start Guide old
 
 ### Docker Support
 
@@ -129,6 +322,69 @@ cd ../figures
 Figures will be generated in the `figures` directory.
 
 ---
+-->
+## Usage
+
+### 1. Preparing dataset
+Create a small, sample dataset.  For example, to create a dataset with 10000 20-dimensional random floating point vectors, run:
+```
+python create_dataset.py --dataset random-xs
+```
+To see a complete list of datasets, run the following:
+```
+python create_dataset.py --help
+```
+
+### 2. Running Algorithms on the **congestion** Track
+
+To evaluate an algorithm under the `congestion` track, use the following command:
+```bash
+python3 run.py \
+  --neurips23track congestion \
+  --algorithm "$ALGO" \
+  --nodocker \
+  --rebuild \
+  --runbook_path "$PATH" \
+  --dataset "$DS"
+```
+- algorithm "$ALGO": Name of the algorithm to evaluate.
+- dataset "$DS": Name of the dataset to use.
+- runbook_path "$PATH": Path to the runbook file describing the test scenario.
+- rebuild: Rebuild the target before running.
+
+### 3. Computing Ground Truth for Runbooks
+
+To compute ground truth for an runbook:
+1. **Clone and build the [DiskANN repository](https://github.com/Microsoft/DiskANN)**
+2. Use the provided script to compute ground truth at various checkpoints:
+```
+python3 benchmark/congestion/compute_gt.py \
+  --runbook "$PATH_TO_RUNBOOK" \
+  --dataset "$DATASET_NAME" \
+  --gt_cmdline_tool ~/DiskANN/build/apps/utils/compute_groundtruth
+```
+
+### 4. Exporting Results
+1. To make the results available for post-processing, change permissions of the results folder
+```
+sudo chmod 777 -R results/
+```
+2. The following command will summarize all results files into a single csv file
+```
+python data_export.py --out "$OUT" --track congestion
+```
+The `--out` path "$OUT" should be adjusted according to the testing scenario. Common values include:
+- `gen`
+- `batch`
+- `event`
+- `conceptDrift`
+- `randomContamination`
+- `randomDrop`
+- `wordContamination`
+- `bulkDeletion`
+- `batchDeletion`
+- `multiModal`
+- ……
 
 ## Additional Information
 
