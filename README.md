@@ -223,7 +223,7 @@ Our evaluation involves the following datasets and algorithms.
 ### Build With Docker
 To build the project using Docker, simply use the provided Dockerfile located in the root directory. This ensures a consistent and reproducible environment for all dependencies and build steps.
 
-1. To initialize and update all submodules in the project, run:
+1. To initialize and update all submodules in the project, you can run:
 ```
 git submodule update --init --recursive
 ```
