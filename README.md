@@ -40,7 +40,6 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
 CANDY-Benchmark/
 ├── benchmark/             
 ├── big-ann-benchmarks/             # Core benchmarking framework (Dynamic Open-World conditions)
-│   ├── LICENSE
 │   ├── README.md
 │   ├── algos-2021.yaml
 │   ├── benchmark/
@@ -66,6 +65,7 @@ CANDY-Benchmark/
 │   │   ├── sparse/
 │   │   ├── streaming/              
 │   │   └── ……
+│   └──……
 ├── DiskANN/                        # Integrated DiskANN-based algorithms
 ├── GTI/                            # Integrated GTI algorithm source
 ├── src/                            # Main algorithm implementations
@@ -79,14 +79,11 @@ CANDY-Benchmark/
 ├── Dockerfile                      # Docker build recipe
 ├── buildCPUOnly.sh
 ├── buildWithCuda.sh
-├── genDoc.sh
 ├── requirements.txt
 ├── setup.py                        # Python package setup
-├── LICENSE
 ├── CMakeLists.txt
-├── Doxyfile
-├── refman.pdf
-└── README.md
+├── README.md
+└── ……
 ```
 ## Quick Start Guide
 
