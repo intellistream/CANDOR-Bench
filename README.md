@@ -18,23 +18,114 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
 
 ## Project Structure
 
-- **`big-ann-benchmarks/`**  
+- **[`big-ann-benchmarks/`](./big-ann-benchmarks/)**  
   The core benchmarking framework of CANDOR-Bench, responsible for evaluation logic and stream orchestration.
 
-- **`GTI/`**  
+- **[`GTI/`](./GTI/)**  
   External project integrated to support the GTI algorithm.
 
-- **`DiskANN/`**  
+- **[`DiskANN/`](./DiskANN/)**  
   External project including FreshDiskANN, Pyanns, and Cufe, adapted for streaming evaluation.
 
-- **`src/`**  
+- **[`src/`](./src/)**  
   Source directory containing the majority of the ANNS algorithms evaluated in the benchmark.
 
-- **`Dockerfile`**  
+- **[`Dockerfile`](./Dockerfile)**  
   Provides a fully reproducible Docker environment for deploying and running CANDOR-Bench.
 
-
 ## Quick Start Guide
+
+### Build Without Docker
+
+#### 1. Clone the Repository and Initialize Submodules
+
+```bash
+git submodule update --init --recursive
+```
+This pulls in all third-party dependencies, including:
+- DiskANN/ (with FreshDiskANN, Pyanns, Cufe, etc.)
+- GTI/
+- big-ann-benchmarks/
+  
+#### 2. Install System Dependencies
+
+CANDOR-Bench requires a number of system libraries and compilers. You can install them using apt on Ubuntu 22.04:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y --no-install-recommends \
+    python3 python3-pip git build-essential \
+    liblapack-dev libblas-dev libopenblas-dev \
+    libboost-all-dev libnuma-dev \
+    libgflags-dev libgoogle-glog-dev \
+    swig libhdf5-dev libaio-dev \
+    libgoogle-perftools-dev libomp-dev \
+    libtbb-dev libarchive-dev \
+    libcurl4-openssl-dev wget curl gnupg \
+    python3-dev
+```
+**Note:** If you're using another Linux distribution, please install equivalent packages.
+
+#### 3. Install CMake ≥ 3.30
+
+```bash
+wget https://github.com/Kitware/CMake/releases/download/v3.30.2/cmake-3.30.2-linux-x86_64.sh -O cmake.sh
+chmod +x cmake.sh
+sudo ./cmake.sh --skip-license --prefix=/usr/local
+rm cmake.sh
+```
+
+#### 4. Install Intel oneAPI MKL
+
+To enable high-performance math kernel support:
+```bash
+wget -qO - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | \
+    gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+
+echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | \
+    sudo tee /etc/apt/sources.list.d/oneAPI.list
+
+sudo apt-get update
+sudo apt-get install -y intel-oneapi-mkl-devel
+```
+
+Set environment variables:
+```bash
+export MKLROOT="/opt/intel/oneapi/mkl/latest"
+export LD_LIBRARY_PATH="${MKLROOT}/lib/intel64:${LD_LIBRARY_PATH}"
+```
+
+#### 5. Install PyTorch (CPU Version)
+
+We use the CPU version of PyTorch for compatibility and reproducibility:
+```bash
+pip install --no-cache-dir \
+    torch==2.3.0+cpu torchvision==0.18.0+cpu torchaudio==2.3.0+cpu \
+    --index-url https://download.pytorch.org/whl/cpu
+```
+**Note:**If you're using a different Python version, make sure to adjust the paths accordingly.
+Set the Torch_DIR environment variable (modify path based on your Python version if necessary):
+```bash
+export Torch_DIR="/usr/local/lib/python3.10/dist-packages/torch/share/cmake/Torch"
+```
+
+#### 6. Build the Project
+
+```bash
+mkdir -p build_temp && cd build_temp
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j$(nproc)
+```
+
+#### 7. Install Python Interface
+
+```bash
+pip install .
+```
+
+### Build With Docker
+
+## Quick Start Guide old
 
 ### Docker Support
 
