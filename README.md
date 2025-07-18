@@ -6,8 +6,8 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
 
 - [Project Structure](#Project-Structure)
 - [Quick Start Guide](#quick-start-guide)
-  - [Build Without Docker](Build-Without-Docker)
-  - [Build With Docker](Build-With-Docker)
+  - [Build With Docker](#Build-With-Docker)
+  - [Build Without Docker](#Build-Without-Docker)
 - [Usage](#Usage)
 <!--   - [Docker Support](#docker-support)
   - [Build Without Docker](#build-without-docker)
@@ -40,20 +40,15 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
 CANDY-Benchmark/
 ├── benchmark/             
 ├── big-ann-benchmarks/             # Core benchmarking framework (Dynamic Open-World conditions)
-│   ├── README.md
-│   ├── algos-2021.yaml
 │   ├── benchmark/
 │   │   ├── algorithms/             # Concurrent Track
 │   │   ├── concurrent/             # Congestion Track
 │   │   ├── congestion/
-│   │   ├── amin.py
+│   │   ├── main.py
 │   │   ├── runner.py
 │   │   └── ……
 │   ├── create_dataset.py
-│   ├── dataset_preparation/
-│   ├── eval/
-│   ├── install/
-│   ├── install.py
+│   ├── requirements_py3.10.txt
 │   ├── logging.conf
 │   ├── neurips21/
 │   ├── neurips23/                  # NeurIPS'23 benchmark configurations and scripts
@@ -68,24 +63,19 @@ CANDY-Benchmark/
 │   └──……
 ├── DiskANN/                        # Integrated DiskANN-based algorithms
 ├── GTI/                            # Integrated GTI algorithm source
+├── IP-DiskANN/                     # Integrated IP-DiskANN algorithm source
 ├── src/                            # Main algorithm implementations
-├── test/
 ├── include/                        # C++ header files
-├── doc/
-├── docker/
-├── figures/
-├── cmake/
 ├── thirdparty/                     # External dependencies
 ├── Dockerfile                      # Docker build recipe
-├── buildCPUOnly.sh
-├── buildWithCuda.sh
 ├── requirements.txt
 ├── setup.py                        # Python package setup
-├── CMakeLists.txt
-├── README.md
 └── ……
 ```
 ## Quick Start Guide
+
+### Build With Docker
+Support for building and running CANDOR-Bench via Docker is currently under development. Please stay tuned for updates.
 
 ### Build Without Docker
 
@@ -98,6 +88,7 @@ This pulls in all third-party dependencies, including:
 - DiskANN/ (with FreshDiskANN, Pyanns, Cufe, etc.)
 - GTI/
 - big-ann-benchmarks/
+- IP-DiskANN/
   
 #### 2. Install System Dependencies
 
@@ -205,8 +196,7 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j
 ```
 
-### Build With Docker
-Support for building and running CANDOR-Bench via Docker is currently under development. Please stay tuned for updates.
+
 <!-- 
 ## Quick Start Guide old
 
