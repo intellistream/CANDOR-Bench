@@ -1,6 +1,6 @@
-# CANDY
+# CANDOR-Bench: Benchmarking In-Memory Continuous ANNS under Dynamic Open-World Streams
 
-A library and benchmark suite for Approximate Nearest Neighbor Search (ANNS). This project is compatible with LibTorch.
+CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-woRld Streams) is a benchmarking framework designed to evaluate in-memory ANNS algorithms under realistic, dynamic data stream conditions. 
 
 ## Table of Contents
 
