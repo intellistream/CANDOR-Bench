@@ -223,9 +223,17 @@ Our evaluation involves the following datasets and algorithms.
 ### Build With Docker
 To build the project using Docker, simply use the provided Dockerfile located in the root directory. This ensures a consistent and reproducible environment for all dependencies and build steps.
 
-You can build the Docker image with:
+1. You can build the Docker image with:
 ```
 docker build -t <your-image-name> .
+```
+2. Once the image is built, you can run a container from it using the following command.
+```
+docker run -it <your-image-name>
+```
+3. After entering the container, navigate to the project directory:
+```
+cd /app/big-ann-benchmarks
 ```
 <!--
 ### Build Without Docker
