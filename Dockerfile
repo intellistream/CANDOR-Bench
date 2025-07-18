@@ -24,6 +24,13 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     gnupg \
     libfmt-dev \
     python3-dev \
+    libeigen3-dev \
+    libspdlog-dev \
+    pybind11-dev \
+    pkg-config \
+    zlib1g-dev \
+    libssl-dev \
+    gfortran \
     && rm -rf /var/lib/apt/lists/* && \
     ldconfig
 
@@ -61,9 +68,19 @@ WORKDIR /app/GTI/GTI
 RUN mkdir -p bin build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j && make install
 
 WORKDIR /app/DiskANN
-RUN mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j && make install
+RUN mkdir -p build && cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release \
+          -DMKL_PATH=/opt/intel/oneapi/mkl/latest/lib/intel64 \
+          -DMKL_INCLUDE_PATH=/opt/intel/oneapi/mkl/latest/include \
+          .. && \
+    make -j && make install
 
 WORKDIR /app/IP-DiskANN
-RUN mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j && make install
+RUN mkdir -p build && cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release \
+          -DMKL_PATH=/opt/intel/oneapi/mkl/latest/lib/intel64 \
+          -DMKL_INCLUDE_PATH=/opt/intel/oneapi/mkl/latest/include \
+          .. && \
+    make -j && make install
 
 CMD ["bash"]
