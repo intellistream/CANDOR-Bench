@@ -6,14 +6,17 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
 
 - [Project Structure](#Project-Structure)
 - [Quick Start Guide](#quick-start-guide)
-  - [Docker Support](#docker-support)
+  - [Build Without Docker](Build-Without-Docker)
+  - [Build With Docker](Build-With-Docker)
+- [Usage](#Usage)
+<!--   - [Docker Support](#docker-support)
   - [Build Without Docker](#build-without-docker)
     - [Build with CUDA Support](#build-with-cuda-support)
     - [Build without CUDA (CPU-Only Version)](#build-without-cuda-cpu-only-version)
   - [Installing PyCANDY](#installing-pycandy)
   - [CLion Configuration](#clion-configuration)
-- [Evaluation Scripts](#evaluation-scripts)
-- [Additional Information](#additional-information)
+- [Evaluation Scripts](#evaluation-scripts) -->
+- [Additional Information](#additional-information) 
 ---
 
 ## Project Structure
@@ -123,8 +126,39 @@ make -j$(nproc)
 pip install .
 ```
 
+#### 8. Install Python dependencies for big-ann-benchmarks
+
+```bash
+pip install -r requirements_py3.10.txt
+```
+#### 9. Build GTI
+
+```bash
+cd GTI/GTI/extern_libraries/n2
+mkdir build
+make shared_lib
+
+cd ../../
+mkdir bin
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make -j
+```
+
+#### 10. Build DiskANN
+
+```bash
+cd DiskANN
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make -j
+```
+
 ### Build With Docker
 
+<!-- 
 ## Quick Start Guide old
 
 ### Docker Support
@@ -239,6 +273,69 @@ cd ../figures
 Figures will be generated in the `figures` directory.
 
 ---
+-->
+## Usage
+
+### 1. Prepare dataset
+Create a small, sample dataset.  For example, to create a dataset with 10000 20-dimensional random floating point vectors, run:
+```
+python create_dataset.py --dataset random-xs
+```
+To see a complete list of datasets, run the following:
+```
+python create_dataset.py --help
+```
+
+### 2. Running Algorithms on the **congestion** Track
+
+To evaluate an algorithm under the `congestion` track, use the following command:
+```bash
+python3 run.py \
+  --neurips23track congestion \
+  --algorithm "$ALGO" \
+  --nodocker \
+  --rebuild \
+  --runbook_path "$PATH" \
+  --dataset "$DS"
+```
+- algorithm "$ALGO": Name of the algorithm to evaluate.
+- dataset "$DS": Name of the dataset to use.
+- runbook_path "$PATH": Path to the runbook file describing the test scenario.
+- rebuild: Rebuild the target before running.
+
+### 3. Computing Ground Truth for Runbooks
+
+To compute ground truth for an runbook:
+1. **Clone and build the [DiskANN repository](https://github.com/Microsoft/DiskANN)**
+2. Use the provided script to compute ground truth at various checkpoints:
+```
+python3 benchmark/congestion/compute_gt.py \
+  --runbook "$PATH_TO_RUNBOOK" \
+  --dataset "$DATASET_NAME" \
+  --gt_cmdline_tool ~/DiskANN/build/apps/utils/compute_groundtruth
+```
+
+### 4. Export Results
+1. To make the results available for post-processing, change permissions of the results folder
+```
+sudo chmod 777 -R results/
+```
+2. The following command will summarize all results files into a single csv file
+```
+python data_export.py --out "$OUT" --track congestion
+```
+-The `--out` path "$OUT" should be adjusted according to the testing scenario. Common values include:
+- `gen`
+- `batch`
+- `event`
+- `conceptDrift`
+- `randomContamination`
+- `randomDrop`
+- `wordContamination`
+- `bulkDeletion`
+- `batchDeletion`
+- `multiModal`
+- ……
 
 ## Additional Information
 
