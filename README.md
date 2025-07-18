@@ -85,11 +85,21 @@ CANDY-Benchmark/
 ├── README.md
 └── ……
 ```
-## Quick Start Guide
+## 1. Quick Start Guide
 
-### Build Without Docker
+### Build With Docker
 
-#### 1. Clone the Repository and Initialize Submodules
+---
+# 🚨🚨🚨 Strong Recommendation: Use Docker! 🚨🚨🚨
+
+> **We strongly recommend using Docker to build and run this project.**
+>
+> There are many algorithm libraries with complex dependencies. Setting up the environment locally can be difficult and error-prone.
+> **Docker provides a consistent and reproducible environment, saving you time and avoiding compatibility issues.**
+>
+> **Note:** Building the Docker image may take **10–20 minutes** depending on your network and hardware.
+
+---
 
 ```bash
 git submodule update --init --recursive
@@ -97,573 +107,61 @@ git submodule update --init --recursive
 This pulls in all third-party dependencies, including:
 - DiskANN/ (with FreshDiskANN, Pyanns, Cufe, etc.)
 - GTI/
+- IP-DiskANN/ 
 - big-ann-benchmarks/
-  
-#### 2. Install System Dependencies
 
-CANDOR-Bench requires a number of system libraries and compilers. You can install them using apt on Ubuntu 22.04:
+#### 2. Build the Docker image
 
 ```bash
-sudo apt-get update
-sudo apt-get install -y --no-install-recommends \
-    python3 python3-pip git build-essential \
-    liblapack-dev libblas-dev libopenblas-dev \
-    libboost-all-dev libnuma-dev \
-    libgflags-dev libgoogle-glog-dev \
-    swig libhdf5-dev libaio-dev \
-    libgoogle-perftools-dev libomp-dev \
-    libtbb-dev libarchive-dev \
-    libcurl4-openssl-dev wget curl gnupg \
-    python3-dev
+docker build -t candor .
 ```
-**Note:** If you're using another Linux distribution, please install equivalent packages.
+This will build the Docker image named `candor`.
 
-#### 3. Install CMake ≥ 3.30
+#### 3. Enter the container
 
 ```bash
-wget https://github.com/Kitware/CMake/releases/download/v3.30.2/cmake-3.30.2-linux-x86_64.sh -O cmake.sh
-chmod +x cmake.sh
-sudo ./cmake.sh --skip-license --prefix=/usr/local
-rm cmake.sh
+docker run -it --rm candor
 ```
+This command will start an interactive shell inside the container (default path: `/app`).
 
-#### 4. Install Intel oneAPI MKL
+#### 4. Scripts for Paper Sections
 
-To enable high-performance math kernel support:
-```bash
-wget -qO - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | \
-    gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+The `big-ann-benchmarks/scripts/` directory provides ready-to-use scripts for reproducing the experiments in different sections of the paper.  
+Each script corresponds to a specific benchmark or experiment described in the paper. For example:
 
-echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | \
-    sudo tee /etc/apt/sources.list.d/oneAPI.list
+- `run_general.sh` — Main benchmark for Section 4.1: General ANNS evaluation
+- `run_congestion.sh` — Section 4.2: Congestion Track experiments
+- `run_concurrent.sh` — Section 4.3: Concurrent Track experiments
+- `run_ood.sh` — Section 4.4: Out-of-Distribution (OOD) evaluation
+- `run_sparse.sh` — Section 4.5: Sparse data benchmark
+- `run_streaming.sh` — Section 4.6: Streaming scenario evaluation
 
-sudo apt-get update
-sudo apt-get install -y intel-oneapi-mkl-devel
-```
+> **Tip:**  
+> You can edit the scripts in `big-ann-benchmarks/scripts/` to specify the algorithms and datasets you want to test.  
+> The available algorithm and dataset names can be found in the next section of this README.
 
-Set environment variables:
-```bash
-export MKLROOT="/opt/intel/oneapi/mkl/latest"
-export LD_LIBRARY_PATH="${MKLROOT}/lib/intel64:${LD_LIBRARY_PATH}"
-```
+#### 5. Run benchmark scripts
 
-#### 5. Install PyTorch (CPU Version)
-
-We use the CPU version of PyTorch for compatibility and reproducibility:
-```bash
-pip install --no-cache-dir \
-    torch==2.3.0+cpu torchvision==0.18.0+cpu torchaudio==2.3.0+cpu \
-    --index-url https://download.pytorch.org/whl/cpu
-```
-**Note**:If you're using a different Python version, make sure to adjust the paths accordingly.
-Set the Torch_DIR environment variable (modify path based on your Python version if necessary):
-```bash
-export Torch_DIR="/usr/local/lib/python3.10/dist-packages/torch/share/cmake/Torch"
-```
-
-#### 6. Build the Project
+Navigate to the scripts directory and run the desired script. For example:
 
 ```bash
-mkdir -p build_temp && cd build_temp
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j$(nproc)
+cd big-ann-benchmarks
+bash scripts/run_general.sh
 ```
 
-#### 7. Install Python Interface
-
-```bash
-pip install .
-```
-
-#### 8. Install Python dependencies for big-ann-benchmarks
-
-```bash
-pip install -r requirements_py3.10.txt
-```
-#### 9. Build GTI
-
-```bash
-cd GTI/GTI/extern_libraries/n2
-mkdir build
-make shared_lib
-
-cd ../../
-mkdir bin
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j
-```
-
-#### 10. Build DiskANN
-
-```bash
-cd DiskANN
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j
-```
-
-### Build With Docker
-Support for building and running CANDOR-Bench via Docker is currently under development. Please stay tuned for updates.
-<!-- 
-## Quick Start Guide old
-
-### Docker Support
-
-We provide Docker support to simplify the setup process.
-
-1. **Navigate to the `./docker` directory:**
-
-   ```shell
-   cd ./docker
-   ```
-
-2. **Build and start the Docker container:**
-
-   ```shell
-   ./start.sh
-   ```
-
-   This script will build the Docker container and start it.
-
-3. **Inside the Docker container, run the build script to install dependencies and build the project:**
-
-  - **With CUDA support:**
-
-    ```shell
-    ./buildWithCuda.sh
-    ```
-
-  - **Without CUDA (CPU-only version):**
-
-    ```shell
-    ./buildCPUOnly.sh
-    ```
-
-### Build Without Docker
-
-If you prefer to build without Docker, follow these steps.
-
-#### Build with CUDA Support
-
-To build CANDY and PyCANDY with CUDA support:
-
-```shell
-./buildWithCuda.sh
-```
-
-#### Build without CUDA (CPU-Only Version)
-
-For a CPU-only version:
-
-```shell
-./buildCPUOnly.sh
-```
-
-These scripts will install dependencies and build the project.
-
-### Installing PyCANDY
-
-After building, you can install PyCANDY to your default Python environment:
-
-```shell
-python3 setup.py install --user
-```
-
-### CLion Configuration
-
-When developing in CLion, you must manually configure:
-
-1. **CMake Prefix Path:**
-
-
-### Requires BLAS, LAPACK, boost and swig
-
-```shell
-sudo apt install liblapack-dev libblas-dev libboost-all-dev swig
-```
-
-  - Run the following command in your terminal to get the CMake prefix path:
-
-    ```shell
-    python3 -c 'import torch; print(torch.utils.cmake_prefix_path)'
-    ```
-
-
-  - Copy the output path and set it in CLion's CMake settings as:
-
-    ```
-    -DCMAKE_PREFIX_PATH=<output_path>
-    ```
-
-2. **Environment Variable `CUDACXX`:**
-
-  - Manually set the environment variable `CUDACXX` to:
-
-    ```
-    /usr/local/cuda/bin/nvcc
-    ```
-
-## Evaluation Scripts
-
-Evaluation scripts are located under `benchmark/scripts`.
-
-To run an evaluation (e.g., scanning the dimensions):
-
-```shell
-cd build/benchmark/scripts/scanIPDimensions
-sudo ls  # Required for perf events
-python3 drawTogether.py 2
-cd ../figures
-```
-
-Figures will be generated in the `figures` directory.
-
----
--->
-## Usage
-
-### 1. Preparing dataset
-Create a small, sample dataset.  For example, to create a dataset with 10000 20-dimensional random floating point vectors, run:
-```
-python create_dataset.py --dataset random-xs
-```
-To see a complete list of datasets, run the following:
-```
-python create_dataset.py --help
-```
-
-### 2. Running Algorithms on the **congestion** Track
-
-To evaluate an algorithm under the `congestion` track, use the following command:
-```bash
-python3 run.py \
-  --neurips23track congestion \
-  --algorithm "$ALGO" \
-  --nodocker \
-  --rebuild \
-  --runbook_path "$PATH" \
-  --dataset "$DS"
-```
-- algorithm "$ALGO": Name of the algorithm to evaluate.
-- dataset "$DS": Name of the dataset to use.
-- runbook_path "$PATH": Path to the runbook file describing the test scenario.
-- rebuild: Rebuild the target before running.
-
-### 3. Computing Ground Truth for Runbooks
-
-To compute ground truth for an runbook:
-1. **Clone and build the [DiskANN repository](https://github.com/Microsoft/DiskANN)**
-2. Use the provided script to compute ground truth at various checkpoints:
-```
-python3 benchmark/congestion/compute_gt.py \
-  --runbook "$PATH_TO_RUNBOOK" \
-  --dataset "$DATASET_NAME" \
-  --gt_cmdline_tool ~/DiskANN/build/apps/utils/compute_groundtruth
-```
-
-### 4. Exporting Results
-1. To make the results available for post-processing, change permissions of the results folder
-```
-sudo chmod 777 -R results/
-```
-2. The following command will summarize all results files into a single csv file
-```
-python data_export.py --out "$OUT" --track congestion
-```
-The `--out` path "$OUT" should be adjusted according to the testing scenario. Common values include:
-- `gen`
-- `batch`
-- `event`
-- `conceptDrift`
-- `randomContamination`
-- `randomDrop`
-- `wordContamination`
-- `bulkDeletion`
-- `batchDeletion`
-- `multiModal`
-- ……
-
-## Additional Information
-
-<details>
-<summary><strong>Click to Expand</strong></summary>
-
-### Table of Contents
-
-- [Extra CMake Options](#extra-cmake-options)
-- [Manual Build Instructions](#manual-build-instructions)
-  - [Requirements](#requirements)
-  - [Build Steps](#build-steps)
-  - [CLion Build Tips](#clion-build-tips)
-- [CUDA Installation (Optional)](#cuda-installation-optional)
-  - [Install CUDA (if using CUDA-based Torch)](#install-cuda-if-using-cuda-based-torch)
-  - [CUDA on Jetson Devices](#cuda-on-jetson-devices)
-- [Torch Installation](#torch-installation)
-  - [Install Python and Pip](#install-python-and-pip)
-  - [Install PyTorch](#install-pytorch)
-- [PAPI Support (Optional)](#papi-support-optional)
-  - [Build PAPI](#build-papi)
-  - [Verify PAPI Installation](#verify-papi-installation)
-  - [Enable PAPI in CANDY](#enable-papi-in-candy)
-- [Distributed CANDY with Ray (Optional)](#distributed-candy-with-ray-optional)
-  - [Build with Ray Support](#build-with-ray-support)
-  - [Running with Ray](#running-with-ray)
-  - [Ray Dashboard (Optional)](#ray-dashboard-optional)
-- [Local Documentation Generation (Optional)](#local-documentation-generation-optional)
-  - [Install Required Packages](#install-required-packages)
-  - [Generate Documentation](#generate-documentation)
-    - [Accessing Documentation](#accessing-documentation)
-- [Known Issues](#known-issues)
+> **Tip:**  
+> You can freely modify the scripts (e.g., in `big-ann-benchmarks/scripts/`) on your local machine at any time.  
+> For development and debugging, it is recommended to **edit your scripts after building the Docker image**.  
+> 
+> If you want your changes to take effect inside the container immediately, you can mount your local scripts directory into the container using the `-v` option:
+> 
+> ```bash
+> docker run -it --rm -v /absolute/path/to/your/scripts:/app/big-ann-benchmarks/scripts candor
+> ```
+> 
+> This way, any changes you make to the scripts on your host will be instantly reflected inside the container, and you do **not** need to rebuild the Docker image for every modification.
 
 ---
 
-### Extra CMake Options
-
-You can set additional CMake options using `cmake -D<option>=ON/OFF`:
-
-- `ENABLE_PAPI` (OFF by default)
-  - Enables PAPI-based performance tools.
-  - **Setup**:
-    - Navigate to the `thirdparty` directory.
-    - Run `installPAPI.sh` to enable PAPI support.
-    - Alternatively, set `REBUILD_PAPI` to `ON`.
-- `ENABLE_HDF5` (OFF by default)
-  - Enables loading data from HDF5 files.
-  - The HDF5 source code is included; no extra dependency is required.
-- `ENABLE_PYBIND` (OFF by default)
-  - Enables building Python bindings (PyCANDY).
-  - Ensure the `pybind11` source code in the `thirdparty` folder is complete.
-
-### Manual Build Instructions
-
-#### Requirements
-
-- **Compiler**: G++11 or newer.
-  - The default `gcc/g++` version on Ubuntu 22.04 (Jammy) is sufficient.
-- **BLAS and LAPACK**:
-  ```shell
-  sudo apt install liblapack-dev libblas-dev
-  ```
-- **Graphviz (Optional)**:
-  ```shell
-  sudo apt-get install graphviz
-  pip install torchviz
-  ```
-
-#### Build Steps
-
-1. **Set the CUDA Compiler Path** (if using CUDA):
-
-   ```shell
-   export CUDACXX=/usr/local/cuda/bin/nvcc
-   ```
-
-2. **Create Build Directory**:
-
-   ```shell
-   mkdir build && cd build
-   ```
-
-3. **Configure CMake**:
-
-   ```shell
-   cmake -DCMAKE_PREFIX_PATH=`python3 -c 'import torch; print(torch.utils.cmake_prefix_path)'` ..
-   ```
-
-4. **Build the Project**:
-
-   ```shell
-   make
-   ```
-
-**For Debug Build**:
-
-```shell
-cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=`python3 -c 'import torch; print(torch.utils.cmake_prefix_path)'` ..
-make
-```
-
-#### CLion Build Tips
-
-- Manually retrieve the CMake prefix path:
-
-  ```shell
-  python3 -c 'import torch; print(torch.utils.cmake_prefix_path)'
-  ```
-
-- Set the `-DCMAKE_PREFIX_PATH` in CLion's CMake settings.
-- Set the environment variable `CUDACXX` to `/usr/local/cuda/bin/nvcc` in CLion.
-
-### CUDA Installation (Optional)
-
-#### Install CUDA (if using CUDA-based Torch)
-
-Refer to the [NVIDIA CUDA Installation Guide](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#ubuntu) for more details.
-
-```shell
-wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb
-sudo dpkg -i cuda-keyring_1.0-1_all.deb
-sudo apt-get update
-sudo apt-get install cuda
-sudo apt-get install nvidia-gds
-sudo apt-get install libcudnn8 libcudnn8-dev libcublas-11-7
-```
-
-**Note**: Ensure CUDA is installed before installing CUDA-based Torch. Reboot your system after installation.
-
-#### CUDA on Jetson Devices
-
-- No need to install CUDA if using a pre-built JetPack on Jetson.
-- Ensure `libcudnn8` and `libcublas` are installed:
-
-  ```shell
-  sudo apt-get install libcudnn8 libcudnn8-dev libcublas-*
-  ```
-
-### Torch Installation
-
-Refer to the [PyTorch Get Started Guide](https://pytorch.org/get-started/locally/) for more details.
-
-#### Install Python and Pip
-
-```shell
-sudo apt-get install python3 python3-pip
-```
-
-#### Install PyTorch
-
-- **With CUDA**:
-
-  ```shell
-  pip3 install torch==2.4.0 torchvision torchaudio
-  ```
-
-- **Without CUDA**:
-
-  ```shell
-  pip3 install --ignore-installed torch==2.4.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-  ```
-
-**Note**: Conflict between `torch2.4.0+cpu` and `torchaudio+cpu` may occur with Python versions > 3.10.
-
-### PAPI Support (Optional)
-
-PAPI provides a consistent interface for collecting performance counter information.
-
-#### Build PAPI
-
-- Navigate to the `thirdparty` directory.
-- Run `installPAPI.sh`.
-- PAPI will be compiled and installed in `thirdparty/papi_build`.
-
-#### Verify PAPI Installation
-
-- Navigate to `thirdparty/papi_build/bin`.
-- Run `sudo ./papi_avail` to check available events.
-- Run `./papi_native_avail` to view native events.
-
-#### Enable PAPI in CANDY
-
-- Set `-DENABLE_PAPI=ON` when configuring CMake.
-- Add the following to your top-level config file:
-
-  ```
-  usePAPI,1,U64
-  perfUseExternalList,1,U64
-  ```
-
-- To specify custom event lists, set:
-
-  ```
-  perfListSrc,<path_to_your_list>,String
-  ```
-
-- Edit `perfLists/perfList.csv` in your build directory to include desired events.
-
-### Distributed CANDY with Ray (Optional)
-
-#### Build with Ray Support
-
-1. **Install Ray**:
-
-   ```shell
-   pip install ray==2.8.1 ray-cpp==2.8.1
-   ```
-
-2. **Get Ray Library Path**:
-
-   ```shell
-   ray cpp --show-library-path
-   ```
-
-3. **Set `RAYPATH` Environment Variable**:
-
-   ```shell
-   export RAYPATH=<ray_library_path>
-   ```
-
-4. **Configure CMake**:
-
-   ```shell
-   cmake -DENABLE_RAY=ON ..
-   ```
-
-#### Running with Ray
-
-- **Start the Head Node**:
-
-  ```shell
-  ray start --head
-  ```
-
-- **Start Worker Nodes**:
-
-  ```shell
-  ray start --address <head_node_ip>:6379 --node-ip-address <worker_node_ip>
-  ```
-
-- **Run the Program**:
-
-  ```shell
-  export RAY_ADDRESS=<head_node_ip>:6379
-  ./<your_program_with_ray_support>
-  ```
-
-**Notes**:
-
-- Ensure the file paths and dependencies are identical across all nodes.
-- For different architectures, recompile the source code on each node.
-- `torch::Tensor` may not be serializable; consider using `std::vector<float>` instead.
-
-#### Ray Dashboard (Optional)
-
-Refer to the [Ray Observability Guide](https://docs.ray.io/en/latest/ray-observability/getting-started.html#observability-getting-started) to set up a dashboard.
-
-### Local Documentation Generation (Optional)
-
-#### Install Required Packages
-
-```shell
-sudo apt-get install doxygen graphviz
-sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
-```
-
-#### Generate Documentation
-
-```shell
-./genDoc.SH
-```
-
-##### Accessing Documentation
-
-- **HTML Pages**: Located in `doc/html/index.html`.
-- **PDF Manual**: Found at `refman.pdf` in the root directory.
-
-### Known Issues
-
-- Conflicts may occur with certain versions of PyTorch and Python.
-
-</details>
+## 2. Algorithm and Datasets
+ 

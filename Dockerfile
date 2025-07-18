@@ -22,6 +22,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     wget \
     curl \
     gnupg \
+    libfmt-dev \
     python3-dev \
     && rm -rf /var/lib/apt/lists/* && \
     ldconfig
@@ -57,12 +58,12 @@ WORKDIR /app/GTI/GTI/extern_libraries/n2
 RUN mkdir -p build && make shared_lib
 
 WORKDIR /app/GTI/GTI
-RUN mkdir -p bin build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j
+RUN mkdir -p bin build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j && make install
 
 WORKDIR /app/DiskANN
-RUN mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j
+RUN mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j && make install
 
 WORKDIR /app/IP-DiskANN
-RUN mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j
+RUN mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j && make install
 
 CMD ["bash"]
