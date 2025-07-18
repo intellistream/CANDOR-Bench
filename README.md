@@ -325,7 +325,7 @@ Figures will be generated in the `figures` directory.
 -->
 ## Usage
 
-### 1. Prepare dataset
+### 1. Preparing dataset
 Create a small, sample dataset.  For example, to create a dataset with 10000 20-dimensional random floating point vectors, run:
 ```
 python create_dataset.py --dataset random-xs
@@ -364,7 +364,7 @@ python3 benchmark/congestion/compute_gt.py \
   --gt_cmdline_tool ~/DiskANN/build/apps/utils/compute_groundtruth
 ```
 
-### 4. Export Results
+### 4. Exporting Results
 1. To make the results available for post-processing, change permissions of the results folder
 ```
 sudo chmod 777 -R results/
