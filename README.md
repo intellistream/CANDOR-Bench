@@ -196,6 +196,15 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j
 ```
 
+#### 11. Build DiskANN
+
+```bash
+cd IP-DiskANN
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make -j
+```
 
 <!-- 
 ## Quick Start Guide old
