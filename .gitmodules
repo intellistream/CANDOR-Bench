@@ -8,3 +8,6 @@
 	path = DiskANN
 	url = https://github.com/MingqiWang-coder/DiskANN.git
 	branch = diskv2
+[submodule "IP-DiskANN"]
+	path = IP-DiskANN
+	url = https://github.com/intellistream/IP-DiskANN.git
