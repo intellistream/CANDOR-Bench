@@ -5,10 +5,12 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
 ## Table of Contents
 
 - [Project Structure](#Project-Structure)
+- [Datasets and Algorithms](#Datasets-and-Algorithms)
+  - [Summary of Datasets](#Summary-of-Datasets)
+  - [Summary of Algorithms](#Summary-of-Algorithms)
 - [Quick Start Guide](#quick-start-guide)
   - [Build With Docker](#Build-With-Docker)
-  - [Build Without Docker](#Build-Without-Docker)
-- [Usage](#Usage)
+  - [Usage](#Usage)
 <!--   - [Docker Support](#docker-support)
   - [Build Without Docker](#build-without-docker)
     - [Build with CUDA Support](#build-with-cuda-support)
@@ -72,16 +74,164 @@ CANDY-Benchmark/
 ├── setup.py                        # Python package setup
 └── ……
 ```
-## 1. Quick Start Guide
+## Datasets and Algorithms
+
+Our evaluation involves the following datasets and algorithms.
+
+### Summary of Datasets
+
+<table>
+<thead>
+  <tr>
+    <th align="center">Category</th>
+    <th align="center">Name</th>
+    <th align="center">Description</th>
+    <th align="center">Dimension</th>
+    <th align="center">Data Size</th>
+    <th align="center">Query Size</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td rowspan="9" align="center"><b>Real-world</b></td>
+    <td align="center">SIFT</td><td align="center">Image</td><td align="center">128</td><td align="center">1M</td><td align="center">10K</td>
+  </tr>
+  <tr><td align="center">OpenImagesStreaming</td><td align="center">Image</td><td align="center">512</td><td align="center">1M</td><td align="center">10K</td></tr>
+  <tr><td align="center">Sun</td><td align="center">Image</td><td align="center">512</td><td align="center">79K</td><td align="center">200</td></tr>
+  <tr><td align="center">SIFT100M</td><td align="center">Image</td><td align="center">128</td><td align="center">100M</td><td align="center">10K</td></tr>
+  <tr><td align="center">Trevi</td><td align="center">Image</td><td align="center">4096</td><td align="center">100K</td><td align="center">200</td></tr>
+  <tr><td align="center">Msong</td><td align="center">Audio</td><td align="center">420</td><td align="center">990K</td><td align="center">200</td></tr>
+  <tr><td align="center">COCO</td><td align="center">Multi-Modal</td><td align="center">768</td><td align="center">100K</td><td align="center">500</td></tr>
+  <tr><td align="center">Glove</td><td align="center">Text</td><td align="center">100</td><td align="center">1.192M</td><td align="center">200</td></tr>
+  <tr><td align="center">MSTuring</td><td align="center">Text</td><td align="center">100</td><td align="center">30M</td><td align="center">10K</td></tr>
+  <tr>
+    <td rowspan="4" align="center"><b>Synthetic</b></td>
+    <td align="center">Gaussian</td><td align="center">i.i.d values</td><td align="center">Adjustable</td><td align="center">500K</td><td align="center">1000</td>
+  </tr>
+  <tr><td align="center">Blob</td><td align="center">Gaussian Blobs</td><td align="center">768</td><td align="center">500K</td><td align="center">1000</td></tr>
+  <tr><td align="center">WTE</td><td align="center">Text</td><td align="center">768</td><td align="center">100K</td><td align="center">100</td></tr>
+  <tr><td align="center">FreewayML</td><td align="center">Constructed</td><td align="center">128</td><td align="center">100K</td><td align="center">1K</td></tr>
+</tbody>
+</table>
+
+### Summary of Algorithms
+<table>
+<thead>
+  <tr>
+    <th style="text-align: center;">Category</th>
+    <th style="text-align: center;">Algorithm Name</th>
+    <th style="text-align: left;">Description</th>
+  </tr>
+</thead>
+<tbody>
+  <!-- Tree-based -->
+  <tr>
+    <td rowspan="1" align="center" style="background-color: #f0f0f0;">
+      <b>Tree-based</b>
+    </td>
+    <td align="center">SPTAG</td>
+    <td style="text-align: left;">Space-partitioning tree structure for efficient data segmentation.</td>
+  </tr>
+
+  <!-- LSH-based -->
+  <tr>
+    <td rowspan="2" align="center" style="background-color: #f8f8f8;">
+      <b>LSH-based</b>
+    </td>
+    <td align="center">LSH</td>
+    <td style="text-align: left;">Data-independent hashing to reduce dimensionality and approximate nearest neighbors.</td>
+  </tr>
+  <tr>
+    <td align="center">LSHAPG</td>
+    <td style="text-align: left;">LSH-driven optimization using LSB-Tree to differentiate graph regions.</td>
+  </tr>
+
+  <!-- Clustering-based -->
+  <tr>
+    <td rowspan="5" align="center" style="background-color: #f0f0f0;">
+      <b>Clustering-based</b>
+    </td>
+    <td align="center">PQ</td>
+    <td style="text-align: left;">Product quantization for efficient clustering into compact subspaces.</td>
+  </tr>
+  <tr>
+    <td align="center">IVFPQ</td>
+    <td style="text-align: left;">Inverted index with product quantization for hierarchical clustering.</td>
+  </tr>
+  <tr>
+    <td align="center">OnlinePQ</td>
+    <td style="text-align: left;">Incremental updates of centroids in product quantization for streaming data.</td>
+  </tr>
+  <tr>
+    <td align="center">Puck</td>
+    <td style="text-align: left;">Non-orthogonal inverted indexes with multiple quantization optimized for large-scale datasets.</td>
+  </tr>
+  <tr>
+    <td align="center">SCANN</td>
+    <td style="text-align: left;">Small-bit quantization to improve register utilization.</td>
+  </tr>
+
+  <!-- Graph-based -->
+  <tr>
+    <td rowspan="10" align="center" style="background-color: #f8f8f8;">
+      <b>Graph-based</b>
+    </td>
+    <td align="center">NSW</td>
+    <td style="text-align: left;">Navigable Small World graph for fast nearest neighbor search.</td>
+  </tr>
+  <tr>
+    <td align="center">HNSW</td>
+    <td style="text-align: left;">Hierarchical Navigable Small World for scalable search.</td>
+  </tr>
+  <tr>
+    <td align="center">FreshDiskANN</td>
+    <td style="text-align: left;">Streaming graph construction for large-scale proximity-based search with refined robust edge pruning.</td>
+  </tr>
+  <tr>
+    <td align="center">MNRU</td>
+    <td style="text-align: left;">Enhances HNSW with efficient updates to prevent unreachable points in dynamic environments.</td>
+  </tr>
+  <tr>
+    <td align="center">Cufe</td>
+    <td style="text-align: left;">Enhances FreshDiskANN with batched neighbor expansion.</td>
+  </tr>
+  <tr>
+    <td align="center">Pyanns</td>
+    <td style="text-align: left;">Enhances FreshDiskANN with fix-sized huge pages for optimized memory access.</td>
+  </tr>
+  <tr>
+    <td align="center">IPDiskANN</td>
+    <td style="text-align: left;">Enables efficient in-place deletions for FreshDiskANN, improving update performance without reconstructions.</td>
+  </tr>
+  <tr>
+    <td align="center">GTI</td>
+    <td style="text-align: left;">Hybrid tree-graph indexing for efficient, dynamic high-dimensional search, with optimized updates and construction.</td>
+  </tr>
+  <tr>
+    <td align="center">ParlayHNSW</td>
+    <td style="text-align: left;">Parallel, deterministic HNSW for improved scalability and performance.</td>
+  </tr>
+  <tr>
+    <td align="center">ParlayVamana</td>
+    <td style="text-align: left;">Parallel, deterministic FreshDiskANN implementation using Vamana for graph construction, with performance improvement.</td>
+  </tr>
+</tbody>
+</table>
+
+## Quick Start Guide
 
 ### Build With Docker
-=======
-Support for building and running CANDOR-Bench via Docker is currently under development. Please stay tuned for updates.
+To build the project using Docker, simply use the provided Dockerfile located in the root directory. This ensures a consistent and reproducible environment for all dependencies and build steps.
 
+You can build the Docker image with:
+```
+docker build -t <your-image-name> .
+```
+<!--
 ### Build Without Docker
 
 ---
-# 🚨🚨🚨 Strong Recommendation: Use Docker! 🚨🚨🚨
+# 🚨🚨 Strong Recommendation: Use Docker! 🚨🚨
 
 > **We strongly recommend using Docker to build and run this project.**
 >
@@ -201,7 +351,7 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j
 ```
-
+-->
 <!-- 
 ## Quick Start Guide old
 
@@ -318,9 +468,11 @@ Figures will be generated in the `figures` directory.
 
 ---
 -->
-## Usage
+### Usage
 
-### 1. Preparing dataset
+All the following operations are performed in the root directory of big-ann-benchmarks.
+
+#### 2.1 Preparing dataset
 Create a small, sample dataset.  For example, to create a dataset with 10000 20-dimensional random floating point vectors, run:
 ```
 python create_dataset.py --dataset random-xs
@@ -330,7 +482,7 @@ To see a complete list of datasets, run the following:
 python create_dataset.py --help
 ```
 
-### 2. Running Algorithms on the **congestion** Track
+#### 2.2 Running Algorithms on the **congestion** Track
 
 To evaluate an algorithm under the `congestion` track, use the following command:
 ```bash
@@ -347,7 +499,7 @@ python3 run.py \
 - runbook_path "$PATH": Path to the runbook file describing the test scenario.
 - rebuild: Rebuild the target before running.
 
-### 3. Computing Ground Truth for Runbooks
+#### 2.3 Computing Ground Truth for Runbooks
 
 To compute ground truth for an runbook:
 1. **Clone and build the [DiskANN repository](https://github.com/Microsoft/DiskANN)**
@@ -359,7 +511,7 @@ python3 benchmark/congestion/compute_gt.py \
   --gt_cmdline_tool ~/DiskANN/build/apps/utils/compute_groundtruth
 ```
 
-### 4. Exporting Results
+#### 2.4 Exporting Results
 1. To make the results available for post-processing, change permissions of the results folder
 ```
 sudo chmod 777 -R results/
