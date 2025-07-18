@@ -157,7 +157,7 @@ make -j
 ```
 
 ### Build With Docker
-
+Support for building and running CANDOR-Bench via Docker is currently under development. Please stay tuned for updates.
 <!-- 
 ## Quick Start Guide old
 
