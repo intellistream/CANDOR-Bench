@@ -81,7 +81,7 @@ Support for building and running CANDOR-Bench via Docker is currently under deve
 ### Build Without Docker
 
 ---
-# 🚨🚨🚨 Strong Recommendation: Use Docker! 🚨🚨🚨
+# 🚨🚨 Strong Recommendation: Use Docker! 🚨🚨
 
 > **We strongly recommend using Docker to build and run this project.**
 >
