@@ -7,11 +7,11 @@
 #include <CANDY/CongestionDropIndex.h>
 #include <CANDY/DPGIndex.h>
 #include <CANDY/FaissIndex.h>
-#include <CANDY/FlannIndex.h>
+// #include <CANDY/FlannIndex.h>
 //#include <CANDY/FlatAMMIPIndex.h>
 //#include <CANDY/FlatAMMIPObjIndex.h>
 #include <CANDY/FlatIndex.h>
-#include <CANDY/HNSWNaiveIndex.h>
+// #include <CANDY/HNSWNaiveIndex.h>
 #include <CANDY/IndexTable.h>
 #include <CANDY/LSHAPGIndex.h>
 #include <CANDY/NNDescentIndex.h>
@@ -21,7 +21,7 @@
 //#include <CANDY/PQIndex.h>
 #include <CANDY/ParallelPartitionIndex.h>
 //#include <CANDY/YinYangGraphIndex.h>
-#include <CANDY/FlatGPUIndex.h>
+// #include <CANDY/FlatGPUIndex.h>
 //#include <CANDY/YinYangGraphSimpleIndex.h>
 #include <include/opencl_config.h>
 #include <include/ray_config.h>
@@ -35,9 +35,9 @@
 #if CANDY_SPTAG == 1
 #include <CANDY/SPTAGIndex.h>
 #endif
-#ifdef ENABLE_CUDA
-#include <CANDY/SONG/SONG.hpp>
-#endif
+//#ifdef ENABLE_CUDA
+// #include <CANDY/SONG/SONG.hpp>
+//#endif
 namespace CANDY {
 CANDY::IndexTable::IndexTable() {
   indexMap["null"] = newAbstractIndex();
@@ -50,21 +50,21 @@ CANDY::IndexTable::IndexTable() {
   //indexMap["onlineIVFLSH"] = newOnlineIVFLSHIndex();
   //indexMap["onlineIVFL2H"] = newOnlineIVFL2HIndex();
   //indexMap["PQ"] = newPQIndex();
-  indexMap["HNSWNaive"] = newHNSWNaiveIndex();
-  indexMap["NSW"] = newNSWIndex();
+  // indexMap["HNSWNaive"] = newHNSWNaiveIndex();
+  // indexMap["NSW"] = newNSWIndex();
   indexMap["faiss"] = newFaissIndex();
   //indexMap["yinYang"] = newYinYangGraphIndex();
   //indexMap["yinYangSimple"] = newYinYangGraphSimpleIndex();
   indexMap["congestionDrop"] = newCongestionDropIndex();
   indexMap["bufferedCongestionDrop"] = newBufferedCongestionDropIndex();
   indexMap["nnDescent"] = newNNDescentIndex();
-  indexMap["Flann"] = newFlannIndex();
+  // indexMap["Flann"] = newFlannIndex();
   indexMap["DPG"] = newDPGIndex();
   indexMap["LSHAPG"] = newLSHAPGIndex();
-  indexMap["flatGPU"] = newFlatGPUIndex();
-#ifdef ENABLE_CUDA
-  indexMap["SONG"] = newSONG();
-#endif
+  // indexMap["flatGPU"] = newFlatGPUIndex();
+//#ifdef ENABLE_CUDA
+  // indexMap["SONG"] = newSONG();
+//#endif
 #if CANDY_CL == 1
   // indexMap["cl"] = newCLMMCPPAlgo();
 #endif

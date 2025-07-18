@@ -1,0 +1,11 @@
+torch --index-url https://download.pytorch.org/whl/cu121
+numpy
+cmake
+matplotlib>=3.5.0
+pandas
+scipy
+scikit-learn
+h5py
+pyyaml
+psutil
+jinja2

@@ -1,21 +1,22 @@
 #set(CMAKE_C_COMPILER "/usr/bin/gcc-11")
 #set(CMAKE_CXX_COMPILER "/usr/bin/g++-11")
 #set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
-cmake_minimum_required(VERSION 3.27)
+#cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 3.14)
 project(CANDYBENCH CXX)
 
-option(ENABLE_CUDA "Enable cuda" ON)
-message(STATUS "1.0 CUDA enabled: ${ENABLE_CUDA}")
-include (cmake/FindCuda.cmake)
+#option(ENABLE_CUDA "Enable cuda" ON)
+#message(STATUS "1.0 CUDA enabled: ${ENABLE_CUDA}")
+# include (cmake/FindCuda.cmake)
 include (cmake/FindTorch.cmake)
-#set(CMAKE_CUDA_ARCHITECTURES "70;75;80")
-set(CMAKE_CUDA_ARCHITECTURES ALL)
 find_package(Torch REQUIRED)
+include_directories(${Torch_INCLUDE_DIRS})
+include_directories("/usr/local/lib/python3.10/dist-packages/torch/include/torch/csrc/api/include")
+include_directories("/usr/local/lib/python3.10/dist-packages/torch/include")
+
 find_package(Python3 REQUIRED COMPONENTS Development)
 include_directories(${Python3_INCLUDE_DIRS})
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-
 
 
 include_directories (${gflags_INCLUDE_DIR})
@@ -35,16 +36,16 @@ include(cmake/default.cmake)
 #test avx2
 
 # Option to enable/disable CUDA
-message(STATUS "2.0 CUDA enabled: ${ENABLE_CUDA}")
-if (ENABLE_CUDA)
-    enable_language(CUDA)
-    set(CMAKE_CUDA_STANDARD 20)
-    set(CMAKE_CUDA_ARCHITECTURES OFF)
-    add_definitions(-DENABLE_CUDA=1)
-    message(STATUS "CUDA is enabled")
-else()
-    message(STATUS "CUDA is not enabled")
-endif ()
+#message(STATUS "2.0 CUDA enabled: ${ENABLE_CUDA}")
+#if (ENABLE_CUDA)
+#    enable_language(CUDA)
+#    set(CMAKE_CUDA_STANDARD 20)
+#    set(CMAKE_CUDA_ARCHITECTURES OFF)
+#    add_definitions(-DENABLE_CUDA=1)
+#    message(STATUS "CUDA is enabled")
+#else()
+#    message(STATUS "CUDA is not enabled")
+#endif ()
 
 add_subdirectory(thirdparty/faiss)
 
@@ -52,15 +53,12 @@ add_subdirectory(thirdparty/faiss)
 #target_compile_options(faiss PRIVATE "-fno-openmp")
 set(LIBRARIES ${LIBRARIES} faiss)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
-set(LIBRARIES ${LIBRARIES} ${TORCH_LIBRARIES})
 
-
-# Set Optimization Flags
-set(CMAKE_CXX_FLAGS "-std=c++20 -Wall -Werror=return-type -Wno-interference-size")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DNO_RACE_CHECK -DCANDY_DEBUG_MODE=1")
 set(CMAKE_CXX_FLAGS_RELEASE "-Wno-ignored-qualifiers -Wno-sign-compare -O3")
-set(PROJECT_BINARY_DIR_RAW ${PROJECT_BINARY_DIR})
 
+set(PROJECT_BINARY_DIR_RAW ${PROJECT_BINARY_DIR})
 # Valid values are "generic", "avx2", "avx512".
 
 detect_avx512_support(AVX512_AVAILABLE)
@@ -311,12 +309,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 message(STATUS "CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}")
 message(STATUS "CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}")
-#pytorch
-#set(Torch_DIR "/home/tony/.local/lib/python3.10/site-packages/torch/share/cmake" )
-# Log4cc
-#find_package(Log4cxx REQUIRED)
-#include_directories(${Log4cxx_INCLUDE_DIR})
-#set(LIBRARIES ${LIBRARIES} ${Log4cxx_LIBRARY})
 
 
 option(ENABLE_UNIT_TESTS "Enable unit tests" OFF)
@@ -331,10 +323,6 @@ foreach (dir ${dirs})
 endforeach ()
 
 
-#add_subdirectory(pytorchNN)
-# Add Source Code
-
-
 add_subdirectory(src)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/)
@@ -342,43 +330,42 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/)
 # Add Library
 get_sources(CANDY_SOURCE_FILES)
 get_headers(CANDY_HEADER_FILES)
-
-if (ENABLE_CUDA)
-    set_source_files_properties(src/CANDY/IndexTable.cpp
-            PROPERTIES
-            LANGUAGE CUDA
-    )
-endif ()
-
-add_library(CANDYBENCH SHARED ${CANDY_SOURCE_FILES} ${CANDY_HEADER_FILES} ${CMAKE_CURRENT_BINARY_DIR}
-        src/CANDY/IndexTable.cpp)
+add_library(CANDYBENCH SHARED ${CANDY_SOURCE_FILES} ${CANDY_HEADER_FILES} ${CMAKE_CURRENT_BINARY_DIR})
+#if (ENABLE_CUDA)
+#    set_source_files_properties(src/CANDY/IndexTable.cpp
+#            PROPERTIES
+#            LANGUAGE CUDA
+#    )
+#endif ()
+#
+#add_library(CANDYBENCH SHARED ${CANDY_SOURCE_FILES} ${CANDY_HEADER_FILES} ${CMAKE_CURRENT_BINARY_DIR}
+#        src/CANDY/IndexTable.cpp)
 
 set_property(TARGET CANDYBENCH PROPERTY CXX_STANDARD 20)
 target_include_directories(CANDYBENCH PUBLIC "include")
 
-if (ENABLE_CUDA)
-    set(LIBRARIES ${LIBRARIES} cublas cudart)
-    set_target_properties(CANDYBENCH PROPERTIES
-            CUDA_STANDARD 20
-            CXX_STANDARD 20
-    )
-else ()
-    set_target_properties(CANDYBENCH PROPERTIES
-            CXX_STANDARD 20
-    )
-endif ()
+#if (ENABLE_CUDA)
+#    set(LIBRARIES ${LIBRARIES} cublas cudart)
+#    set_target_properties(CANDYBENCH PROPERTIES
+#            CUDA_STANDARD 20
+#            CXX_STANDARD 20
+#    )
+#else ()
+#    set_target_properties(CANDYBENCH PROPERTIES
+#            CXX_STANDARD 20
+#    )
+#endif ()
 
 # 设置 MKL 库的路径
-set(MKL_INCLUDE_DIR "/usr/include/mkl")
-set(MKL_LIB_DIR "/usr/lib/x86_64-linux-gnu")
-#set(MPI_INCLUDE_PATH "/usr/include/openmpi-x86_64")
-#set(MPI_LIBRARIES "/usr/lib/x86_64-linux-gnu/openmpi/lib/libmpi.so")
-
+set(MKL_ROOT /opt/intel/oneapi/mkl/latest)
+set(MKL_INCLUDE_DIR /opt/intel/oneapi/mkl/latest/include)
+set(MKL_LIB_DIR /opt/intel/oneapi/mkl/latest/lib/intel64)
 set(MKL_LIBRARIES
-        "${MKL_LIB_DIR}/libmkl_intel_lp64.so"
-        "${MKL_LIB_DIR}/libmkl_sequential.so"
-        "${MKL_LIB_DIR}/libmkl_core.so"
+    "${MKL_LIB_DIR}/libmkl_intel_lp64.so"
+    "${MKL_LIB_DIR}/libmkl_sequential.so"
+    "${MKL_LIB_DIR}/libmkl_core.so"
 )
+
 target_include_directories(CANDYBENCH PUBLIC ${MKL_INCLUDE_DIR})
 # MKL 和其他库的链接
 target_link_libraries(CANDYBENCH PUBLIC
