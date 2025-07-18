@@ -4,7 +4,7 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
 
 ## Table of Contents
 
-- [Project Structure].(#Project Structure)
+- [Project Structure](#Project-Structure)
 - [Quick Start Guide](#quick-start-guide)
   - [Docker Support](#docker-support)
   - [Build Without Docker](#build-without-docker)
@@ -18,15 +18,20 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
 
 ## Project Structure
 
-big-ann-benchmarks/ — The core benchmarking framework of CANDOR-Bench, responsible for evaluation logic and stream orchestration.
+- **`big-ann-benchmarks/`**  
+  The core benchmarking framework of CANDOR-Bench, responsible for evaluation logic and stream orchestration.
 
-GTI/ — External project integrated to support the GTI algorithm.
+- **`GTI/`**  
+  External project integrated to support the GTI algorithm.
 
-DiskANN/ — External project including FreshDiskANN, Pyanns, and Cufe, adapted for streaming evaluation.
+- **`DiskANN/`**  
+  External project including FreshDiskANN, Pyanns, and Cufe, adapted for streaming evaluation.
 
-src/ — Source directory containing the majority of the ANNS algorithms evaluated in the benchmark.
+- **`src/`**  
+  Source directory containing the majority of the ANNS algorithms evaluated in the benchmark.
 
-Dockerfile — Provides a fully reproducible Docker environment for deploying and running CANDOR-Bench.
+- **`Dockerfile`**  
+  Provides a fully reproducible Docker environment for deploying and running CANDOR-Bench.
 
 
 ## Quick Start Guide
