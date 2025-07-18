@@ -357,16 +357,15 @@ target_include_directories(CANDYBENCH PUBLIC "include")
 #endif ()
 
 # 设置 MKL 库的路径
-set(MKL_INCLUDE_DIR "/usr/include/mkl")
-set(MKL_LIB_DIR "/usr/lib/x86_64-linux-gnu")
-#set(MPI_INCLUDE_PATH "/usr/include/openmpi-x86_64")
-#set(MPI_LIBRARIES "/usr/lib/x86_64-linux-gnu/openmpi/lib/libmpi.so")
-
+set(MKL_ROOT /opt/intel/oneapi/mkl/latest)
+set(MKL_INCLUDE_DIR /opt/intel/oneapi/mkl/latest/include)
+set(MKL_LIB_DIR /opt/intel/oneapi/mkl/latest/lib/intel64)
 set(MKL_LIBRARIES
-        "${MKL_LIB_DIR}/libmkl_intel_lp64.so"
-        "${MKL_LIB_DIR}/libmkl_sequential.so"
-        "${MKL_LIB_DIR}/libmkl_core.so"
+    "${MKL_LIB_DIR}/libmkl_intel_lp64.so"
+    "${MKL_LIB_DIR}/libmkl_sequential.so"
+    "${MKL_LIB_DIR}/libmkl_core.so"
 )
+
 target_include_directories(CANDYBENCH PUBLIC ${MKL_INCLUDE_DIR})
 # MKL 和其他库的链接
 target_link_libraries(CANDYBENCH PUBLIC
