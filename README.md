@@ -106,7 +106,7 @@ pip install --no-cache-dir \
     torch==2.3.0+cpu torchvision==0.18.0+cpu torchaudio==2.3.0+cpu \
     --index-url https://download.pytorch.org/whl/cpu
 ```
-**Note:**If you're using a different Python version, make sure to adjust the paths accordingly.
+**Note**:If you're using a different Python version, make sure to adjust the paths accordingly.
 Set the Torch_DIR environment variable (modify path based on your Python version if necessary):
 ```bash
 export Torch_DIR="/usr/local/lib/python3.10/dist-packages/torch/share/cmake/Torch"
