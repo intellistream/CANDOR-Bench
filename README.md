@@ -220,6 +220,18 @@ Our evaluation involves the following datasets and algorithms.
 
 ## Quick Start Guide
 
+---
+# 🚨🚨 Strong Recommendation: Use Docker! 🚨🚨
+
+> **We strongly recommend using Docker to build and run this project.**
+>
+> There are many algorithm libraries with complex dependencies. Setting up the environment locally can be difficult and error-prone.
+> **Docker provides a consistent and reproducible environment, saving you time and avoiding compatibility issues.**
+>
+> **Note:** Building the Docker image may take **10–20 minutes** depending on your network and hardware.
+
+---
+
 ### Build With Docker
 To build the project using Docker, simply use the provided Dockerfile located in the root directory. This ensures a consistent and reproducible environment for all dependencies and build steps.
 
@@ -241,18 +253,6 @@ cd /app/big-ann-benchmarks
 ```
 <!--
 ### Build Without Docker
-
----
-# 🚨🚨 Strong Recommendation: Use Docker! 🚨🚨
-
-> **We strongly recommend using Docker to build and run this project.**
->
-> There are many algorithm libraries with complex dependencies. Setting up the environment locally can be difficult and error-prone.
-> **Docker provides a consistent and reproducible environment, saving you time and avoiding compatibility issues.**
->
-> **Note:** Building the Docker image may take **10–20 minutes** depending on your network and hardware.
-
----
 
 ```bash
 git submodule update --init --recursive
