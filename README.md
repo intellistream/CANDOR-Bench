@@ -21,13 +21,13 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
 
 ## Project Structure
 
-- **[`big-ann-benchmarks/`](./big-ann-benchmarks/)**  
+- **[`big-ann-benchmarks/`]**  
   The core benchmarking framework of CANDOR-Bench, responsible for evaluation logic and stream orchestration.
 
-- **[`GTI/`](./GTI/)**  
+- **[`GTI/`]**  
   External project integrated to support the GTI algorithm.
 
-- **[`DiskANN/`](./DiskANN/)**  
+- **[`DiskANN/`]**  
   External project including FreshDiskANN, Pyanns, and Cufe, adapted for streaming evaluation.
 
 - **[`src/`](./src/)**  
