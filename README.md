@@ -324,7 +324,7 @@ sudo chmod 777 -R results/
 ```
 python data_export.py --out "$OUT" --track congestion
 ```
--The `--out` path "$OUT" should be adjusted according to the testing scenario. Common values include:
+The `--out` path "$OUT" should be adjusted according to the testing scenario. Common values include:
 - `gen`
 - `batch`
 - `event`
