@@ -31,6 +31,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     zlib1g-dev \
     libssl-dev \
     gfortran \
+    vim \
     && rm -rf /var/lib/apt/lists/* && \
     ldconfig
 
@@ -59,7 +60,7 @@ RUN pip install --no-cache-dir \
 ENV Torch_DIR="/usr/local/lib/python3.10/dist-packages/torch/share/cmake/Torch"
 
 WORKDIR /app
-RUN pip install .
+RUN sh -c "python3 setup.py build_ext && python3 setup.py install"
 
 WORKDIR /app/GTI/GTI/extern_libraries/n2
 RUN mkdir -p build && make shared_lib
@@ -67,20 +68,15 @@ RUN mkdir -p build && make shared_lib
 WORKDIR /app/GTI/GTI
 RUN mkdir -p bin build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j && make install
 
-WORKDIR /app/DiskANN
-RUN mkdir -p build && cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release \
-          -DMKL_PATH=/opt/intel/oneapi/mkl/latest/lib/intel64 \
-          -DMKL_INCLUDE_PATH=/opt/intel/oneapi/mkl/latest/include \
-          .. && \
-    make -j && make install
+# WORKDIR /app/DiskANN
+# RUN mkdir -p build && cd build && \
+#     cmake .. && \
+#     make -j && make install
 
-WORKDIR /app/IP-DiskANN
-RUN mkdir -p build && cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release \
-          -DMKL_PATH=/opt/intel/oneapi/mkl/latest/lib/intel64 \
-          -DMKL_INCLUDE_PATH=/opt/intel/oneapi/mkl/latest/include \
-          .. && \
-    make -j && make install
+# WORKDIR /app/IP-DiskANN
+# RUN mkdir -p build && cd build && \
+#     cmake .. && \
+#     make -j && make install
 
+WORKDIR /app
 CMD ["bash"]

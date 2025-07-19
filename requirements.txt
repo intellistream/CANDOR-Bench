@@ -9,3 +9,10 @@ h5py
 pyyaml
 psutil
 jinja2
+scipy
+pyyaml 
+docker
+psutil
+h5py
+pandas
+ansicolors
