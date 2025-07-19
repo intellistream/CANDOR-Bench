@@ -18,7 +18,6 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
   - [Installing PyCANDY](#installing-pycandy)
   - [CLion Configuration](#clion-configuration)
 - [Evaluation Scripts](#evaluation-scripts) -->
-- [Additional Information](#additional-information) 
 ---
 
 ## Project Structure
@@ -480,7 +479,26 @@ Figures will be generated in the `figures` directory.
 
 ---
 -->
-### Usage
+
+### Example
+Prepare dataset and compute groundtruth
+```
+cd big-ann-benchmarks
+bash scripts/compute_general.sh
+```
+
+Run general experiments 
+```
+bash scripts/run_general.sh
+```
+
+Wait experiments completed, and generate results, will be as gen-congestion.csv
+```
+python data_exporter.py --output gen --track congestion
+```
+
+
+### More Usage
 
 All the following operations are performed in the root directory of big-ann-benchmarks.
 
@@ -544,40 +562,3 @@ The `--out` path "$OUT" should be adjusted according to the testing scenario. Co
 - `batchDeletion`
 - `multiModal`
 - ……
-
-## Additional Information
-
-<details>
-<summary><strong>Click to Expand</strong></summary>
-
-### Table of Contents
-
-- [Extra CMake Options](#extra-cmake-options)
-- [Manual Build Instructions](#manual-build-instructions)
-  - [Requirements](#requirements)
-  - [Build Steps](#build-steps)
-  - [CLion Build Tips](#clion-build-tips)
-- [CUDA Installation (Optional)](#cuda-installation-optional)
-  - [Install CUDA (if using CUDA-based Torch)](#install-cuda-if-using-cuda-based-torch)
-  - [CUDA on Jetson Devices](#cuda-on-jetson-devices)
-- [Torch Installation](#torch-installation)
-  - [Install Python and Pip](#install-python-and-pip)
-  - [Install PyTorch](#install-pytorch)
-- [PAPI Support (Optional)](#papi-support-optional)
-  - [Build PAPI](#build-papi)
-  - [Verify PAPI Installation](#verify-papi-installation)
-  - [Enable PAPI in CANDY](#enable-papi-in-candy)
-- [Distributed CANDY with Ray (Optional)](#distributed-candy-with-ray-optional)
-  - [Build with Ray Support](#build-with-ray-support)
-  - [Running with Ray](#running-with-ray)
-  - [Ray Dashboard (Optional)](#ray-dashboard-optional)
-- [Local Documentation Generation (Optional)](#local-documentation-generation-optional)
-  - [Install Required Packages](#install-required-packages)
-  - [Generate Documentation](#generate-documentation)
-    - [Accessing Documentation](#accessing-documentation)
-- [Known Issues](#known-issues)
->>>>>>> dd068b958060f24e4d0c2cdf899f229efccc0b2b
-
----
-
-## 2. Algorithm and Datasets
