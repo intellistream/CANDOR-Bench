@@ -3,6 +3,7 @@ FROM ubuntu:22.04
 WORKDIR /app
 
 COPY . /app
+RUN pip install --no-cache-dir -r requirements.txt
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -59,14 +60,19 @@ RUN pip install --no-cache-dir \
 
 ENV Torch_DIR="/usr/local/lib/python3.10/dist-packages/torch/share/cmake/Torch"
 
-WORKDIR /app
-RUN sh -c "python3 setup.py build_ext && python3 setup.py install"
-
 WORKDIR /app/GTI/GTI/extern_libraries/n2
 RUN mkdir -p build && make shared_lib
 
 WORKDIR /app/GTI/GTI
 RUN mkdir -p bin build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j && make install
+
+ENV INTEL_ONEAPI_ROOT=/opt/intel/oneapi
+RUN bash -c "source \"${INTEL_ONEAPI_ROOT}/setvars.sh\" --force && \
+    echo 'source \"${INTEL_ONEAPI_ROOT}/setvars.sh\" --force' > /etc/profile.d/oneapi.sh && \
+    chmod +x /etc/profile.d/oneapi.sh"
+
+WORKDIR /app
+# RUN pip install .
 
 # WORKDIR /app/DiskANN
 # RUN mkdir -p build && cd build && \
@@ -78,5 +84,4 @@ RUN mkdir -p bin build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && mak
 #     cmake .. && \
 #     make -j && make install
 
-WORKDIR /app
 CMD ["bash"]

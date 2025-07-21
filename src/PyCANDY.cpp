@@ -19,10 +19,10 @@
 #include <Utils/ThreadPerfPAPI.hpp>
 #endif
 //#if CANDY_DiskANN == 1
-#include <DiskANN/include/defaults.h>
-#include <DiskANN/include/distance.h>
-#include <DiskANN/python/include/dynamic_memory_index.h>
-#include <DiskANN/python/include/builder.h>
+// #include <DiskANN/include/defaults.h>
+// #include <DiskANN/include/distance.h>
+// #include <DiskANN/python/include/dynamic_memory_index.h>
+// #include <DiskANN/python/include/builder.h>
 //#endif
 #include <faiss/index_factory.h>
 

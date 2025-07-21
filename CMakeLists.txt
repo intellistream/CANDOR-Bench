@@ -107,7 +107,7 @@ option(ENABLE_PUCK
 
 option(ENABLE_PYBIND
         "Enable original pybind and build CANDYBENCH python"
-        OFF
+        ON
 )
 option(ENABLE_DiskANN
         "Enable DiskANN support"
@@ -206,9 +206,10 @@ configure_file(
 set(SPTAG_BUILD_DIR ${CMAKE_BINARY_DIR}/SPTAG_build)
 
 # Configure build output directories specifically for SPTAG
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SPTAG_BUILD_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SPTAG_BUILD_DIR}/lib)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${SPTAG_BUILD_DIR}/lib)
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SPTAG_BUILD_DIR}/bin)
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SPTAG_BUILD_DIR}/lib)
+# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${SPTAG_BUILD_DIR}/lib)
+
 if (NOT ENABLE_SPTAG)
     message(STATUS "I will NOT include SPTAG LIBS")
     set(CANDY_SPTAG 0)
@@ -226,9 +227,9 @@ configure_file(
 
 set(DiskANN_BUILD_DIR ${CMAKE_BINARY_DIR}/DiskANN_build)
 # Configure build output directories specifically for DISKANN
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${DiskANN_BUILD_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${DiskANN_BUILD_DIR}/lib)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${DiskANN_BUILD_DIR}/lib)
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${DiskANN_BUILD_DIR}/bin)
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${DiskANN_BUILD_DIR}/lib)
+# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${DiskANN_BUILD_DIR}/lib)
 
 if (NOT ENABLE_DiskANN)
     message(STATUS "I will NOT include diskann LIBS")
@@ -264,9 +265,9 @@ configure_file(
 set(PUCK_BUILD_DIR ${CMAKE_BINARY_DIR}/PUCK_build)
 
 # Configure build output directories specifically for PUCK
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PUCK_BUILD_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PUCK_BUILD_DIR}/lib)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PUCK_BUILD_DIR}/lib)
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PUCK_BUILD_DIR}/bin)
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PUCK_BUILD_DIR}/lib)
+# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PUCK_BUILD_DIR}/lib)
 if (NOT ENABLE_PUCK)
     message(STATUS "I will NOT include PUCK LIBS")
     set(CANDY_PUCK 0)
@@ -302,9 +303,9 @@ configure_file(
 )
 
 # Reset output directories for the rest of your project
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 message(STATUS "CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}")
@@ -325,7 +326,7 @@ endforeach ()
 
 add_subdirectory(src)
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/)
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/)
 
 # Add Library
 get_sources(CANDY_SOURCE_FILES)
@@ -356,7 +357,6 @@ target_include_directories(CANDYBENCH PUBLIC "include")
 #    )
 #endif ()
 
-# 设置 MKL 库的路径
 set(MKL_ROOT /opt/intel/oneapi/mkl/latest)
 set(MKL_INCLUDE_DIR /opt/intel/oneapi/mkl/latest/include)
 set(MKL_LIB_DIR /opt/intel/oneapi/mkl/latest/lib/intel64)
@@ -368,15 +368,24 @@ set(MKL_LIBRARIES
 )
 
 target_include_directories(CANDYBENCH PUBLIC ${MKL_INCLUDE_DIR})
-# MKL 和其他库的链接
+
+find_package(MPI REQUIRED)
+if(MPI_FOUND)
+    message(STATUS "MPI found: ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES}")
+    include_directories(${MPI_INCLUDE_PATH}) 
+else()
+    message(FATAL_ERROR "MPI not found. Please ensure Intel MPI or OpenMPI is installed and configured.")
+endif()
+
 target_link_libraries(CANDYBENCH PUBLIC
         ${MKL_LIBRARIES}
         iomp5
         pthread
         m
         dl
-        find_package(MPI REQUIRED)
+        ${MPI_LIBRARIES}
 )
+
 target_compile_options(CANDYBENCH PUBLIC
         -m64
         -DUSE_MKL
@@ -416,7 +425,7 @@ message(WARNING "CANDY GFLAGS_LIBRARY_DIR: ${GFLAGS_LIBRARIES}")
 message(WARNING "CANDY GLOG_LIBRARY_DIR: ${GLOG_LIBRARIES}")
 #target_link_libraries(CANDYBENCH PUBLIC  ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES})
 target_link_libraries(CANDYBENCH PUBLIC ${LIBRARIES})
-install(TARGETS CANDYBENCH LIBRARY DESTINATION .)
+# install(TARGETS CANDYBENCH LIBRARY DESTINATION .)
 find_library(LIBAIO_LIBRARIES NAMES aio)
 message(STATUS "LIBAIO_LIBRARIES: ${LIBAIO_LIBRARIES}")
 target_link_libraries(CANDYBENCH PUBLIC ${LIBAIO_LIBRARIES})
@@ -438,9 +447,9 @@ else ()
     add_subdirectory(thirdparty/pybind11)
 
     pybind11_add_module(PyCANDYAlgo ${PROJECT_SOURCE_DIR}/src/PyCANDY.cpp)
-    set_target_properties(PyCANDYAlgo PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
-    )
+    # set_target_properties(PyCANDYAlgo PROPERTIES
+    #     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
+    # )
 
     find_library(TORCH_PYTHON_LIBRARY torch_python PATH "${TORCH_INSTALL_PREFIX}/lib")
     target_link_libraries(PyCANDYAlgo PUBLIC ${LIBRARIES} CANDYBENCH ${TORCH_PYTHON_LIBRARY})

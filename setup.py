@@ -14,7 +14,6 @@ class CMakeExtension(Extension):
 
 class CMakeBuild(build_ext):
     def run(self):
-        # Check if CMake is installed
         try:
             out = subprocess.check_output(['cmake', '--version'])
         except OSError:
@@ -29,7 +28,6 @@ class CMakeBuild(build_ext):
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
         cfg = "Debug" if debug else "Release"
 
-        # Get PyTorch CMake path
         try:
             torch_cmake_prefix = os.environ.get('Torch_DIR')
             if not torch_cmake_prefix:
@@ -43,17 +41,21 @@ class CMakeBuild(build_ext):
             print(f"Error getting torch cmake path: {e}")
             sys.exit(1)
 
-        # Get CPU core count
         try:
             threads_output = subprocess.check_output(["nproc"], text=True, encoding='utf-8').strip()
-            threads = threads_output if threads_output.isdigit() else "2"
+            threads = threads_output if threads_output.isdigit() else "16"
         except subprocess.CalledProcessError:
-            threads = "2"
+            threads = "16"
 
         print(f"Using {threads} build threads.")
 
+        self.build_temp = os.path.join(self.build_temp, ext.name)
+        os.makedirs(self.build_temp, exist_ok=True)
+        print(f"DEBUG: Using temporary CMake build directory: {self.build_temp}")
+        print(f"DEBUG: Final extension output directory (extdir for setuptools): {extdir}")
+
         cmake_args = [
-            f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}{os.sep}',
+            f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}', 
             f'-DPYTHON_EXECUTABLE={sys.executable}',
             f'-DCMAKE_PREFIX_PATH={torch_cmake_prefix}',
             f'-DCMAKE_BUILD_TYPE={cfg}',
@@ -61,17 +63,15 @@ class CMakeBuild(build_ext):
 
             '-DENABLE_HDF5=OFF',
             '-DENABLE_PYBIND=ON',
-            '-DCMAKE_INSTALL_PREFIX=/usr/local/lib',
             '-DENABLE_PAPI=OFF',
             '-DENABLE_SPTAG=ON',
             '-DENABLE_DiskANN=ON',
             '-DPYBIND=ON',
         ]
 
-        # MKL path
         mkl_base_path = os.environ.get('MKLROOT')
         if not mkl_base_path:
-            raise RuntimeError("MKLROOT environment variable is not set. Please ensure Intel oneAPI MKL is installed and MKLROOT is configured in Dockerfile.")
+            raise RuntimeError("MKLROOT environment variable not set. Please ensure Intel oneAPI MKL is installed and MKLROOT is configured in Dockerfile.")
 
         cmake_args.append(f'-DMKL_PATH={mkl_base_path}')
         cmake_args.append(f'-DMKL_INCLUDE_PATH={mkl_base_path}/include')
@@ -81,10 +81,6 @@ class CMakeBuild(build_ext):
 
         build_args = ['--config', cfg]
         build_args += ['--', '-j' + threads]
-
-        self.build_temp = os.path.join(self.build_temp, ext.name)
-        os.makedirs(self.build_temp, exist_ok=True)
-        print(f"DEBUG: Using build directory: {self.build_temp}")
 
         print(f"DEBUG: CMake configure command: {['cmake', ext.sourcedir] + cmake_args}")
         try:
@@ -109,34 +105,34 @@ class CMakeBuild(build_ext):
             print(f"STDERR:\n{e.stderr}")
             raise
 
-        lib_name = "libCANDYBENCH.so"
-        py_lib_name = "PyCANDYAlgo.so"
+        expected_py_lib_name = self.get_ext_filename(ext.name)
+        lib_candy_bench = "libCANDYBENCH.so"
 
-        so_files = glob.glob(os.path.join(self.build_temp, py_lib_name))
-        if not so_files:
-            so_files = glob.glob(os.path.join(self.build_temp, lib_name))
+        if not os.path.exists(os.path.join(extdir, expected_py_lib_name)):
+            fallback_path = os.path.join(self.build_temp, os.path.relpath(extdir, start=os.path.abspath(os.curdir))) 
+            if os.path.exists(os.path.join(fallback_path, expected_py_lib_name)):
+                 print(f"DEBUG: Fallback: Found {expected_py_lib_name} in {fallback_path}. Copying to {extdir}...")
+                 shutil.copy2(os.path.join(fallback_path, expected_py_lib_name), extdir)
+            else:
+                raise RuntimeError(f"Missing expected Python extension module: {expected_py_lib_name} in {extdir} after build. Also not found in fallback path {fallback_path}.")
 
-        print(f"Discovered .so files in {self.build_temp}:")
-        print(so_files)
-
-        if not so_files:
-            print(f"WARNING: No .so files found in {self.build_temp}. Checking common subdirectories...")
-            so_files = glob.glob(os.path.join(self.build_temp, 'lib', '*.so'))
-            if not so_files:
-                so_files = glob.glob(os.path.join(self.build_temp, 'bin', '*.so'))
-            if not so_files:
-                print("WARNING: Still no .so files found in common subdirectories. Build might have failed or output path is unusual.")
-
-
-        for file in so_files:
-            target_path = os.path.join(extdir, os.path.basename(file))
-            print(f"Copying {file} to {target_path}")
-            shutil.copy(file, extdir)
+        if not os.path.exists(os.path.join(extdir, lib_candy_bench)):
+            fallback_path = os.path.join(self.build_temp, os.path.relpath(extdir, start=os.path.abspath(os.curdir)))
+            if os.path.exists(os.path.join(fallback_path, lib_candy_bench)):
+                 print(f"DEBUG: Fallback: Found {lib_candy_bench} in {fallback_path}. Copying to {extdir}...")
+                 shutil.copy2(os.path.join(fallback_path, lib_candy_bench), extdir)
+            else:
+                if os.path.exists(os.path.join(self.build_temp, lib_candy_bench)):
+                    print(f"DEBUG: Fallback: Found {lib_candy_bench} in {self.build_temp}. Copying to {extdir}...")
+                    shutil.copy2(os.path.join(self.build_temp, lib_candy_bench), extdir)
+                else:
+                    print(f"WARNING: libCANDYBENCH.so not found in {extdir} or {self.build_temp}. This might cause issues.")
+        
+        print(f"DEBUG: Confirmed {expected_py_lib_name} and {lib_candy_bench} (if exists) should be in {extdir}.")
 
 setup(
     name='PyCANDYAlgo',
     version='0.1',
-    author='Your Name',
     description='A simple python version of CANDY benchmark built with Pybind11 and CMake',
     long_description='',
     ext_modules=[CMakeExtension('PyCANDYAlgo', sourcedir=".")],
