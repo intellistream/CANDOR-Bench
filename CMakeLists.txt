@@ -364,6 +364,7 @@ set(MKL_LIBRARIES
     "${MKL_LIB_DIR}/libmkl_intel_lp64.so"
     "${MKL_LIB_DIR}/libmkl_sequential.so"
     "${MKL_LIB_DIR}/libmkl_core.so"
+    "${MKL_LIB_DIR}/libmkl_blacs_intelmpi_lp64.so"
 )
 
 target_include_directories(CANDYBENCH PUBLIC ${MKL_INCLUDE_DIR})
@@ -374,6 +375,7 @@ target_link_libraries(CANDYBENCH PUBLIC
         pthread
         m
         dl
+        find_package(MPI REQUIRED)
 )
 target_compile_options(CANDYBENCH PUBLIC
         -m64
@@ -407,6 +409,7 @@ endif ()
 if(OpenMP_CXX_FOUND)
     target_link_libraries(CANDYBENCH PRIVATE OpenMP::OpenMP_CXX)
 endif()
+
 target_link_options(CANDYBENCH PUBLIC "-Wl,-rpath,./")
 target_link_options(CANDYBENCH PUBLIC "-Wl,-rpath,./")
 message(WARNING "CANDY GFLAGS_LIBRARY_DIR: ${GFLAGS_LIBRARIES}")
@@ -433,15 +436,20 @@ if (NOT ENABLE_PYBIND)
 else ()
     message(STATUS "I will  build original python package PyCANDYAlgo")
     add_subdirectory(thirdparty/pybind11)
+
     pybind11_add_module(PyCANDYAlgo ${PROJECT_SOURCE_DIR}/src/PyCANDY.cpp)
+    set_target_properties(PyCANDYAlgo PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
+    )
+
     find_library(TORCH_PYTHON_LIBRARY torch_python PATH "${TORCH_INSTALL_PREFIX}/lib")
-    #target_link_libraries(PyCANDYAlgo PRIVATE gflags glog)
     target_link_libraries(PyCANDYAlgo PUBLIC ${LIBRARIES} CANDYBENCH ${TORCH_PYTHON_LIBRARY})
-    install(TARGETS PyCANDYAlgo LIBRARY DESTINATION .)
+
     message(STATUS "Additional include torch_python: ${TORCH_PYTHON_LIBRARY}")
     set(CANDY_PYBIND 1)
     set_property(TARGET PyCANDYAlgo  PROPERTY CXX_STANDARD 20)
 endif ()
+
 configure_file(
         "${PROJECT_SOURCE_DIR}/include/pybind_config.h.in"
         "${PROJECT_BINARY_DIR}/include/pybind_config.h"
