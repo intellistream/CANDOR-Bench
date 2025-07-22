@@ -19,15 +19,15 @@
 #include <Utils/ThreadPerfPAPI.hpp>
 #endif
 //#if CANDY_DiskANN == 1
-#include <DiskANN/include/defaults.h>
-#include <DiskANN/include/distance.h>
+#include "defaults.h"
+#include "distance.h"
 #include <DiskANN/python/include/dynamic_memory_index.h>
 #include <DiskANN/python/include/builder.h>
 //#endif
 #include <faiss/index_factory.h>
 
 
-// #include<puck/pyapi_wrapper/py_api_wrapper.h>
+#include<puck/pyapi_wrapper/py_api_wrapper.h>
 
 namespace py = pybind11;
 using namespace INTELLI;
@@ -321,7 +321,6 @@ PYBIND11_MODULE(PyCANDYAlgo, m) {
       .def("setConfig", &AbstractIndex::setConfig, py::call_guard<py::gil_scoped_release>())
       .def("startHPC", &AbstractIndex::startHPC)
       .def("insertTensor", &AbstractIndex::insertTensor)
-      .def("ccInsertAndSearchTensor", &AbstractIndex::ccInsertAndSearchTensor)
       .def("insertTensorWithIds", &AbstractIndex::insertTensorWithIds)
       .def("loadInitialTensor", &AbstractIndex::loadInitialTensor)
       .def("loadInitialTensorWithIds", &AbstractIndex::loadInitialTensorWithIds)
@@ -331,6 +330,7 @@ PYBIND11_MODULE(PyCANDYAlgo, m) {
       .def("searchIndex", &AbstractIndex::searchIndex)
       .def("searchIndexParam", &AbstractIndex::searchIndexParam)
       .def("rawData", &AbstractIndex::rawData)
+      .def("ccInsertAndSearchTensor", &AbstractIndex::ccInsertAndSearchTensor)
       .def("searchTensor", &AbstractIndex::searchTensor)
       .def("endHPC", &AbstractIndex::endHPC)
       .def("setFrozenLevel", &AbstractIndex::setFrozenLevel)
@@ -382,44 +382,44 @@ PYBIND11_MODULE(PyCANDYAlgo, m) {
 #endif
 
 
-  // auto m_puck = m.def_submodule("puck", "Puck Interface from Baidu.");
-  // py::class_<py_puck_api::PySearcher, std::shared_ptr<py_puck_api::PySearcher>>(m_puck, "PuckSearcher")
-  //   .def(py::init<>())
-  //   .def("init", &py_puck_api::PySearcher::init)
-  //   .def("show",&py_puck_api::PySearcher::show)
-  //   .def("build",&py_puck_api::PySearcher::build)
-  //   .def("search",&py_puck_api::PySearcher::search)
-  //   .def("batch_add",&py_puck_api::PySearcher::batch_add)
-  //   .def("batch_delete",&py_puck_api::PySearcher::batch_delete);
+  auto m_puck = m.def_submodule("puck", "Puck Interface from Baidu.");
+  py::class_<py_puck_api::PySearcher, std::shared_ptr<py_puck_api::PySearcher>>(m_puck, "PuckSearcher")
+    .def(py::init<>())
+    .def("init", &py_puck_api::PySearcher::init)
+    .def("show",&py_puck_api::PySearcher::show)
+    .def("build",&py_puck_api::PySearcher::build)
+    .def("search",&py_puck_api::PySearcher::search)
+    .def("batch_add",&py_puck_api::PySearcher::batch_add)
+    .def("batch_delete",&py_puck_api::PySearcher::batch_delete);
 
-  //   m_puck.def("update_gflag", &py_puck_api::update_gflag, "A function to update gflag");
+    m_puck.def("update_gflag", &py_puck_api::update_gflag, "A function to update gflag");
 
 
-  //   auto m_utils = m.def_submodule("utils", "Utility Classes from CANDY.");
-  //   py::class_<NumpyIdxPair<float>,std::shared_ptr<NumpyIdxPair<float>>>(m_utils,"NumpyIdxPair")
-  //           .def(py::init<>())
-  //           .def(py::init<py::array_t<float, py::array::c_style | py::array::forcecast>, std::vector<int64_t>>())
-  //           .def_readwrite("vectors", &NumpyIdxPair<float>::vectors)
-  //           .def_readwrite("idx", &NumpyIdxPair<float>::idx);
+    auto m_utils = m.def_submodule("utils", "Utility Classes from CANDY.");
+    py::class_<NumpyIdxPair<float>,std::shared_ptr<NumpyIdxPair<float>>>(m_utils,"NumpyIdxPair")
+            .def(py::init<>())
+            .def(py::init<py::array_t<float, py::array::c_style | py::array::forcecast>, std::vector<int64_t>>())
+            .def_readwrite("vectors", &NumpyIdxPair<float>::vectors)
+            .def_readwrite("idx", &NumpyIdxPair<float>::idx);
 
-  //   py::class_<SPSCWrapperNumpy<float>, std::shared_ptr<SPSCWrapperNumpy<float>>>(m_utils, "NumpyIdxQueue")
-  //       .def(py::init<const size_t>())
-  //       .def("push", &SPSCWrapperNumpy<float>::push)
-  //       .def("try_push", &SPSCWrapperNumpy<float>::try_push)
-  //       .def("front", &SPSCWrapperNumpy<float>::front)
-  //       .def("empty", &SPSCWrapperNumpy<float>::empty)
-  //       .def("size", &SPSCWrapperNumpy<float>::size)
-  //       .def("capacity", &SPSCWrapperNumpy<float>::capacity)
-  //       .def("pop", &SPSCWrapperNumpy<float>::pop);
-  //   py::class_<SPSCWrapperIdx, std::shared_ptr<SPSCWrapperIdx>>(m_utils, "IdxQueue")
-  //           .def(py::init<const size_t>())
-  //           .def("push", &SPSCWrapperIdx::push)
-  //           .def("try_push", &SPSCWrapperIdx::try_push)
-  //           .def("front", &SPSCWrapperIdx::front)
-  //           .def("empty", &SPSCWrapperIdx::empty)
-  //           .def("size", &SPSCWrapperIdx::size)
-  //           .def("capacity", &SPSCWrapperIdx::capacity)
-  //           .def("pop", &SPSCWrapperIdx::pop);
+    py::class_<SPSCWrapperNumpy<float>, std::shared_ptr<SPSCWrapperNumpy<float>>>(m_utils, "NumpyIdxQueue")
+        .def(py::init<const size_t>())
+        .def("push", &SPSCWrapperNumpy<float>::push)
+        .def("try_push", &SPSCWrapperNumpy<float>::try_push)
+        .def("front", &SPSCWrapperNumpy<float>::front)
+        .def("empty", &SPSCWrapperNumpy<float>::empty)
+        .def("size", &SPSCWrapperNumpy<float>::size)
+        .def("capacity", &SPSCWrapperNumpy<float>::capacity)
+        .def("pop", &SPSCWrapperNumpy<float>::pop);
+    py::class_<SPSCWrapperIdx, std::shared_ptr<SPSCWrapperIdx>>(m_utils, "IdxQueue")
+            .def(py::init<const size_t>())
+            .def("push", &SPSCWrapperIdx::push)
+            .def("try_push", &SPSCWrapperIdx::try_push)
+            .def("front", &SPSCWrapperIdx::front)
+            .def("empty", &SPSCWrapperIdx::empty)
+            .def("size", &SPSCWrapperIdx::size)
+            .def("capacity", &SPSCWrapperIdx::capacity)
+            .def("pop", &SPSCWrapperIdx::pop);
 
 
   auto m_diskann = m.def_submodule("diskannpy","diskann interface from microsoft.");

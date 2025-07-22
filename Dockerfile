@@ -45,11 +45,13 @@ RUN wget -qO - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-P
     echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    intel-oneapi-mkl-devel \
+        intel-oneapi-mkl \
+        intel-oneapi-mkl-devel \
     && rm -rf /var/lib/apt/lists/*
 
-ENV MKLROOT="/opt/intel/oneapi/mkl/latest"
-ENV LD_LIBRARY_PATH="${MKLROOT}/lib/intel64:${LD_LIBRARY_PATH}"
+ENV MKLROOT=/opt/intel/oneapi/mkl/latest
+ENV LD_LIBRARY_PATH=${MKLROOT}/lib:${MKLROOT}/lib/intel64:${LD_LIBRARY_PATH}
+
 
 RUN pip install --no-cache-dir \
     torch==2.3.0+cpu \
@@ -58,9 +60,14 @@ RUN pip install --no-cache-dir \
     --index-url https://download.pytorch.org/whl/cpu
 
 ENV Torch_DIR="/usr/local/lib/python3.10/dist-packages/torch/share/cmake/Torch"
-
+#
 WORKDIR /app
-RUN sh -c "python3 setup.py build_ext && python3 setup.py install"
+RUN sh -c "python3 setup.py install && \
+           rm -rf build/lib.linux-x86_64-3.10 && \
+           mkdir -p build/lib.linux-x86_64-3.10 && \
+           python3 setup.py install"
+
+#RUN sh -c "python3 setup.py build_ext && python3 setup.py install"
 
 WORKDIR /app/GTI/GTI/extern_libraries/n2
 RUN mkdir -p build && make shared_lib
@@ -73,10 +80,15 @@ RUN mkdir -p bin build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && mak
 #     cmake .. && \
 #     make -j && make install
 
-# WORKDIR /app/IP-DiskANN
-# RUN mkdir -p build && cd build && \
-#     cmake .. && \
-#     make -j && make install
+WORKDIR /app/IP-DiskANN
+RUN mkdir -p build && cd build && \
+     cmake .. && \
+     make -j && make install
+
+WORKDIR /app/big-ann-benchmarks
+RUN pip install -r requirements_py3.10.txt && \
+    git clone https://github.com/Microsoft/DiskANN && \
+    cd DiskANN && mkdir build && cd build && cmake .. \
 
 WORKDIR /app
 CMD ["bash"]

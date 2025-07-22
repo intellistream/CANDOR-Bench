@@ -4,10 +4,10 @@
 [submodule "GTI"]
 	path = GTI
 	url = https://github.com/MingqiWang-coder/GTI-Graph-based-Tree-Index.git
-[submodule "DiskANN"]
-	path = DiskANN
-	url = https://github.com/MingqiWang-coder/DiskANN.git
-	branch = diskv2
+; [submodule "DiskANN"]
+; 	path = DiskANN
+; 	url = https://github.com/MingqiWang-coder/DiskANN.git
+; 	branch = diskv2
 [submodule "IP-DiskANN"]
 	path = IP-DiskANN
 	url = https://github.com/intellistream/IP-DiskANN.git
