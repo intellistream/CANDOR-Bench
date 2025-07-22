@@ -206,14 +206,6 @@ Our evaluation involves the following datasets and algorithms.
     <td align="center">GTI</td>
     <td style="text-align: left;">Hybrid tree-graph indexing for efficient, dynamic high-dimensional search, with optimized updates and construction.</td>
   </tr>
-  <tr>
-    <td align="center">ParlayHNSW</td>
-    <td style="text-align: left;">Parallel, deterministic HNSW for improved scalability and performance.</td>
-  </tr>
-  <tr>
-    <td align="center">ParlayVamana</td>
-    <td style="text-align: left;">Parallel, deterministic FreshDiskANN implementation using Vamana for graph construction, with performance improvement.</td>
-  </tr>
 </tbody>
 </table>
 
