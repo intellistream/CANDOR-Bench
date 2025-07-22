@@ -227,7 +227,7 @@ Our evaluation involves the following datasets and algorithms.
 > There are many algorithm libraries with complex dependencies. Setting up the environment locally can be difficult and error-prone.
 > **Docker provides a consistent and reproducible environment, saving you time and avoiding compatibility issues.**
 >
-> **Note:** Building the Docker image may take **10–20 minutes** depending on your network and hardware.
+> **Note:** Building the Docker image may take **15–30 minutes** depending on your network and hardware, please be patient.
 
 ---
 
