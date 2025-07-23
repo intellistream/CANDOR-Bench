@@ -88,12 +88,13 @@ Our evaluation involves the following datasets and algorithms.
     <th align="center">Dimension</th>
     <th align="center">Data Size</th>
     <th align="center">Query Size</th>
+    <th align="center">Code Identifier</th>
   </tr>
 </thead>
 <tbody>
   <tr>
     <td rowspan="9" align="center"><b>Real-world</b></td>
-    <td align="center">SIFT</td><td align="center">Image</td><td align="center">128</td><td align="center">1M</td><td align="center">10K</td>
+    <td align="center">SIFT</td><td align="center">Image</td><td align="center">128</td><td align="center">1M</td><td align="center">10K</td><td align="center">sift</td></tr>
   </tr>
   <tr><td align="center">OpenImagesStreaming</td><td align="center">Image</td><td align="center">512</td><td align="center">1M</td><td align="center">10K</td></tr>
   <tr><td align="center">Sun</td><td align="center">Image</td><td align="center">512</td><td align="center">79K</td><td align="center">200</td></tr>
