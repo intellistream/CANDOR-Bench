@@ -114,12 +114,14 @@ Our evaluation involves the following datasets and algorithms.
 </table>
 
 ### Summary of Algorithms
+
 <table>
 <thead>
   <tr>
     <th style="text-align: center;">Category</th>
     <th style="text-align: center;">Algorithm Name</th>
     <th style="text-align: left;">Description</th>
+    <th style="text-align: center;">Code Identifier</th>
   </tr>
 </thead>
 <tbody>
@@ -130,6 +132,7 @@ Our evaluation involves the following datasets and algorithms.
     </td>
     <td align="center">SPTAG</td>
     <td style="text-align: left;">Space-partitioning tree structure for efficient data segmentation.</td>
+    <td align="center">candy_sptag</td>
   </tr>
 
   <!-- LSH-based -->
@@ -139,10 +142,12 @@ Our evaluation involves the following datasets and algorithms.
     </td>
     <td align="center">LSH</td>
     <td style="text-align: left;">Data-independent hashing to reduce dimensionality and approximate nearest neighbors.</td>
+    <td align="center">faiss_lsh</td>
   </tr>
   <tr>
     <td align="center">LSHAPG</td>
     <td style="text-align: left;">LSH-driven optimization using LSB-Tree to differentiate graph regions.</td>
+    <td align="center">candy_lshapg</td>
   </tr>
 
   <!-- Clustering-based -->
@@ -152,22 +157,27 @@ Our evaluation involves the following datasets and algorithms.
     </td>
     <td align="center">PQ</td>
     <td style="text-align: left;">Product quantization for efficient clustering into compact subspaces.</td>
+    <td align="center">faiss_pq</td>
   </tr>
   <tr>
     <td align="center">IVFPQ</td>
     <td style="text-align: left;">Inverted index with product quantization for hierarchical clustering.</td>
+    <td align="center">faiss_IVFPQ</td>
   </tr>
   <tr>
     <td align="center">OnlinePQ</td>
     <td style="text-align: left;">Incremental updates of centroids in product quantization for streaming data.</td>
+    <td align="center">faiss_onlinepq</td>
   </tr>
   <tr>
     <td align="center">Puck</td>
     <td style="text-align: left;">Non-orthogonal inverted indexes with multiple quantization optimized for large-scale datasets.</td>
+    <td align="center">puck</td>
   </tr>
   <tr>
     <td align="center">SCANN</td>
     <td style="text-align: left;">Small-bit quantization to improve register utilization.</td>
+    <td align="center">faiss_fast_scan</td>
   </tr>
 
   <!-- Graph-based -->
@@ -177,34 +187,42 @@ Our evaluation involves the following datasets and algorithms.
     </td>
     <td align="center">NSW</td>
     <td style="text-align: left;">Navigable Small World graph for fast nearest neighbor search.</td>
+    <td align="center">faiss_NSW</td>
   </tr>
   <tr>
     <td align="center">HNSW</td>
     <td style="text-align: left;">Hierarchical Navigable Small World for scalable search.</td>
+    <td align="center">faiss_HNSW</td>
   </tr>
-  <tr>
+<!--   <tr>
     <td align="center">FreshDiskANN</td>
     <td style="text-align: left;">Streaming graph construction for large-scale proximity-based search with refined robust edge pruning.</td>
-  </tr>
+    <td align="center">FreshDiskANN</td>
+  </tr> -->
   <tr>
     <td align="center">MNRU</td>
     <td style="text-align: left;">Enhances HNSW with efficient updates to prevent unreachable points in dynamic environments.</td>
+    <td align="center">candy_mnru</td>
   </tr>
   <tr>
     <td align="center">Cufe</td>
     <td style="text-align: left;">Enhances FreshDiskANN with batched neighbor expansion.</td>
+    <td align="center">cufe</td>
   </tr>
   <tr>
     <td align="center">Pyanns</td>
     <td style="text-align: left;">Enhances FreshDiskANN with fix-sized huge pages for optimized memory access.</td>
+    <td align="center">pyanns</td>
   </tr>
   <tr>
     <td align="center">IPDiskANN</td>
     <td style="text-align: left;">Enables efficient in-place deletions for FreshDiskANN, improving update performance without reconstructions.</td>
+    <td align="center">ipdiskann</td>
   </tr>
   <tr>
     <td align="center">GTI</td>
     <td style="text-align: left;">Hybrid tree-graph indexing for efficient, dynamic high-dimensional search, with optimized updates and construction.</td>
+    <td align="center">gti</td>
   </tr>
 </tbody>
 </table>
@@ -486,7 +504,7 @@ bash scripts/run_general.sh
 
 Wait experiments completed, and generate results, will be as gen-congestion.csv
 ```
-python data_exporter.py --output gen --track congestion
+python3 data_exporter.py --output gen --track congestion
 ```
 
 
@@ -497,11 +515,11 @@ All the following operations are performed in the root directory of big-ann-benc
 #### 2.1 Preparing dataset
 Create a small, sample dataset.  For example, to create a dataset with 10000 20-dimensional random floating point vectors, run:
 ```
-python create_dataset.py --dataset random-xs
+python3 create_dataset.py --dataset random-xs
 ```
 To see a complete list of datasets, run the following:
 ```
-python create_dataset.py --help
+python3 create_dataset.py --help
 ```
 
 #### 2.2 Running Algorithms on the **congestion** Track
@@ -516,10 +534,10 @@ python3 run.py \
   --runbook_path "$PATH" \
   --dataset "$DS"
 ```
-- algorithm "$ALGO": Name of the algorithm to evaluate.
+- algorithm "$ALGO": Name of the algorithm to evaluate.Detailed names of the algorithms can be found in the "Code Identifier" column (the last column) of the "summary of algorithms" table.
 - dataset "$DS": Name of the dataset to use.
-- runbook_path "$PATH": Path to the runbook file describing the test scenario.
-- rebuild: Rebuild the target before running.
+- runbook_path "$PATH": Path to the runbook file describing the test scenario.For example, the runbook path for the general experiment is `neurips23/runbooks/congestion/general_experiment/general_experiment.yaml.`
+- rebuild: Rebuild the target before running. 
 
 #### 2.3 Computing Ground Truth for Runbooks
 
@@ -540,7 +558,7 @@ sudo chmod 777 -R results/
 ```
 2. The following command will summarize all results files into a single csv file
 ```
-python data_export.py --out "$OUT" --track congestion
+python3 data_export.py --out "$OUT" --track congestion
 ```
 The `--out` path "$OUT" should be adjusted according to the testing scenario. Common values include:
 - `gen`
