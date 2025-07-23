@@ -63,7 +63,6 @@ CANDY-Benchmark/
 │   │   ├── streaming/              
 │   │   └── ……
 │   └──……
-├── DiskANN/                        # Integrated DiskANN-based algorithms
 ├── GTI/                            # Integrated GTI algorithm source
 ├── IP-DiskANN/                     # Integrated IP-DiskANN algorithm source
 ├── src/                            # Main algorithm implementations
