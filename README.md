@@ -542,26 +542,25 @@ python3 run.py \
 
 #### 2.3 Computing Ground Truth for Runbooks
 
-To compute ground truth for an runbook:
-1. **Clone and build the [DiskANN repository](https://github.com/Microsoft/DiskANN)**
-2. Use the provided script to compute ground truth at various checkpoints:
+To compute ground truth for an runbook, Use the provided script to compute ground truth at various checkpoints:
 ```
 python3 benchmark/congestion/compute_gt.py \
-  --runbook "$PATH_TO_RUNBOOK" \
-  --dataset "$DATASET_NAME" \
-  --gt_cmdline_tool ~/DiskANN/build/apps/utils/compute_groundtruth
+  --runbook "$PATH" \
+  --dataset "$DS" \
+  --gt_cmdline_tool ./DiskANN/build/apps/utils/compute_groundtruth
 ```
 
 #### 2.4 Exporting Results
 1. To make the results available for post-processing, change permissions of the results folder
 ```
-sudo chmod 777 -R results/
+chmod 777 -R results/
 ```
 2. The following command will summarize all results files into a single csv file
 ```
 python3 data_export.py --out "$OUT" --track congestion
 ```
-The `--out` path "$OUT" should be adjusted according to the testing scenario. Common values include:
+The `--out` parameter "$OUT" should be adjusted according to the testing scenario. For example, the value corresponding to the general experiment is `gen`.
+Common values include:
 - `gen`
 - `batch`
 - `event`
