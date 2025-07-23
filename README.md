@@ -10,6 +10,7 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
   - [Summary of Algorithms](#Summary-of-Algorithms)
 - [Quick Start Guide](#quick-start-guide)
   - [Build With Docker](#Build-With-Docker)
+  - [Example](#Example)
   - [Usage](#Usage)
 <!--   - [Docker Support](#docker-support)
   - [Build Without Docker](#build-without-docker)
@@ -62,7 +63,6 @@ CANDY-Benchmark/
 │   │   ├── streaming/              
 │   │   └── ……
 │   └──……
-├── DiskANN/                        # Integrated DiskANN-based algorithms
 ├── GTI/                            # Integrated GTI algorithm source
 ├── IP-DiskANN/                     # Integrated IP-DiskANN algorithm source
 ├── src/                            # Main algorithm implementations
@@ -88,38 +88,41 @@ Our evaluation involves the following datasets and algorithms.
     <th align="center">Dimension</th>
     <th align="center">Data Size</th>
     <th align="center">Query Size</th>
+    <th align="center">Code Identifier</th>
   </tr>
 </thead>
 <tbody>
   <tr>
     <td rowspan="9" align="center"><b>Real-world</b></td>
-    <td align="center">SIFT</td><td align="center">Image</td><td align="center">128</td><td align="center">1M</td><td align="center">10K</td>
+    <td align="center">SIFT</td><td align="center">Image</td><td align="center">128</td><td align="center">1M</td><td align="center">10K</td><td align="center">sift</td></tr>
   </tr>
-  <tr><td align="center">OpenImagesStreaming</td><td align="center">Image</td><td align="center">512</td><td align="center">1M</td><td align="center">10K</td></tr>
-  <tr><td align="center">Sun</td><td align="center">Image</td><td align="center">512</td><td align="center">79K</td><td align="center">200</td></tr>
-  <tr><td align="center">SIFT100M</td><td align="center">Image</td><td align="center">128</td><td align="center">100M</td><td align="center">10K</td></tr>
-  <tr><td align="center">Trevi</td><td align="center">Image</td><td align="center">4096</td><td align="center">100K</td><td align="center">200</td></tr>
-  <tr><td align="center">Msong</td><td align="center">Audio</td><td align="center">420</td><td align="center">990K</td><td align="center">200</td></tr>
-  <tr><td align="center">COCO</td><td align="center">Multi-Modal</td><td align="center">768</td><td align="center">100K</td><td align="center">500</td></tr>
-  <tr><td align="center">Glove</td><td align="center">Text</td><td align="center">100</td><td align="center">1.192M</td><td align="center">200</td></tr>
-  <tr><td align="center">MSTuring</td><td align="center">Text</td><td align="center">100</td><td align="center">30M</td><td align="center">10K</td></tr>
+  <tr><td align="center">OpenImagesStreaming</td><td align="center">Image</td><td align="center">512</td><td align="center">1M</td><td align="center">10K</td><td align="center">\</td></tr></tr>
+  <tr><td align="center">Sun</td><td align="center">Image</td><td align="center">512</td><td align="center">79K</td><td align="center">200</td><td align="center">sun</td></tr></tr>
+  <tr><td align="center">SIFT100M</td><td align="center">Image</td><td align="center">128</td><td align="center">100M</td><td align="center">10K</td><td align="center">sift100M</td></tr></tr>
+  <tr><td align="center">Trevi</td><td align="center">Image</td><td align="center">4096</td><td align="center">100K</td><td align="center">200</td><td align="center">sift</td></tr></tr>
+  <tr><td align="center">Msong</td><td align="center">Audio</td><td align="center">420</td><td align="center">990K</td><td align="center">200</td><td align="center">msong</td></tr></tr>
+  <tr><td align="center">COCO</td><td align="center">Multi-Modal</td><td align="center">768</td><td align="center">100K</td><td align="center">500</td><td align="center">coco</td></tr></tr>
+  <tr><td align="center">Glove</td><td align="center">Text</td><td align="center">100</td><td align="center">1.192M</td><td align="center">200</td><td align="center">glove</td></tr></tr>
+  <tr><td align="center">MSTuring</td><td align="center">Text</td><td align="center">100</td><td align="center">30M</td><td align="center">10K</td><td align="center">msturing</td></tr></tr>
   <tr>
     <td rowspan="4" align="center"><b>Synthetic</b></td>
-    <td align="center">Gaussian</td><td align="center">i.i.d values</td><td align="center">Adjustable</td><td align="center">500K</td><td align="center">1000</td>
+    <td align="center">Gaussian</td><td align="center">i.i.d values</td><td align="center">Adjustable</td><td align="center">500K</td><td align="center">1000</td><td align="center">\</td></tr>
   </tr>
-  <tr><td align="center">Blob</td><td align="center">Gaussian Blobs</td><td align="center">768</td><td align="center">500K</td><td align="center">1000</td></tr>
-  <tr><td align="center">WTE</td><td align="center">Text</td><td align="center">768</td><td align="center">100K</td><td align="center">100</td></tr>
-  <tr><td align="center">FreewayML</td><td align="center">Constructed</td><td align="center">128</td><td align="center">100K</td><td align="center">1K</td></tr>
+  <tr><td align="center">Blob</td><td align="center">Gaussian Blobs</td><td align="center">768</td><td align="center">500K</td><td align="center">1000</td><td align="center">\</td></tr></tr>
+  <tr><td align="center">WTE</td><td align="center">Text</td><td align="center">768</td><td align="center">100K</td><td align="center">100</td><td align="center">\</td></tr></tr>
+  <tr><td align="center">FreewayML</td><td align="center">Constructed</td><td align="center">128</td><td align="center">100K</td><td align="center">1K</td><td align="center">\</td></tr></tr>
 </tbody>
 </table>
 
 ### Summary of Algorithms
+
 <table>
 <thead>
   <tr>
     <th style="text-align: center;">Category</th>
     <th style="text-align: center;">Algorithm Name</th>
     <th style="text-align: left;">Description</th>
+    <th style="text-align: center;">Code Identifier</th>
   </tr>
 </thead>
 <tbody>
@@ -130,6 +133,7 @@ Our evaluation involves the following datasets and algorithms.
     </td>
     <td align="center">SPTAG</td>
     <td style="text-align: left;">Space-partitioning tree structure for efficient data segmentation.</td>
+    <td align="center">candy_sptag</td>
   </tr>
 
   <!-- LSH-based -->
@@ -139,10 +143,12 @@ Our evaluation involves the following datasets and algorithms.
     </td>
     <td align="center">LSH</td>
     <td style="text-align: left;">Data-independent hashing to reduce dimensionality and approximate nearest neighbors.</td>
+    <td align="center">faiss_lsh</td>
   </tr>
   <tr>
     <td align="center">LSHAPG</td>
     <td style="text-align: left;">LSH-driven optimization using LSB-Tree to differentiate graph regions.</td>
+    <td align="center">candy_lshapg</td>
   </tr>
 
   <!-- Clustering-based -->
@@ -152,22 +158,27 @@ Our evaluation involves the following datasets and algorithms.
     </td>
     <td align="center">PQ</td>
     <td style="text-align: left;">Product quantization for efficient clustering into compact subspaces.</td>
+    <td align="center">faiss_pq</td>
   </tr>
   <tr>
     <td align="center">IVFPQ</td>
     <td style="text-align: left;">Inverted index with product quantization for hierarchical clustering.</td>
+    <td align="center">faiss_IVFPQ</td>
   </tr>
   <tr>
     <td align="center">OnlinePQ</td>
     <td style="text-align: left;">Incremental updates of centroids in product quantization for streaming data.</td>
+    <td align="center">faiss_onlinepq</td>
   </tr>
   <tr>
     <td align="center">Puck</td>
     <td style="text-align: left;">Non-orthogonal inverted indexes with multiple quantization optimized for large-scale datasets.</td>
+    <td align="center">puck</td>
   </tr>
   <tr>
     <td align="center">SCANN</td>
     <td style="text-align: left;">Small-bit quantization to improve register utilization.</td>
+    <td align="center">faiss_fast_scan</td>
   </tr>
 
   <!-- Graph-based -->
@@ -177,42 +188,42 @@ Our evaluation involves the following datasets and algorithms.
     </td>
     <td align="center">NSW</td>
     <td style="text-align: left;">Navigable Small World graph for fast nearest neighbor search.</td>
+    <td align="center">faiss_NSW</td>
   </tr>
   <tr>
     <td align="center">HNSW</td>
     <td style="text-align: left;">Hierarchical Navigable Small World for scalable search.</td>
+    <td align="center">faiss_HNSW</td>
   </tr>
-  <tr>
+<!--   <tr>
     <td align="center">FreshDiskANN</td>
     <td style="text-align: left;">Streaming graph construction for large-scale proximity-based search with refined robust edge pruning.</td>
-  </tr>
+    <td align="center">FreshDiskANN</td>
+  </tr> -->
   <tr>
     <td align="center">MNRU</td>
     <td style="text-align: left;">Enhances HNSW with efficient updates to prevent unreachable points in dynamic environments.</td>
+    <td align="center">candy_mnru</td>
   </tr>
   <tr>
     <td align="center">Cufe</td>
     <td style="text-align: left;">Enhances FreshDiskANN with batched neighbor expansion.</td>
+    <td align="center">cufe</td>
   </tr>
   <tr>
     <td align="center">Pyanns</td>
     <td style="text-align: left;">Enhances FreshDiskANN with fix-sized huge pages for optimized memory access.</td>
+    <td align="center">pyanns</td>
   </tr>
   <tr>
     <td align="center">IPDiskANN</td>
     <td style="text-align: left;">Enables efficient in-place deletions for FreshDiskANN, improving update performance without reconstructions.</td>
+    <td align="center">ipdiskann</td>
   </tr>
   <tr>
     <td align="center">GTI</td>
     <td style="text-align: left;">Hybrid tree-graph indexing for efficient, dynamic high-dimensional search, with optimized updates and construction.</td>
-  </tr>
-  <tr>
-    <td align="center">ParlayHNSW</td>
-    <td style="text-align: left;">Parallel, deterministic HNSW for improved scalability and performance.</td>
-  </tr>
-  <tr>
-    <td align="center">ParlayVamana</td>
-    <td style="text-align: left;">Parallel, deterministic FreshDiskANN implementation using Vamana for graph construction, with performance improvement.</td>
+    <td align="center">gti</td>
   </tr>
 </tbody>
 </table>
@@ -227,7 +238,7 @@ Our evaluation involves the following datasets and algorithms.
 > There are many algorithm libraries with complex dependencies. Setting up the environment locally can be difficult and error-prone.
 > **Docker provides a consistent and reproducible environment, saving you time and avoiding compatibility issues.**
 >
-> **Note:** Building the Docker image may take **10–20 minutes** depending on your network and hardware.
+> **Note:** Building the Docker image may take **15–30 minutes** depending on your network and hardware, please be patient.
 
 ---
 
@@ -494,7 +505,7 @@ bash scripts/run_general.sh
 
 Wait experiments completed, and generate results, will be as gen-congestion.csv
 ```
-python data_exporter.py --output gen --track congestion
+python3 data_exporter.py --output gen --track congestion
 ```
 
 
@@ -505,11 +516,11 @@ All the following operations are performed in the root directory of big-ann-benc
 #### 2.1 Preparing dataset
 Create a small, sample dataset.  For example, to create a dataset with 10000 20-dimensional random floating point vectors, run:
 ```
-python create_dataset.py --dataset random-xs
+python3 create_dataset.py --dataset random-xs
 ```
 To see a complete list of datasets, run the following:
 ```
-python create_dataset.py --help
+python3 create_dataset.py --help
 ```
 
 #### 2.2 Running Algorithms on the **congestion** Track
@@ -524,33 +535,32 @@ python3 run.py \
   --runbook_path "$PATH" \
   --dataset "$DS"
 ```
-- algorithm "$ALGO": Name of the algorithm to evaluate.
+- algorithm "$ALGO": Name of the algorithm to evaluate.Detailed names of the algorithms can be found in the "Code Identifier" column (the last column) of the "summary of algorithms" table.
 - dataset "$DS": Name of the dataset to use.
-- runbook_path "$PATH": Path to the runbook file describing the test scenario.
-- rebuild: Rebuild the target before running.
+- runbook_path "$PATH": Path to the runbook file describing the test scenario.For example, the runbook path for the general experiment is `neurips23/runbooks/congestion/general_experiment/general_experiment.yaml.`
+- rebuild: Rebuild the target before running. 
 
 #### 2.3 Computing Ground Truth for Runbooks
 
-To compute ground truth for an runbook:
-1. **Clone and build the [DiskANN repository](https://github.com/Microsoft/DiskANN)**
-2. Use the provided script to compute ground truth at various checkpoints:
+To compute ground truth for an runbook, Use the provided script to compute ground truth at various checkpoints:
 ```
 python3 benchmark/congestion/compute_gt.py \
-  --runbook "$PATH_TO_RUNBOOK" \
-  --dataset "$DATASET_NAME" \
-  --gt_cmdline_tool ~/DiskANN/build/apps/utils/compute_groundtruth
+  --runbook "$PATH" \
+  --dataset "$DS" \
+  --gt_cmdline_tool ./DiskANN/build/apps/utils/compute_groundtruth
 ```
 
 #### 2.4 Exporting Results
 1. To make the results available for post-processing, change permissions of the results folder
 ```
-sudo chmod 777 -R results/
+chmod 777 -R results/
 ```
 2. The following command will summarize all results files into a single csv file
 ```
-python data_export.py --out "$OUT" --track congestion
+python3 data_export.py --out "$OUT" --track congestion
 ```
-The `--out` path "$OUT" should be adjusted according to the testing scenario. Common values include:
+The `--out` parameter "$OUT" should be adjusted according to the testing scenario. For example, the value corresponding to the general experiment is `gen`.
+Common values include:
 - `gen`
 - `batch`
 - `event`

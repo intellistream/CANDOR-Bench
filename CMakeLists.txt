@@ -7,16 +7,16 @@ project(CANDYBENCH CXX)
 
 #option(ENABLE_CUDA "Enable cuda" ON)
 #message(STATUS "1.0 CUDA enabled: ${ENABLE_CUDA}")
-# include (cmake/FindCuda.cmake)
+include (cmake/FindCuda.cmake)
 include (cmake/FindTorch.cmake)
+set(CMAKE_CUDA_ARCHITECTURES "70;75;80")
+#set(CMAKE_CUDA_ARCHITECTURES ALL)
 find_package(Torch REQUIRED)
-include_directories(${Torch_INCLUDE_DIRS})
-include_directories("/usr/local/lib/python3.10/dist-packages/torch/include/torch/csrc/api/include")
-include_directories("/usr/local/lib/python3.10/dist-packages/torch/include")
-
 find_package(Python3 REQUIRED COMPONENTS Development)
 include_directories(${Python3_INCLUDE_DIRS})
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+
 
 
 include_directories (${gflags_INCLUDE_DIR})
@@ -53,12 +53,15 @@ add_subdirectory(thirdparty/faiss)
 #target_compile_options(faiss PRIVATE "-fno-openmp")
 set(LIBRARIES ${LIBRARIES} faiss)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+set(LIBRARIES ${LIBRARIES} ${TORCH_LIBRARIES})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+
+# Set Optimization Flags
+set(CMAKE_CXX_FLAGS "-std=c++20 -Wall -Werror=return-type -Wno-interference-size")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DNO_RACE_CHECK -DCANDY_DEBUG_MODE=1")
 set(CMAKE_CXX_FLAGS_RELEASE "-Wno-ignored-qualifiers -Wno-sign-compare -O3")
-
 set(PROJECT_BINARY_DIR_RAW ${PROJECT_BINARY_DIR})
+
 # Valid values are "generic", "avx2", "avx512".
 
 detect_avx512_support(AVX512_AVAILABLE)
@@ -107,7 +110,7 @@ option(ENABLE_PUCK
 
 option(ENABLE_PYBIND
         "Enable original pybind and build CANDYBENCH python"
-        ON
+        OFF
 )
 option(ENABLE_DiskANN
         "Enable DiskANN support"
@@ -206,10 +209,9 @@ configure_file(
 set(SPTAG_BUILD_DIR ${CMAKE_BINARY_DIR}/SPTAG_build)
 
 # Configure build output directories specifically for SPTAG
-# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SPTAG_BUILD_DIR}/bin)
-# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SPTAG_BUILD_DIR}/lib)
-# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${SPTAG_BUILD_DIR}/lib)
-
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SPTAG_BUILD_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SPTAG_BUILD_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${SPTAG_BUILD_DIR}/lib)
 if (NOT ENABLE_SPTAG)
     message(STATUS "I will NOT include SPTAG LIBS")
     set(CANDY_SPTAG 0)
@@ -227,9 +229,9 @@ configure_file(
 
 set(DiskANN_BUILD_DIR ${CMAKE_BINARY_DIR}/DiskANN_build)
 # Configure build output directories specifically for DISKANN
-# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${DiskANN_BUILD_DIR}/bin)
-# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${DiskANN_BUILD_DIR}/lib)
-# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${DiskANN_BUILD_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${DiskANN_BUILD_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${DiskANN_BUILD_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${DiskANN_BUILD_DIR}/lib)
 
 if (NOT ENABLE_DiskANN)
     message(STATUS "I will NOT include diskann LIBS")
@@ -265,9 +267,9 @@ configure_file(
 set(PUCK_BUILD_DIR ${CMAKE_BINARY_DIR}/PUCK_build)
 
 # Configure build output directories specifically for PUCK
-# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PUCK_BUILD_DIR}/bin)
-# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PUCK_BUILD_DIR}/lib)
-# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PUCK_BUILD_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PUCK_BUILD_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PUCK_BUILD_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PUCK_BUILD_DIR}/lib)
 if (NOT ENABLE_PUCK)
     message(STATUS "I will NOT include PUCK LIBS")
     set(CANDY_PUCK 0)
@@ -303,13 +305,19 @@ configure_file(
 )
 
 # Reset output directories for the rest of your project
-# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 message(STATUS "CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}")
 message(STATUS "CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}")
+#pytorch
+#set(Torch_DIR "/home/tony/.local/lib/python3.10/site-packages/torch/share/cmake" )
+# Log4cc
+#find_package(Log4cxx REQUIRED)
+#include_directories(${Log4cxx_INCLUDE_DIR})
+#set(LIBRARIES ${LIBRARIES} ${Log4cxx_LIBRARY})
 
 
 option(ENABLE_UNIT_TESTS "Enable unit tests" OFF)
@@ -324,9 +332,13 @@ foreach (dir ${dirs})
 endforeach ()
 
 
+#add_subdirectory(pytorchNN)
+# Add Source Code
+
+
 add_subdirectory(src)
 
-# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/)
 
 # Add Library
 get_sources(CANDY_SOURCE_FILES)
@@ -357,35 +369,27 @@ target_include_directories(CANDYBENCH PUBLIC "include")
 #    )
 #endif ()
 
-set(MKL_ROOT /opt/intel/oneapi/mkl/latest)
-set(MKL_INCLUDE_DIR /opt/intel/oneapi/mkl/latest/include)
-set(MKL_LIB_DIR /opt/intel/oneapi/mkl/latest/lib/intel64)
+# 设置 MKL 库的路径
+set(MKL_INCLUDE_DIR "/opt/intel/oneapi/mkl/2025.2/include")
+set(MKL_LIB_DIR "/opt/intel/oneapi/mkl/2025.2/lib/intel64")
+
+#set(MPI_INCLUDE_PATH "/usr/include/openmpi-x86_64")
+#set(MPI_LIBRARIES "/usr/lib/x86_64-linux-gnu/openmpi/lib/libmpi.so")
+
 set(MKL_LIBRARIES
-    "${MKL_LIB_DIR}/libmkl_intel_lp64.so"
-    "${MKL_LIB_DIR}/libmkl_sequential.so"
-    "${MKL_LIB_DIR}/libmkl_core.so"
-    "${MKL_LIB_DIR}/libmkl_blacs_intelmpi_lp64.so"
+        "${MKL_LIB_DIR}/libmkl_intel_lp64.so"
+        "${MKL_LIB_DIR}/libmkl_sequential.so"
+        "${MKL_LIB_DIR}/libmkl_core.so"
 )
-
 target_include_directories(CANDYBENCH PUBLIC ${MKL_INCLUDE_DIR})
-
-find_package(MPI REQUIRED)
-if(MPI_FOUND)
-    message(STATUS "MPI found: ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES}")
-    include_directories(${MPI_INCLUDE_PATH}) 
-else()
-    message(FATAL_ERROR "MPI not found. Please ensure Intel MPI or OpenMPI is installed and configured.")
-endif()
-
+# MKL 和其他库的链接
 target_link_libraries(CANDYBENCH PUBLIC
         ${MKL_LIBRARIES}
         iomp5
         pthread
         m
         dl
-        ${MPI_LIBRARIES}
 )
-
 target_compile_options(CANDYBENCH PUBLIC
         -m64
         -DUSE_MKL
@@ -418,14 +422,13 @@ endif ()
 if(OpenMP_CXX_FOUND)
     target_link_libraries(CANDYBENCH PRIVATE OpenMP::OpenMP_CXX)
 endif()
-
 target_link_options(CANDYBENCH PUBLIC "-Wl,-rpath,./")
 target_link_options(CANDYBENCH PUBLIC "-Wl,-rpath,./")
 message(WARNING "CANDY GFLAGS_LIBRARY_DIR: ${GFLAGS_LIBRARIES}")
 message(WARNING "CANDY GLOG_LIBRARY_DIR: ${GLOG_LIBRARIES}")
 #target_link_libraries(CANDYBENCH PUBLIC  ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES})
 target_link_libraries(CANDYBENCH PUBLIC ${LIBRARIES})
-# install(TARGETS CANDYBENCH LIBRARY DESTINATION .)
+install(TARGETS CANDYBENCH LIBRARY DESTINATION .)
 find_library(LIBAIO_LIBRARIES NAMES aio)
 message(STATUS "LIBAIO_LIBRARIES: ${LIBAIO_LIBRARIES}")
 target_link_libraries(CANDYBENCH PUBLIC ${LIBAIO_LIBRARIES})
@@ -445,20 +448,15 @@ if (NOT ENABLE_PYBIND)
 else ()
     message(STATUS "I will  build original python package PyCANDYAlgo")
     add_subdirectory(thirdparty/pybind11)
-
     pybind11_add_module(PyCANDYAlgo ${PROJECT_SOURCE_DIR}/src/PyCANDY.cpp)
-    # set_target_properties(PyCANDYAlgo PROPERTIES
-    #     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
-    # )
-
     find_library(TORCH_PYTHON_LIBRARY torch_python PATH "${TORCH_INSTALL_PREFIX}/lib")
+    #target_link_libraries(PyCANDYAlgo PRIVATE gflags glog)
     target_link_libraries(PyCANDYAlgo PUBLIC ${LIBRARIES} CANDYBENCH ${TORCH_PYTHON_LIBRARY})
-
+    install(TARGETS PyCANDYAlgo LIBRARY DESTINATION .)
     message(STATUS "Additional include torch_python: ${TORCH_PYTHON_LIBRARY}")
     set(CANDY_PYBIND 1)
     set_property(TARGET PyCANDYAlgo  PROPERTY CXX_STANDARD 20)
 endif ()
-
 configure_file(
         "${PROJECT_SOURCE_DIR}/include/pybind_config.h.in"
         "${PROJECT_BINARY_DIR}/include/pybind_config.h"
