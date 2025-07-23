@@ -96,21 +96,21 @@ Our evaluation involves the following datasets and algorithms.
     <td rowspan="9" align="center"><b>Real-world</b></td>
     <td align="center">SIFT</td><td align="center">Image</td><td align="center">128</td><td align="center">1M</td><td align="center">10K</td><td align="center">sift</td></tr>
   </tr>
-  <tr><td align="center">OpenImagesStreaming</td><td align="center">Image</td><td align="center">512</td><td align="center">1M</td><td align="center">10K</td></tr>
-  <tr><td align="center">Sun</td><td align="center">Image</td><td align="center">512</td><td align="center">79K</td><td align="center">200</td></tr>
-  <tr><td align="center">SIFT100M</td><td align="center">Image</td><td align="center">128</td><td align="center">100M</td><td align="center">10K</td></tr>
-  <tr><td align="center">Trevi</td><td align="center">Image</td><td align="center">4096</td><td align="center">100K</td><td align="center">200</td></tr>
-  <tr><td align="center">Msong</td><td align="center">Audio</td><td align="center">420</td><td align="center">990K</td><td align="center">200</td></tr>
-  <tr><td align="center">COCO</td><td align="center">Multi-Modal</td><td align="center">768</td><td align="center">100K</td><td align="center">500</td></tr>
-  <tr><td align="center">Glove</td><td align="center">Text</td><td align="center">100</td><td align="center">1.192M</td><td align="center">200</td></tr>
-  <tr><td align="center">MSTuring</td><td align="center">Text</td><td align="center">100</td><td align="center">30M</td><td align="center">10K</td></tr>
+  <tr><td align="center">OpenImagesStreaming</td><td align="center">Image</td><td align="center">512</td><td align="center">1M</td><td align="center">10K</td><td align="center">\</td></tr></tr>
+  <tr><td align="center">Sun</td><td align="center">Image</td><td align="center">512</td><td align="center">79K</td><td align="center">200</td><td align="center">sun</td></tr></tr>
+  <tr><td align="center">SIFT100M</td><td align="center">Image</td><td align="center">128</td><td align="center">100M</td><td align="center">10K</td><td align="center">sift100M</td></tr></tr>
+  <tr><td align="center">Trevi</td><td align="center">Image</td><td align="center">4096</td><td align="center">100K</td><td align="center">200</td><td align="center">sift</td></tr></tr>
+  <tr><td align="center">Msong</td><td align="center">Audio</td><td align="center">420</td><td align="center">990K</td><td align="center">200</td><td align="center">msong</td></tr></tr>
+  <tr><td align="center">COCO</td><td align="center">Multi-Modal</td><td align="center">768</td><td align="center">100K</td><td align="center">500</td><td align="center">coco</td></tr></tr>
+  <tr><td align="center">Glove</td><td align="center">Text</td><td align="center">100</td><td align="center">1.192M</td><td align="center">200</td><td align="center">glove</td></tr></tr>
+  <tr><td align="center">MSTuring</td><td align="center">Text</td><td align="center">100</td><td align="center">30M</td><td align="center">10K</td><td align="center">msturing</td></tr></tr>
   <tr>
     <td rowspan="4" align="center"><b>Synthetic</b></td>
-    <td align="center">Gaussian</td><td align="center">i.i.d values</td><td align="center">Adjustable</td><td align="center">500K</td><td align="center">1000</td>
+    <td align="center">Gaussian</td><td align="center">i.i.d values</td><td align="center">Adjustable</td><td align="center">500K</td><td align="center">1000</td><td align="center">\</td></tr>
   </tr>
-  <tr><td align="center">Blob</td><td align="center">Gaussian Blobs</td><td align="center">768</td><td align="center">500K</td><td align="center">1000</td></tr>
-  <tr><td align="center">WTE</td><td align="center">Text</td><td align="center">768</td><td align="center">100K</td><td align="center">100</td></tr>
-  <tr><td align="center">FreewayML</td><td align="center">Constructed</td><td align="center">128</td><td align="center">100K</td><td align="center">1K</td></tr>
+  <tr><td align="center">Blob</td><td align="center">Gaussian Blobs</td><td align="center">768</td><td align="center">500K</td><td align="center">1000</td><td align="center">\</td></tr></tr>
+  <tr><td align="center">WTE</td><td align="center">Text</td><td align="center">768</td><td align="center">100K</td><td align="center">100</td><td align="center">\</td></tr></tr>
+  <tr><td align="center">FreewayML</td><td align="center">Constructed</td><td align="center">128</td><td align="center">100K</td><td align="center">1K</td><td align="center">\</td></tr></tr>
 </tbody>
 </table>
 

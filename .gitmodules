@@ -1,9 +1,11 @@
 [submodule "big-ann-benchmarks"]
 	path = big-ann-benchmarks
 	url = https://github.com/intellistream/big-ann-benchmarks.git
+	branch = main
 [submodule "GTI"]
 	path = GTI
 	url = https://github.com/MingqiWang-coder/GTI-Graph-based-Tree-Index.git
+	branch = main
 ; [submodule "DiskANN"]
 ; 	path = DiskANN
 ; 	url = https://github.com/MingqiWang-coder/DiskANN.git
@@ -11,3 +13,4 @@
 [submodule "IP-DiskANN"]
 	path = IP-DiskANN
 	url = https://github.com/intellistream/IP-DiskANN.git
+	branch = main
