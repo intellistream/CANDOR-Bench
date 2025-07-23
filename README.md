@@ -10,6 +10,7 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
   - [Summary of Algorithms](#Summary-of-Algorithms)
 - [Quick Start Guide](#quick-start-guide)
   - [Build With Docker](#Build-With-Docker)
+  - [Example](#Example)
   - [Usage](#Usage)
 <!--   - [Docker Support](#docker-support)
   - [Build Without Docker](#build-without-docker)
