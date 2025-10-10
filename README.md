@@ -505,7 +505,7 @@ bash scripts/run_general.sh
 
 Wait experiments completed, and generate results, will be as gen-congestion.csv
 ```
-python3 data_exporter.py --output gen --track congestion
+python3 data_export.py --output gen --track congestion
 ```
 
 
