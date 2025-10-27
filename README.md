@@ -195,11 +195,11 @@ Our evaluation involves the following datasets and algorithms.
     <td style="text-align: left;">Hierarchical Navigable Small World for scalable search.</td>
     <td align="center">faiss_HNSW</td>
   </tr>
-<!--   <tr>
+  <tr>
     <td align="center">FreshDiskANN</td>
     <td style="text-align: left;">Streaming graph construction for large-scale proximity-based search with refined robust edge pruning.</td>
-    <td align="center">FreshDiskANN</td>
-  </tr> -->
+    <td align="center">diskann</td>
+  </tr>
   <tr>
     <td align="center">MNRU</td>
     <td style="text-align: left;">Enhances HNSW with efficient updates to prevent unreachable points in dynamic environments.</td>
