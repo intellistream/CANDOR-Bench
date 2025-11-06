@@ -20,6 +20,231 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
 - [Evaluation Scripts](#evaluation-scripts) -->
 ---
 
+
+
+## Project Structure
+<!--
+- **[`big-ann-benchmarks/`]**  
+  The core benchmarking framework of CANDOR-Bench, responsible for evaluation logic and stream orchestration.
+
+- **[`GTI/`]**  
+  External project integrated to support the GTI algorithm.
+
+- **[`DiskANN/`]**  
+  External project including FreshDiskANN, Pyanns, and Cufe, adapted for streaming evaluation.
+
+- **[`src/`](./src/)**  
+  Source directory containing the majority of the ANNS algorithms evaluated in the benchmark.
+
+- **[`Dockerfile`](./Dockerfile)**  
+  Provides a fully reproducible Docker environment for deploying and running CANDOR-Bench.
+-->
+```
+CANDY-Benchmark/
+├── benchmark/             
+├── big-ann-benchmarks/             # Core benchmarking framework (Dynamic Open-World conditions)
+│   ├── benchmark/
+│   │   ├── algorithms/             # Concurrent Track
+│   │   ├── concurrent/             # Congestion Track
+│   │   ├── congestion/
+│   │   ├── main.py
+│   │   ├── runner.py
+│   │   └── ……
+│   ├── create_dataset.py
+│   ├── requirements_py3.10.txt
+│   ├── logging.conf
+│   ├── neurips21/
+│   ├── neurips23/                  # NeurIPS'23 benchmark configurations and scripts
+│   │   ├── concurrent/             # Concurrent Track
+│   │   ├── congestion/             # Congestion Track
+│   │   ├── filter/
+│   │   ├── ood/
+│   │   ├── runbooks/               # Dynamic benchmark scenario definitions (e.g., T1, T3, etc.)
+│   │   ├── sparse/
+│   │   ├── streaming/              
+│   │   └── ……
+│   └──……
+├── GTI/                            # Integrated GTI algorithm source
+├── IP-DiskANN/                     # Integrated IP-DiskANN algorithm source
+├── src/                            # Main algorithm implementations
+├── include/                        # C++ header files
+├── thirdparty/                     # External dependencies
+├── Dockerfile                      # Docker build recipe
+├── requirements.txt
+├── setup.py                        # Python package setup
+└── ……
+```
+## Datasets and Algorithms
+
+Our evaluation involves the following datasets and algorithms.
+
+### Summary of Datasets
+
+<table>
+<thead>
+  <tr>
+    <th align="center">Category</th>
+    <th align="center">Name</th>
+    <th align="center">Description</th>
+    <th align="center">Dimension</th>
+    <th align="center">Data Size</th>
+    <th align="center">Query Size</th>
+    <th align="center">Code Identifier</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td rowspan="8" align="center"><b>Real-world</b></td>
+    <td align="center">SIFT</td><td align="center">Image</td><td align="center">128</td><td align="center">1M</td><td align="center">10K</td><td align="center">sift</td></tr>
+  </tr>
+  <tr><td align="center">OpenImagesStreaming</td><td align="center">Image</td><td align="center">512</td><td align="center">1M</td><td align="center">10K</td><td align="center">\</td></tr></tr>
+  <tr><td align="center">Sun</td><td align="center">Image</td><td align="center">512</td><td align="center">79K</td><td align="center">200</td><td align="center">sun</td></tr></tr>
+  <tr><td align="center">SIFT100M</td><td align="center">Image</td><td align="center">128</td><td align="center">100M</td><td align="center">10K</td><td align="center">sift100M</td></tr></tr>
+  <!-- <tr><td align="center">Trevi</td><td align="center">Image</td><td align="center">4096</td><td align="center">100K</td><td align="center">200</td><td align="center">sift</td></tr></tr> -->
+  <tr><td align="center">Msong</td><td align="center">Audio</td><td align="center">420</td><td align="center">990K</td><td align="center">200</td><td align="center">msong</td></tr></tr>
+  <tr><td align="center">COCO</td><td align="center">Multi-Modal</td><td align="center">768</td><td align="center">100K</td><td align="center">500</td><td align="center">coco</td></tr></tr>
+  <tr><td align="center">Glove</td><td align="center">Text</td><td align="center">100</td><td align="center">1.192M</td><td align="center">200</td><td align="center">glove</td></tr></tr>
+  <tr><td align="center">MSTuring</td><td align="center">Text</td><td align="center">100</td><td align="center">30M</td><td align="center">10K</td><td align="center">msturing</td></tr></tr>
+  <tr>
+    <td rowspan="4" align="center"><b>Synthetic</b></td>
+    <td align="center">Gaussian</td><td align="center">i.i.d values</td><td align="center">Adjustable</td><td align="center">500K</td><td align="center">1000</td><td align="center">\</td></tr>
+  </tr>
+  <tr><td align="center">Blob</td><td align="center">Gaussian Blobs</td><td align="center">768</td><td align="center">500K</td><td align="center">1000</td><td align="center">\</td></tr></tr>
+  <tr><td align="center">WTE</td><td align="center">Text</td><td align="center">768</td><td align="center">100K</td><td align="center">100</td><td align="center">\</td></tr></tr>
+  <tr><td align="center">FreewayML</td><td align="center">Constructed</td><td align="center">128</td><td align="center">100K</td><td align="center">1K</td><td align="center">\</td></tr></tr>
+</tbody>
+</table>
+
+### Summary of Algorithms
+
+<table>
+<thead>
+  <tr>
+    <th style="text-align: center;">Category</th>
+    <th style="text-align: center;">Algorithm Name</th>
+    <th style="text-align: left;">Description</th>
+    <th style="text-align: center;">Code Identifier</th>
+  </tr>
+</thead>
+<tbody>
+  <!-- Tree-based -->
+  <tr>
+    <td rowspan="1" align="center" style="background-color: #f0f0f0;">
+      <b>Tree-based</b>
+    </td>
+    <td align="center">SPTAG</td>
+    <td style="text-align: left;">Space-partitioning tree structure for efficient data segmentation.</td>
+    <td align="center">candy_sptag</td>
+  </tr>
+
+  <!-- LSH-based -->
+  <tr>
+    <td rowspan="3" align="center" style="background-color: #f8f8f8;">
+      <b>LSH-based</b>
+    </td>
+    <td align="center">LSH</td>
+    <td style="text-align: left;">Data-independent hashing to reduce dimensionality and approximate nearest neighbors.</td>
+    <td align="center">faiss_lsh</td>
+  </tr>
+  <tr>
+    <td align="center">LSHAPG</td>
+    <td style="text-align: left;">LSH-driven optimization using LSB-Tree to differentiate graph regions.</td>
+    <td align="center">candy_lshapg</td>
+  </tr>
+  <tr>
+    <td align="center">PLSH</td>
+    <td style="text-align: left;">Parallel LSH optimized for high-throughput similarity search on data streams.</td>
+    <td align="center">plsh</td>
+  </tr>
+
+  <!-- Clustering-based -->
+  <tr>
+    <td rowspan="5" align="center" style="background-color: #f0f0f0;">
+      <b>Clustering-based</b>
+    </td>
+    <td align="center">PQ</td>
+    <td style="text-align: left;">Product quantization for efficient clustering into compact subspaces.</td>
+    <td align="center">faiss_pq</td>
+  </tr>
+  <tr>
+    <td align="center">IVFPQ</td>
+    <td style="text-align: left;">Inverted index with product quantization for hierarchical clustering.</td>
+    <td align="center">faiss_IVFPQ</td>
+  </tr>
+  <tr>
+    <td align="center">OnlinePQ</td>
+    <td style="text-align: left;">Incremental updates of centroids in product quantization for streaming data.</td>
+    <td align="center">faiss_onlinepq</td>
+  </tr>
+  <tr>
+    <td align="center">Puck</td>
+    <td style="text-align: left;">Non-orthogonal inverted indexes with multiple quantization optimized for large-scale datasets.</td>
+    <td align="center">puck</td>
+  </tr>
+  <tr>
+    <td align="center">SCANN</td>
+    <td style="text-align: left;">Small-bit quantization to improve register utilization.</td>
+    <td align="center">faiss_fast_scan</td>
+  </tr>
+
+  <!-- Graph-based -->
+  <tr>
+    <td rowspan="10" align="center" style="background-color: #f8f8f8;">
+      <b>Graph-based</b>
+    </td>
+    <td align="center">NSW</td>
+    <td style="text-align: left;">Navigable Small World graph for fast nearest neighbor search.</td>
+    <td align="center">faiss_NSW</td>
+  </tr>
+  <tr>
+    <td align="center">HNSW</td>
+    <td style="text-align: left;">Hierarchical Navigable Small World for scalable search.</td>
+    <td align="center">faiss_HNSW</td>
+  </tr>
+  <tr>
+    <td align="center">FreshDiskANN</td>
+    <td style="text-align: left;">Streaming graph construction for large-scale proximity-based search with refined robust edge pruning.</td>
+    <td align="center">diskann</td>
+  </tr>
+  <tr>
+    <td align="center">MNRU</td>
+    <td style="text-align: left;">Enhances HNSW with efficient updates to prevent unreachable points in dynamic environments.</td>
+    <td align="center">candy_mnru</td>
+  </tr>
+  <tr>
+    <td align="center">Cufe</td>
+    <td style="text-align: left;">Enhances FreshDiskANN with batched neighbor expansion.</td>
+    <td align="center">cufe</td>
+  </tr>
+  <tr>
+    <td align="center">Pyanns</td>
+    <td style="text-align: left;">Enhances FreshDiskANN with fix-sized huge pages for optimized memory access.</td>
+    <td align="center">pyanns</td>
+  </tr>
+  <tr>
+    <td align="center">IPDiskANN</td>
+    <td style="text-align: left;">Enables efficient in-place deletions for FreshDiskANN, improving update performance without reconstructions.</td>
+    <td align="center">ipdiskann</td>
+  </tr>
+  <tr>
+    <td align="center">GTI</td>
+    <td style="text-align: left;">Hybrid tree-graph indexing for efficient, dynamic high-dimensional search, with optimized updates and construction.</td>
+    <td align="center">gti</td>
+  </tr>
+  <tr>
+    <td align="center">PARLAY_HNSW</td>
+    <td style="text-align: left;">Parallel, deterministic Hnsw for improved scalability and performance.</td>
+    <td align="center">parlay_hnsw</td>
+  </tr>
+  <tr>
+    <td align="center">PARLAY_VAMANA</td>
+    <td style="text-align: left;">Parallel, deterministic FreshDiskANN implementation using Vamana for graph construction, with performance improvement.</td>
+    <td align="center">parlay_vamana</td>
+  </tr>
+</tbody>
+</table>
+
+
 ## Quick Start Guide
 
 ---
@@ -364,225 +589,3 @@ Common values include:
 - `batchDeletion`
 - `multiModal`
 - ……
-
-## Project Structure
-<!--
-- **[`big-ann-benchmarks/`]**  
-  The core benchmarking framework of CANDOR-Bench, responsible for evaluation logic and stream orchestration.
-
-- **[`GTI/`]**  
-  External project integrated to support the GTI algorithm.
-
-- **[`DiskANN/`]**  
-  External project including FreshDiskANN, Pyanns, and Cufe, adapted for streaming evaluation.
-
-- **[`src/`](./src/)**  
-  Source directory containing the majority of the ANNS algorithms evaluated in the benchmark.
-
-- **[`Dockerfile`](./Dockerfile)**  
-  Provides a fully reproducible Docker environment for deploying and running CANDOR-Bench.
--->
-```
-CANDY-Benchmark/
-├── benchmark/             
-├── big-ann-benchmarks/             # Core benchmarking framework (Dynamic Open-World conditions)
-│   ├── benchmark/
-│   │   ├── algorithms/             # Concurrent Track
-│   │   ├── concurrent/             # Congestion Track
-│   │   ├── congestion/
-│   │   ├── main.py
-│   │   ├── runner.py
-│   │   └── ……
-│   ├── create_dataset.py
-│   ├── requirements_py3.10.txt
-│   ├── logging.conf
-│   ├── neurips21/
-│   ├── neurips23/                  # NeurIPS'23 benchmark configurations and scripts
-│   │   ├── concurrent/             # Concurrent Track
-│   │   ├── congestion/             # Congestion Track
-│   │   ├── filter/
-│   │   ├── ood/
-│   │   ├── runbooks/               # Dynamic benchmark scenario definitions (e.g., T1, T3, etc.)
-│   │   ├── sparse/
-│   │   ├── streaming/              
-│   │   └── ……
-│   └──……
-├── GTI/                            # Integrated GTI algorithm source
-├── IP-DiskANN/                     # Integrated IP-DiskANN algorithm source
-├── src/                            # Main algorithm implementations
-├── include/                        # C++ header files
-├── thirdparty/                     # External dependencies
-├── Dockerfile                      # Docker build recipe
-├── requirements.txt
-├── setup.py                        # Python package setup
-└── ……
-```
-## Datasets and Algorithms
-
-Our evaluation involves the following datasets and algorithms.
-
-### Summary of Datasets
-
-<table>
-<thead>
-  <tr>
-    <th align="center">Category</th>
-    <th align="center">Name</th>
-    <th align="center">Description</th>
-    <th align="center">Dimension</th>
-    <th align="center">Data Size</th>
-    <th align="center">Query Size</th>
-    <th align="center">Code Identifier</th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td rowspan="8" align="center"><b>Real-world</b></td>
-    <td align="center">SIFT</td><td align="center">Image</td><td align="center">128</td><td align="center">1M</td><td align="center">10K</td><td align="center">sift</td></tr>
-  </tr>
-  <tr><td align="center">OpenImagesStreaming</td><td align="center">Image</td><td align="center">512</td><td align="center">1M</td><td align="center">10K</td><td align="center">\</td></tr></tr>
-  <tr><td align="center">Sun</td><td align="center">Image</td><td align="center">512</td><td align="center">79K</td><td align="center">200</td><td align="center">sun</td></tr></tr>
-  <tr><td align="center">SIFT100M</td><td align="center">Image</td><td align="center">128</td><td align="center">100M</td><td align="center">10K</td><td align="center">sift100M</td></tr></tr>
-  <!-- <tr><td align="center">Trevi</td><td align="center">Image</td><td align="center">4096</td><td align="center">100K</td><td align="center">200</td><td align="center">sift</td></tr></tr> -->
-  <tr><td align="center">Msong</td><td align="center">Audio</td><td align="center">420</td><td align="center">990K</td><td align="center">200</td><td align="center">msong</td></tr></tr>
-  <tr><td align="center">COCO</td><td align="center">Multi-Modal</td><td align="center">768</td><td align="center">100K</td><td align="center">500</td><td align="center">coco</td></tr></tr>
-  <tr><td align="center">Glove</td><td align="center">Text</td><td align="center">100</td><td align="center">1.192M</td><td align="center">200</td><td align="center">glove</td></tr></tr>
-  <tr><td align="center">MSTuring</td><td align="center">Text</td><td align="center">100</td><td align="center">30M</td><td align="center">10K</td><td align="center">msturing</td></tr></tr>
-  <tr>
-    <td rowspan="4" align="center"><b>Synthetic</b></td>
-    <td align="center">Gaussian</td><td align="center">i.i.d values</td><td align="center">Adjustable</td><td align="center">500K</td><td align="center">1000</td><td align="center">\</td></tr>
-  </tr>
-  <tr><td align="center">Blob</td><td align="center">Gaussian Blobs</td><td align="center">768</td><td align="center">500K</td><td align="center">1000</td><td align="center">\</td></tr></tr>
-  <tr><td align="center">WTE</td><td align="center">Text</td><td align="center">768</td><td align="center">100K</td><td align="center">100</td><td align="center">\</td></tr></tr>
-  <tr><td align="center">FreewayML</td><td align="center">Constructed</td><td align="center">128</td><td align="center">100K</td><td align="center">1K</td><td align="center">\</td></tr></tr>
-</tbody>
-</table>
-
-### Summary of Algorithms
-
-<table>
-<thead>
-  <tr>
-    <th style="text-align: center;">Category</th>
-    <th style="text-align: center;">Algorithm Name</th>
-    <th style="text-align: left;">Description</th>
-    <th style="text-align: center;">Code Identifier</th>
-  </tr>
-</thead>
-<tbody>
-  <!-- Tree-based -->
-  <tr>
-    <td rowspan="1" align="center" style="background-color: #f0f0f0;">
-      <b>Tree-based</b>
-    </td>
-    <td align="center">SPTAG</td>
-    <td style="text-align: left;">Space-partitioning tree structure for efficient data segmentation.</td>
-    <td align="center">candy_sptag</td>
-  </tr>
-
-  <!-- LSH-based -->
-  <tr>
-    <td rowspan="3" align="center" style="background-color: #f8f8f8;">
-      <b>LSH-based</b>
-    </td>
-    <td align="center">LSH</td>
-    <td style="text-align: left;">Data-independent hashing to reduce dimensionality and approximate nearest neighbors.</td>
-    <td align="center">faiss_lsh</td>
-  </tr>
-  <tr>
-    <td align="center">LSHAPG</td>
-    <td style="text-align: left;">LSH-driven optimization using LSB-Tree to differentiate graph regions.</td>
-    <td align="center">candy_lshapg</td>
-  </tr>
-  <tr>
-    <td align="center">PLSH</td>
-    <td style="text-align: left;">Parallel LSH optimized for high-throughput similarity search on data streams.</td>
-    <td align="center">plsh</td>
-  </tr>
-
-  <!-- Clustering-based -->
-  <tr>
-    <td rowspan="5" align="center" style="background-color: #f0f0f0;">
-      <b>Clustering-based</b>
-    </td>
-    <td align="center">PQ</td>
-    <td style="text-align: left;">Product quantization for efficient clustering into compact subspaces.</td>
-    <td align="center">faiss_pq</td>
-  </tr>
-  <tr>
-    <td align="center">IVFPQ</td>
-    <td style="text-align: left;">Inverted index with product quantization for hierarchical clustering.</td>
-    <td align="center">faiss_IVFPQ</td>
-  </tr>
-  <tr>
-    <td align="center">OnlinePQ</td>
-    <td style="text-align: left;">Incremental updates of centroids in product quantization for streaming data.</td>
-    <td align="center">faiss_onlinepq</td>
-  </tr>
-  <tr>
-    <td align="center">Puck</td>
-    <td style="text-align: left;">Non-orthogonal inverted indexes with multiple quantization optimized for large-scale datasets.</td>
-    <td align="center">puck</td>
-  </tr>
-  <tr>
-    <td align="center">SCANN</td>
-    <td style="text-align: left;">Small-bit quantization to improve register utilization.</td>
-    <td align="center">faiss_fast_scan</td>
-  </tr>
-
-  <!-- Graph-based -->
-  <tr>
-    <td rowspan="10" align="center" style="background-color: #f8f8f8;">
-      <b>Graph-based</b>
-    </td>
-    <td align="center">NSW</td>
-    <td style="text-align: left;">Navigable Small World graph for fast nearest neighbor search.</td>
-    <td align="center">faiss_NSW</td>
-  </tr>
-  <tr>
-    <td align="center">HNSW</td>
-    <td style="text-align: left;">Hierarchical Navigable Small World for scalable search.</td>
-    <td align="center">faiss_HNSW</td>
-  </tr>
-  <tr>
-    <td align="center">FreshDiskANN</td>
-    <td style="text-align: left;">Streaming graph construction for large-scale proximity-based search with refined robust edge pruning.</td>
-    <td align="center">diskann</td>
-  </tr>
-  <tr>
-    <td align="center">MNRU</td>
-    <td style="text-align: left;">Enhances HNSW with efficient updates to prevent unreachable points in dynamic environments.</td>
-    <td align="center">candy_mnru</td>
-  </tr>
-  <tr>
-    <td align="center">Cufe</td>
-    <td style="text-align: left;">Enhances FreshDiskANN with batched neighbor expansion.</td>
-    <td align="center">cufe</td>
-  </tr>
-  <tr>
-    <td align="center">Pyanns</td>
-    <td style="text-align: left;">Enhances FreshDiskANN with fix-sized huge pages for optimized memory access.</td>
-    <td align="center">pyanns</td>
-  </tr>
-  <tr>
-    <td align="center">IPDiskANN</td>
-    <td style="text-align: left;">Enables efficient in-place deletions for FreshDiskANN, improving update performance without reconstructions.</td>
-    <td align="center">ipdiskann</td>
-  </tr>
-  <tr>
-    <td align="center">GTI</td>
-    <td style="text-align: left;">Hybrid tree-graph indexing for efficient, dynamic high-dimensional search, with optimized updates and construction.</td>
-    <td align="center">gti</td>
-  </tr>
-  <tr>
-    <td align="center">PARLAY_HNSW</td>
-    <td style="text-align: left;">Parallel, deterministic Hnsw for improved scalability and performance.</td>
-    <td align="center">parlay_hnsw</td>
-  </tr>
-  <tr>
-    <td align="center">PARLAY_VAMANA</td>
-    <td style="text-align: left;">Parallel, deterministic FreshDiskANN implementation using Vamana for graph construction, with performance improvement.</td>
-    <td align="center">parlay_vamana</td>
-  </tr>
-</tbody>
-</table>
