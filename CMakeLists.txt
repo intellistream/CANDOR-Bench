@@ -370,8 +370,14 @@ target_include_directories(CANDYBENCH PUBLIC "include")
 #endif ()
 
 # 设置 MKL 库的路径
-set(MKL_INCLUDE_DIR "/opt/intel/oneapi/mkl/2025.2/include")
-set(MKL_LIB_DIR "/opt/intel/oneapi/mkl/2025.2/lib/intel64")
+# 优先使用环境变量 MKLROOT，如果未设置则使用默认路径
+if(DEFINED ENV{MKLROOT})
+    set(MKL_INCLUDE_DIR "$ENV{MKLROOT}/include")
+    set(MKL_LIB_DIR "$ENV{MKLROOT}/lib/intel64")
+else()
+    set(MKL_INCLUDE_DIR "/opt/intel/oneapi/mkl/latest/include")
+    set(MKL_LIB_DIR "/opt/intel/oneapi/mkl/latest/lib/intel64")
+endif()
 
 #set(MPI_INCLUDE_PATH "/usr/include/openmpi-x86_64")
 #set(MPI_LIBRARIES "/usr/lib/x86_64-linux-gnu/openmpi/lib/libmpi.so")
