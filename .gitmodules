@@ -14,3 +14,7 @@
 	path = IP-DiskANN
 	url = https://github.com/intellistream/IP-DiskANN.git
 	branch = main
+[submodule "PLSH"]
+	path = PLSH
+	url = https://github.com/Kwan-Yiu/PLSH.git
+	branch = master

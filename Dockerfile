@@ -87,6 +87,11 @@ RUN mkdir -p build && cd build && \
      cmake .. && \
      make -j && make install
 
+WORKDIR /app/PLSH
+RUN mkdir -p build && cd build && \
+    cmake .. && \
+    make -j && make install
+
 WORKDIR /app/big-ann-benchmarks
 RUN pip install -r requirements_py3.10.txt && \
     git clone https://github.com/Microsoft/DiskANN && \
