@@ -51,6 +51,8 @@ RUN wget -qO - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-P
 
 ENV MKLROOT=/opt/intel/oneapi/mkl/latest
 ENV LD_LIBRARY_PATH=${MKLROOT}/lib:${MKLROOT}/lib/intel64:${LD_LIBRARY_PATH}
+ENV CPATH=${MKLROOT}/include:${CPATH}
+ENV LIBRARY_PATH=${MKLROOT}/lib:${MKLROOT}/lib/intel64:${LIBRARY_PATH}
 
 
 RUN pip install --no-cache-dir \
