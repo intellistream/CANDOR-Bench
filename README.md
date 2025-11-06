@@ -99,7 +99,7 @@ Our evaluation involves the following datasets and algorithms.
   <tr><td align="center">OpenImagesStreaming</td><td align="center">Image</td><td align="center">512</td><td align="center">1M</td><td align="center">10K</td><td align="center">\</td></tr></tr>
   <tr><td align="center">Sun</td><td align="center">Image</td><td align="center">512</td><td align="center">79K</td><td align="center">200</td><td align="center">sun</td></tr></tr>
   <tr><td align="center">SIFT100M</td><td align="center">Image</td><td align="center">128</td><td align="center">100M</td><td align="center">10K</td><td align="center">sift100M</td></tr></tr>
-  <tr><td align="center">Trevi</td><td align="center">Image</td><td align="center">4096</td><td align="center">100K</td><td align="center">200</td><td align="center">sift</td></tr></tr>
+  <!-- <tr><td align="center">Trevi</td><td align="center">Image</td><td align="center">4096</td><td align="center">100K</td><td align="center">200</td><td align="center">sift</td></tr></tr> -->
   <tr><td align="center">Msong</td><td align="center">Audio</td><td align="center">420</td><td align="center">990K</td><td align="center">200</td><td align="center">msong</td></tr></tr>
   <tr><td align="center">COCO</td><td align="center">Multi-Modal</td><td align="center">768</td><td align="center">100K</td><td align="center">500</td><td align="center">coco</td></tr></tr>
   <tr><td align="center">Glove</td><td align="center">Text</td><td align="center">100</td><td align="center">1.192M</td><td align="center">200</td><td align="center">glove</td></tr></tr>
@@ -149,6 +149,11 @@ Our evaluation involves the following datasets and algorithms.
     <td align="center">LSHAPG</td>
     <td style="text-align: left;">LSH-driven optimization using LSB-Tree to differentiate graph regions.</td>
     <td align="center">candy_lshapg</td>
+  </tr>
+  <tr>
+    <td align="center">PLSH</td>
+    <td style="text-align: left;">Parallel LSH optimized for high-throughput similarity search on data streams.</td>
+    <td align="center">plsh</td>
   </tr>
 
   <!-- Clustering-based -->
@@ -224,6 +229,16 @@ Our evaluation involves the following datasets and algorithms.
     <td align="center">GTI</td>
     <td style="text-align: left;">Hybrid tree-graph indexing for efficient, dynamic high-dimensional search, with optimized updates and construction.</td>
     <td align="center">gti</td>
+  </tr>
+  <tr>
+    <td align="center">PARLAY_HNSW</td>
+    <td style="text-align: left;">Parallel, deterministic Hnsw for improved scalability and performance.</td>
+    <td align="center">parlay_hnsw</td>
+  </tr>
+  <tr>
+    <td align="center">PARLAY_VAMANA</td>
+    <td style="text-align: left;">Parallel, deterministic FreshDiskANN implementation using Vamana for graph construction, with performance improvement.</td>
+    <td align="center">parlay_vamana</td>
   </tr>
 </tbody>
 </table>
