@@ -18,9 +18,9 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
   - [Installing PyCANDY](#installing-pycandy)
   - [CLion Configuration](#clion-configuration)
 - [Evaluation Scripts](#evaluation-scripts) -->
----
 
----
+
+
 # 🚨🚨 Strong Recommendation: Use Docker! 🚨🚨
 
 > **We strongly recommend using Docker to build and run this project.**
@@ -30,7 +30,6 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
 >
 > **Note:** Building the Docker image may take **15–30 minutes** depending on your network and hardware, please be patient.
 
----
 
 
 
