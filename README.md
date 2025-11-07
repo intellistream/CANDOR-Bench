@@ -20,6 +20,18 @@ CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-
 - [Evaluation Scripts](#evaluation-scripts) -->
 ---
 
+---
+# 🚨🚨 Strong Recommendation: Use Docker! 🚨🚨
+
+> **We strongly recommend using Docker to build and run this project.**
+>
+> There are many algorithm libraries with complex dependencies. Setting up the environment locally can be difficult and error-prone.
+> **Docker provides a consistent and reproducible environment, saving you time and avoiding compatibility issues.**
+>
+> **Note:** Building the Docker image may take **15–30 minutes** depending on your network and hardware, please be patient.
+
+---
+
 
 
 ## Project Structure
