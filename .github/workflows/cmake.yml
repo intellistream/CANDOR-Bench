@@ -2,7 +2,7 @@ name: CMake
 
 on:
   push:
-    branches: [ main, fix-mkl ]
+    branches: [ main, fix-mkl, feature/cache-miss ]
   pull_request:
     branches: [ main ]
 

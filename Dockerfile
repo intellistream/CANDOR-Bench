@@ -32,6 +32,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     libssl-dev \
     gfortran \
     vim \
+    linux-tools-generic \
+    linux-tools-common \
     && rm -rf /var/lib/apt/lists/* && \
     ldconfig
 
