@@ -50,4 +50,4 @@ commit.sh
 data/
 raw_data/
 DiskANN/
-
+results/
