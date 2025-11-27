@@ -1,103 +1,70 @@
+# SAGE-DB-Bench Dockerfile
+# 用于功能测试和开发，不推荐用于精确性能测试
+
 FROM ubuntu:22.04
 
-WORKDIR /app
+LABEL maintainer="SAGE-DB-Bench Team"
+LABEL description="Streaming ANN Benchmark Framework"
 
-COPY . /app
+# 避免交互式提示
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
-    apt-get install -y --no-install-recommends \
-    python3 python3-pip git build-essential \
-    liblapack-dev libblas-dev libopenblas-dev \
-    libboost-all-dev \
-    libnuma-dev \
-    libgflags-dev libgoogle-glog-dev \
-    swig \
-    libhdf5-dev \
-    libaio-dev \
-    libgoogle-perftools-dev \
-    libomp-dev \
-    libtbb-dev \
-    libarchive-dev \
-    libcurl4-openssl-dev \
+# 安装系统依赖
+RUN apt-get update && apt-get install -y \
+    # 基础工具
+    build-essential \
+    cmake \
+    git \
     wget \
     curl \
-    gnupg \
-    libfmt-dev \
-    python3-dev \
-    libeigen3-dev \
-    libspdlog-dev \
-    pybind11-dev \
-    pkg-config \
-    zlib1g-dev \
-    libssl-dev \
-    gfortran \
     vim \
-    linux-tools-generic \
-    linux-tools-common \
-    && rm -rf /var/lib/apt/lists/* && \
-    ldconfig
-
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.30.2/cmake-3.30.2-linux-x86_64.sh -O cmake.sh && \
-    chmod +x cmake.sh && \
-    ./cmake.sh --skip-license --prefix=/usr/local && \
-    rm cmake.sh && \
-    ln -sf /usr/local/bin/cmake /usr/bin/cmake
-
-RUN wget -qO - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor -o /usr/share/keyrings/oneapi-archive-keyring.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list && \
-    apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        intel-oneapi-mkl \
-        intel-oneapi-mkl-devel \
+    # Python相关
+    python3.10 \
+    python3.10-dev \
+    python3-pip \
+    # 数学库
+    libopenblas-dev \
+    libomp-dev \
+    # 其他依赖
+    swig \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-ENV MKLROOT=/opt/intel/oneapi/mkl/latest
-ENV LD_LIBRARY_PATH=${MKLROOT}/lib:${MKLROOT}/lib/intel64:${LD_LIBRARY_PATH}
-ENV CPATH=${MKLROOT}/include:${CPATH}
-ENV LIBRARY_PATH=${MKLROOT}/lib:${MKLROOT}/lib/intel64:${LIBRARY_PATH}
+# 升级pip
+RUN pip3 install --upgrade pip setuptools wheel
 
-
-RUN pip install --no-cache-dir \
-    torch==2.3.0+cpu \
-    torchvision==0.18.0+cpu \
-    torchaudio==2.3.0+cpu \
-    --index-url https://download.pytorch.org/whl/cpu
-
-ENV Torch_DIR="/usr/local/lib/python3.10/dist-packages/torch/share/cmake/Torch"
-#
+# 设置工作目录
 WORKDIR /app
-RUN sh -c "python3 setup.py install && \
-           rm -rf build/lib.linux-x86_64-3.10 && \
-           mkdir -p build/lib.linux-x86_64-3.10 && \
-           python3 setup.py install"
 
-#RUN sh -c "python3 setup.py build_ext && python3 setup.py install"
+# 复制requirements.txt（利用Docker缓存）
+COPY requirements.txt .
 
-WORKDIR /app/GTI/GTI/extern_libraries/n2
-RUN mkdir -p build && make shared_lib
+# 安装Python依赖
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-WORKDIR /app/GTI/GTI
-RUN mkdir -p bin build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j && make install
+# 复制项目文件
+COPY . .
 
-# WORKDIR /app/DiskANN
-# RUN mkdir -p build && cd build && \
-#     cmake .. && \
-#     make -j && make install
+# 初始化子模块
+RUN git submodule update --init --recursive || echo "Warning: Failed to init submodules"
 
-WORKDIR /app/IP-DiskANN
-RUN mkdir -p build && cd build && \
-     cmake .. && \
-     make -j && make install
+# 编译算法库（可选，注释掉可加快构建速度）
+# RUN cd algorithms_impl && ./build.sh
 
-WORKDIR /app/PLSH
-RUN mkdir -p build && cd build && \
-    cmake .. && \
-    make -j && make install
+# 创建必要的目录
+RUN mkdir -p results raw_data logs
 
-WORKDIR /app/big-ann-benchmarks
-RUN pip install -r requirements_py3.10.txt && \
-    git clone https://github.com/Microsoft/DiskANN && \
-    cd DiskANN && mkdir build && cd build && cmake .. \
+# 设置环境变量
+ENV PYTHONPATH=/app:$PYTHONPATH
+ENV OMP_NUM_THREADS=4
 
-WORKDIR /app
-CMD ["bash"]
+# 暴露端口（如果有web服务）
+# EXPOSE 8000
+
+# 默认命令
+CMD ["/bin/bash"]
+
+# 使用示例：
+# docker build -t sage-db-bench .
+# docker run -it --name sage-bench -v $(pwd)/results:/app/results sage-db-bench
