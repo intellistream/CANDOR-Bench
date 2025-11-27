@@ -27,6 +27,7 @@
 #include <faiss/IndexAdditiveQuantizerFastScan.h>
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexHNSW.h>
+#include <faiss/IndexHNSWOptimized.h>
 #include <faiss/IndexNSW.h>
 #include <faiss/IndexMNRU.h>
 #include <faiss/IndexIVF.h>
@@ -476,6 +477,59 @@ IndexHNSW* parse_IndexHNSW(
 
     return nullptr;
 }
+
+/***************************************************************
+ * Parse IndexHNSWOptimized
+ */
+
+IndexHNSWOptimized* parse_IndexHNSWOptimized(
+        const std::string code_string,
+        int d,
+        MetricType mt,
+        int hnsw_M) {
+    std::smatch sm;
+    auto match = [&sm, &code_string](const std::string& pattern) {
+        return re_match(code_string, pattern, sm);
+    };
+
+    if (match("Flat|")) {
+        return new IndexHNSWFlatOptimized(d, hnsw_M, mt);
+    }
+
+    if (match("PQ([0-9]+)(x[0-9]+)?(np)?")) {
+        int M = std::stoi(sm[1].str());
+        int nbit = mres_to_int(sm[2], 8, 1);
+        IndexHNSWPQOptimized* ipq = new IndexHNSWPQOptimized(d, M, hnsw_M, nbit);
+        dynamic_cast<IndexPQ*>(ipq->storage)->do_polysemous_training =
+                sm[3].str() != "np";
+        return ipq;
+    }
+    if (match(sq_pattern)) {
+        return new IndexHNSWSQOptimized(d, sq_types[sm[1].str()], hnsw_M, mt);
+    }
+    if (match("([0-9]+)\\+PQ([0-9]+)?")) {
+        int ncent = mres_to_int(sm[1]);
+        int pq_m = mres_to_int(sm[2]);
+        IndexHNSW2LevelOptimized* hidx2l =
+                new IndexHNSW2LevelOptimized(new IndexFlatL2(d), ncent, pq_m, hnsw_M);
+        dynamic_cast<Index2Layer*>(hidx2l->storage)->q1.own_fields = true;
+        return hidx2l;
+    }
+    if (match("2x([0-9]+)\\+PQ([0-9]+)?")) {
+        int nbit = mres_to_int(sm[1]);
+        int pq_m = mres_to_int(sm[2]);
+        Index* quant = new MultiIndexQuantizer(d, 2, nbit);
+        IndexHNSW2LevelOptimized* hidx2l = new IndexHNSW2LevelOptimized(
+                quant, (size_t)1 << (2 * nbit), pq_m, hnsw_M);
+        Index2Layer* idx2l = dynamic_cast<Index2Layer*>(hidx2l->storage);
+        idx2l->q1.own_fields = true;
+        idx2l->q1.quantizer_trains_alone = 1;
+        return hidx2l;
+    }
+
+    return nullptr;
+}
+
 IndexMNRU* parse_IndexMNRU(
                 const std::string code_string,
                 int d,
@@ -817,6 +871,28 @@ std::unique_ptr<Index> index_factory_sub(
         FAISS_THROW_IF_NOT_FMT(
                 index,
                 "could not parse HNSW code description %s in %s",
+                code_string.c_str(),
+                description.c_str());
+        return std::unique_ptr<Index>(index);
+    }
+
+    // HNSWOptimized variants
+    if (re_match(description, "HNSWOptimized([0-9]*)([,_].*)?", sm)) {
+        int hnsw_M = mres_to_int(sm[1], 32);
+        // We also accept empty code string (synonym of Flat)
+        std::string code_string =
+                sm[2].length() > 0 ? sm[2].str().substr(1) : "";
+        if (verbose) {
+            printf("parsing HNSWOptimized string %s code_string=%s hnsw_M=%d\n",
+                   description.c_str(),
+                   code_string.c_str(),
+                   hnsw_M);
+        }
+
+        IndexHNSWOptimized* index = parse_IndexHNSWOptimized(code_string, d, metric, hnsw_M);
+        FAISS_THROW_IF_NOT_FMT(
+                index,
+                "could not parse HNSWOptimized code description %s in %s",
                 code_string.c_str(),
                 description.c_str());
         return std::unique_ptr<Index>(index);

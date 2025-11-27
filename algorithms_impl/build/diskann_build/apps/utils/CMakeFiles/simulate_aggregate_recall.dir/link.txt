@@ -1,1 +1,0 @@
-g++  -fopenmp -O3 -DNDEBUG -Ofast -DNDEBUG -march=native -mtune=native -ftree-vectorize CMakeFiles/simulate_aggregate_recall.dir/simulate_aggregate_recall.cpp.o -o simulate_aggregate_recall  -lmkl_intel_ilp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl 
