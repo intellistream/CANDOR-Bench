@@ -1,1 +1,0 @@
-g++  -fopenmp -O3 -DNDEBUG -Ofast -DNDEBUG -march=native -mtune=native -ftree-vectorize CMakeFiles/int8_to_float_scale.dir/int8_to_float_scale.cpp.o -o int8_to_float_scale  -lmkl_intel_ilp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl ../../src/libdiskann.a -lmkl_intel_ilp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl 

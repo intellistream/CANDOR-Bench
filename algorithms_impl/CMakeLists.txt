@@ -29,7 +29,7 @@ set(ENABLE_RAY OFF)
 
 # 生成配置头文件
 configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../include/papi_config.h.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/papi_config.h.in"
     "${CMAKE_CURRENT_BINARY_DIR}/include/papi_config.h"
 )
 

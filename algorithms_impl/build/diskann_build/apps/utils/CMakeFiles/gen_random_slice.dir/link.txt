@@ -1,1 +1,0 @@
-g++  -fopenmp -O3 -DNDEBUG -Ofast -DNDEBUG -march=native -mtune=native -ftree-vectorize CMakeFiles/gen_random_slice.dir/gen_random_slice.cpp.o -o gen_random_slice  -lmkl_intel_ilp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl ../../src/libdiskann.a -ltcmalloc -lmkl_intel_ilp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl 
