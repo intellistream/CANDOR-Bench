@@ -1,0 +1,22 @@
+sift:
+  max_pts: 1000000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 10000
+  3:
+    operation: "batch_insert"
+    start: 10000
+    end: 20000  # 插入 10000 条，将执行约 100 次连续查询
+    batchSize: 1000
+    eventRate: 5000
+    continuousQuery: true
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"

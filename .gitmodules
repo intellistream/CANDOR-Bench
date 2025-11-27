@@ -1,20 +1,28 @@
-[submodule "big-ann-benchmarks"]
-	path = big-ann-benchmarks
-	url = https://github.com/intellistream/big-ann-benchmarks.git
-	branch = feature/cache-miss
-[submodule "GTI"]
-	path = GTI
-	url = https://github.com/MingqiWang-coder/GTI-Graph-based-Tree-Index.git
-	branch = main
 [submodule "DiskANN"]
 	path = DiskANN
-	url = https://github.com/MingqiWang-coder/DiskANN.git
-	branch = diskv2
+	url = https://github.com/microsoft/DiskANN.git
+	branch = main
+[submodule "GTI"]
+	path = algorithms_impl/gti
+	url = https://github.com/MingqiWang-coder/GTI-Graph-based-Tree-Index.git
+	branch = main
 [submodule "IP-DiskANN"]
-	path = IP-DiskANN
+	path = algorithms_impl/ipdiskann
 	url = https://github.com/intellistream/IP-DiskANN.git
 	branch = main
 [submodule "PLSH"]
-	path = PLSH
+	path = algorithms_impl/plsh
+	url = https://github.com/Kwan-Yiu/PLSH.git
+	branch = master
+[submodule "algorithms_impl/gti"]
+	path = algorithms_impl/gti
+	url = https://github.com/MingqiWang-coder/GTI-Graph-based-Tree-Index.git
+	branch = main
+[submodule "algorithms_impl/ipdiskann"]
+	path = algorithms_impl/ipdiskann
+	url = https://github.com/intellistream/IP-DiskANN.git
+	branch = main
+[submodule "algorithms_impl/plsh"]
+	path = algorithms_impl/plsh
 	url = https://github.com/Kwan-Yiu/PLSH.git
 	branch = master
