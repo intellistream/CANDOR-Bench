@@ -1,0 +1,30 @@
+Performing C SOURCE FILE Test C_FLAG_QUNUSED_ARGUMENTS failed with the following output:
+Change Dir: /home/mingqi/SAGE-DB-Bench/benchmark_anns/algorithms_impl/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_6bbbb/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_6bbbb.dir/build.make CMakeFiles/cmTC_6bbbb.dir/build
+gmake[1]: Entering directory '/home/mingqi/SAGE-DB-Bench/benchmark_anns/algorithms_impl/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_6bbbb.dir/src.c.o
+/usr/bin/cc -DC_FLAG_QUNUSED_ARGUMENTS  -fopenmp -Wall -Wextra -Wundef -Wshadow -Wcast-align -Wcast-qual -Wstrict-prototypes  -fPIE   -Qunused-arguments -o CMakeFiles/cmTC_6bbbb.dir/src.c.o -c /home/mingqi/SAGE-DB-Bench/benchmark_anns/algorithms_impl/build/CMakeFiles/CMakeTmp/src.c
+cc: error: unrecognized command-line option '-Qunused-arguments'
+gmake[1]: *** [CMakeFiles/cmTC_6bbbb.dir/build.make:78: CMakeFiles/cmTC_6bbbb.dir/src.c.o] Error 1
+gmake[1]: Leaving directory '/home/mingqi/SAGE-DB-Bench/benchmark_anns/algorithms_impl/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_6bbbb/fast] Error 2
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C++ SOURCE FILE Test CXX_FLAG_QUNUSED_ARGUMENTS failed with the following output:
+Change Dir: /home/mingqi/SAGE-DB-Bench/benchmark_anns/algorithms_impl/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_0192f/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_0192f.dir/build.make CMakeFiles/cmTC_0192f.dir/build
+gmake[1]: Entering directory '/home/mingqi/SAGE-DB-Bench/benchmark_anns/algorithms_impl/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_0192f.dir/src.cxx.o
+/usr/bin/c++ -DCXX_FLAG_QUNUSED_ARGUMENTS  -Wall -Wunreachable-code -Wno-reorder -Wno-delete-non-virtual-dtor -Wno-sign-compare -Wno-unknown-pragmas -Wcast-align -lm -lrt -std=c++14 -fopenmp -fopenmp -Wall -Wextra -Wundef -Wshadow -Wcast-align -Wcast-qual  -fPIE   -Qunused-arguments -std=gnu++20 -o CMakeFiles/cmTC_0192f.dir/src.cxx.o -c /home/mingqi/SAGE-DB-Bench/benchmark_anns/algorithms_impl/build/CMakeFiles/CMakeTmp/src.cxx
+c++: error: unrecognized command-line option '-Qunused-arguments'
+gmake[1]: *** [CMakeFiles/cmTC_0192f.dir/build.make:78: CMakeFiles/cmTC_0192f.dir/src.cxx.o] Error 1
+gmake[1]: Leaving directory '/home/mingqi/SAGE-DB-Bench/benchmark_anns/algorithms_impl/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_0192f/fast] Error 2
+
+
+Source file was:
+int main() { return 0; }

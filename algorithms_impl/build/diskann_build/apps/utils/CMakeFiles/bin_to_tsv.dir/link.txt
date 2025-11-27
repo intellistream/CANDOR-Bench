@@ -1,0 +1,1 @@
+g++  -fopenmp -O3 -DNDEBUG -Ofast -DNDEBUG -march=native -mtune=native -ftree-vectorize CMakeFiles/bin_to_tsv.dir/bin_to_tsv.cpp.o -o bin_to_tsv  -lmkl_intel_ilp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl 
