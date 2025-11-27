@@ -291,14 +291,14 @@ def export_results(dataset_name: str, algorithm: str, runbook_name: str,
         else:
             print(f"  ⚠️  插入QPS数量不匹配: {len(insert_qps_df)} vs {len(mean_recalls)}")
     
-    # 5.3 合并查询QPS
+    # 5.3 查询QPS和延迟
     if batch_query_qps_file.exists():
         query_qps_df = pd.read_csv(batch_query_qps_file)
         # 对齐batch_idx
         query_qps_dict = dict(zip(query_qps_df['batch_idx'], query_qps_df['query_qps']))
         data['query_qps'] = [query_qps_dict.get(i, np.nan) for i in data['batch_idx']]
     
-    # 5.4 合并查询延迟
+    # 5.4 查询延迟
     if batch_query_latency_file.exists():
         query_latency_df = pd.read_csv(batch_query_latency_file)
         # 对齐batch_idx

@@ -21,6 +21,7 @@ from .metrics import (
 )
 from .maintenance import MaintenanceState, MaintenancePolicy
 from .worker import CongestionDropWorker
+from .io_utils import save_run_results
 
 
 def store_timestamps_to_csv(
@@ -328,6 +329,19 @@ class BenchmarkRunner:
         print(f"总用时: {runbook_elapsed:.2f}s")
         print(f"{'='*60}\n")
         
+        # 保存结果到文件
+        if self.output_dir:
+            print(f"\n保存结果到 {self.output_dir}...")
+            save_run_results(
+                metrics=self.metrics,
+                all_results_continuous=self.all_results_continuous,
+                output_dir=self.output_dir,
+                algorithm_name=self.metrics.algorithm_name,
+                dataset_name=self.metrics.dataset_name,
+                runbook_name=dataset_name  # 使用 runbook 的数据集名称作为标识
+            )
+            print(f"✓ 结果保存完成\n")
+        
         return self.metrics
     
     def _execute_initial(self, op: Dict):
@@ -410,9 +424,10 @@ class BenchmarkRunner:
     def _start_workers(self):
         """启动工作线程（如果使用 Worker）"""
         if self.use_worker and self.worker:
-            print(f"  启动 Worker 线程  ")
+            print(f"  启动 Worker 线程")
             self.worker.startHPC()
             self._hpc_active = True
+        
         print(f"  ✓ 工作线程启动完成")
 
     def _enable_scenario(self, op: Dict):
