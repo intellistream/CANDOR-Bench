@@ -1,0 +1,1 @@
+g++  -fopenmp -O3 -DNDEBUG -Ofast -DNDEBUG -march=native -mtune=native -ftree-vectorize CMakeFiles/vector_analysis.dir/vector_analysis.cpp.o -o vector_analysis  -lmkl_intel_ilp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl ../../src/libdiskann.a -ltcmalloc -lmkl_intel_ilp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl 

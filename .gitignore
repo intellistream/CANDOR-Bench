@@ -47,4 +47,7 @@ PyCANDYAlgo.egg-info/
 dist/
 commit_info
 commit.sh
+data/
+raw_data/
+DiskANN/
 
