@@ -112,10 +112,11 @@ class CongestionDropWorker(AbstractThread):
     支持拥塞丢弃逻辑
     """
     
-    def __init__(self, my_index_algo):
+    def __init__(self, my_index_algo, cache_profiler=None):
         """
         Args:
             my_index_algo: 底层索引算法实例
+            cache_profiler: CacheProfiler实例（可选）
         """
         super().__init__()
         
@@ -164,6 +165,11 @@ class CongestionDropWorker(AbstractThread):
         
         # 背压逻辑开关
         self.use_backpressure_logic = False
+        
+        # Cache profiler（可选）
+        self.cache_profiler = cache_profiler
+        self.cache_stats_list = []  # 存储每个批次插入的cache统计
+        self.query_cache_stats_list = []  # 存储每次查询的cache统计
     
     def setup(self, dtype: str, max_pts: int, ndim: int) -> None:
         """
@@ -232,9 +238,24 @@ class CongestionDropWorker(AbstractThread):
                 if arrival_time is not None and self.benchmark_start_time is not None:
                     insert_start_time = time.time()
                 
+                # 启动 cache profiling（如果启用）
+                cache_profiler_started = False
+                if self.cache_profiler:
+                    cache_profiler_started = self.cache_profiler.start()
+                
                 # 执行真正的索引插入
                 self.my_index_algo.insert(pair.vectors, np.array(pair.idx))
                 self.ingested_vectors += pair.vectors.shape[0]
+                
+                # 停止 cache profiling 并记录统计数据
+                if cache_profiler_started:
+                    cache_stats = self.cache_profiler.stop()
+                    if cache_stats:
+                        self.cache_stats_list.append(cache_stats)
+                    else:
+                        # 如果获取失败，记录空统计
+                        from .cache_profiler import CacheMissStats
+                        self.cache_stats_list.append(CacheMissStats())
                 
                 # 记录处理完成时间（如果有到达时间戳）
                 if arrival_time is not None and self.benchmark_start_time is not None:
@@ -427,10 +448,25 @@ class CongestionDropWorker(AbstractThread):
         lock_wait_time = (time.time() - lock_acquire_start) * 1e6  # 微秒
         
         try:
+            # 启动 cache profiling（如果启用）
+            cache_profiler_started = False
+            if self.cache_profiler:
+                cache_profiler_started = self.cache_profiler.start()
+            
             # 执行真正的查询
             query_exec_start = time.time()
             result = self.my_index_algo.query(X, k)
             query_exec_time = (time.time() - query_exec_start) * 1e6  # 微秒
+            
+            # 停止 cache profiling 并记录统计数据
+            if cache_profiler_started:
+                cache_stats = self.cache_profiler.stop()
+                if cache_stats:
+                    self.query_cache_stats_list.append(cache_stats)
+                else:
+                    # 如果获取失败，记录空统计
+                    from .cache_profiler import CacheMissStats
+                    self.query_cache_stats_list.append(CacheMissStats())
             
             self.res = self.my_index_algo.res
             

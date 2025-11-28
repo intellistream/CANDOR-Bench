@@ -22,6 +22,7 @@ from .metrics import (
 from .maintenance import MaintenanceState, MaintenancePolicy
 from .worker import CongestionDropWorker
 from .io_utils import save_run_results
+from .cache_profiler import CacheProfiler
 
 
 def store_timestamps_to_csv(
@@ -154,7 +155,8 @@ class BenchmarkRunner:
         maintenance_policy: Optional[MaintenancePolicy] = None,
         save_timestamps: bool = True,
         output_dir: str = "results",
-        use_worker: bool = True
+        use_worker: bool = True,
+        enable_cache_profiling: bool = False
     ):
         """
         Args:
@@ -166,6 +168,7 @@ class BenchmarkRunner:
             save_timestamps: 是否保存时间戳数据
             output_dir: 输出目录
             use_worker: 是否使用 CongestionDropWorker（启用队列和拥塞丢弃）
+            enable_cache_profiling: 是否启用 cache miss 监测
         """
         self.base_algo = algorithm  # 保存原始算法
         self.dataset = dataset
@@ -174,10 +177,21 @@ class BenchmarkRunner:
         self.save_timestamps = save_timestamps
         self.output_dir = output_dir
         self.use_worker = use_worker
+        self.enable_cache_profiling = enable_cache_profiling
+        
+        # Cache profiler（需要在创建worker之前初始化）
+        self.cache_profiler = None
+        if enable_cache_profiling:
+            self.cache_profiler = CacheProfiler()
+            # 在启动时检查可用性
+            if not self.cache_profiler.is_available():
+                print("  ⚠️  Cache profiling 不可用，将禁用该功能")
+                self.cache_profiler = None
+                self.enable_cache_profiling = False
         
         # 如果使用 worker，则包装算法
         if use_worker:
-            self.worker = CongestionDropWorker(algorithm)
+            self.worker = CongestionDropWorker(algorithm, cache_profiler=self.cache_profiler)
             self.algo = self.worker  # 通过 worker 访问算法
             self._hpc_active = False
         else:
@@ -329,18 +343,8 @@ class BenchmarkRunner:
         print(f"总用时: {runbook_elapsed:.2f}s")
         print(f"{'='*60}\n")
         
-        # 保存结果到文件
-        if self.output_dir:
-            print(f"\n保存结果到 {self.output_dir}...")
-            save_run_results(
-                metrics=self.metrics,
-                all_results_continuous=self.all_results_continuous,
-                output_dir=self.output_dir,
-                algorithm_name=self.metrics.algorithm_name,
-                dataset_name=self.metrics.dataset_name,
-                runbook_name=dataset_name  # 使用 runbook 的数据集名称作为标识
-            )
-            print(f"✓ 结果保存完成\n")
+        # 结果保存由 run_benchmark.py 的 store_results 统一处理
+        # 这里不再重复保存，避免生成重复文件
         
         return self.metrics
     
@@ -554,6 +558,9 @@ class BenchmarkRunner:
         # 按批次插入
         num_batches = (count + batch_size - 1) // batch_size
         start_time = time.time()
+        
+        # Cache profiling 统计
+        batch_cache_stats = []  # 存储每个批次的 cache miss 统计
 
         for batch_idx in range(num_batches):
             batch_start = batch_idx * batch_size
@@ -577,6 +584,7 @@ class BenchmarkRunner:
             # 执行批量插入（通过 worker 队列）
             # 注意：这里只是将数据放入队列，真实的处理延迟由 worker 记录
             # 传递到达时间戳给 worker 用于延迟追踪
+            # Cache profiling 现在在 worker 层执行，更精确地测量索引操作
             if event_rate > 0:
                 self.algo.insert(batch_data, batch_ids, arrival_time=tExpectedArrival)
             else:
@@ -607,7 +615,9 @@ class BenchmarkRunner:
                 print(f"    [{batch_idx}] {current_range_start}~{current_range_end} querying all {len(queries)} queries (进度: {progress_pct:.1f}%)")
                 
                 # 执行全量查询：一次性传入所有查询向量
+                # Cache profiling 在 worker.query() 中进行
                 cq_start = time.time()
+                
                 try:
                     results = self.algo.query(queries, self.k)
                     
@@ -657,7 +667,7 @@ class BenchmarkRunner:
         batch_drop_count = final_drop_count - initial_drop_count
         drop_rate = batch_drop_count / count if count > 0 else 0
         
-        # 从 worker 获取真实的处理延迟（如果启用 worker）
+        # 从 worker 获取真实的处理延迟和cache统计（如果启用 worker）
         batch_latencies = []
         insert_latencies = []
         queue_wait_times = []
@@ -698,6 +708,50 @@ class BenchmarkRunner:
         # 保存每个批次的插入吞吐量（从 worker 的真实插入时间计算）
         if batch_insert_throughputs:
             self.attrs['batchinsertThroughtput'].extend(batch_insert_throughputs)
+        
+        # 从 worker 获取 cache miss 统计数据（插入和查询）
+        if self.use_worker and self.worker:
+            # 获取插入的cache统计（只收集新增的部分）
+            insert_cache_stats_all = getattr(self.worker, 'cache_stats_list', [])
+            last_insert_count = getattr(self, '_last_collected_insert_cache_count', 0)
+            insert_cache_stats = insert_cache_stats_all[last_insert_count:]
+            
+            if insert_cache_stats:
+                for cache_stat in insert_cache_stats:
+                    self.metrics.cache_miss_per_batch.append(cache_stat.cache_misses)
+                    self.metrics.cache_references_per_batch.append(cache_stat.cache_references)
+                    self.metrics.cache_miss_rate_per_batch.append(cache_stat.cache_miss_rate)
+                
+                # 更新已收集计数
+                self._last_collected_insert_cache_count = len(insert_cache_stats_all)
+                
+                avg_cache_miss = np.mean([s.cache_misses for s in insert_cache_stats])
+                avg_cache_miss_rate = np.mean([s.cache_miss_rate for s in insert_cache_stats])
+                print(f"    插入 Cache miss 统计:")
+                print(f"      {len(insert_cache_stats)} 个批次")
+                print(f"      平均 cache misses: {avg_cache_miss:,.0f}")
+                print(f"      平均 cache miss 率: {avg_cache_miss_rate:.2%}")
+            
+            # 获取查询的cache统计（只收集新增的部分）
+            query_cache_stats_all = getattr(self.worker, 'query_cache_stats_list', [])
+            last_query_count = getattr(self, '_last_collected_query_cache_count', 0)
+            query_cache_stats = query_cache_stats_all[last_query_count:]
+            
+            if query_cache_stats:
+                for cache_stat in query_cache_stats:
+                    self.metrics.query_cache_miss_per_batch.append(cache_stat.cache_misses)
+                    self.metrics.query_cache_references_per_batch.append(cache_stat.cache_references)
+                    self.metrics.query_cache_miss_rate_per_batch.append(cache_stat.cache_miss_rate)
+                
+                # 更新已收集计数
+                self._last_collected_query_cache_count = len(query_cache_stats_all)
+                
+                avg_query_cache_miss = np.mean([s.cache_misses for s in query_cache_stats])
+                avg_query_cache_miss_rate = np.mean([s.cache_miss_rate for s in query_cache_stats])
+                print(f"    连续查询 Cache miss 统计:")
+                print(f"      {len(query_cache_stats)} 次查询")
+                print(f"      平均 cache misses: {avg_query_cache_miss:,.0f}")
+                print(f"      平均 cache miss 率: {avg_query_cache_miss_rate:.2%}")
         
         # 记录丢弃统计
         if 'dropCount' not in self.attrs:
@@ -823,6 +877,7 @@ class BenchmarkRunner:
         start_time = time.time()
         
         # 一次性批量查询所有向量
+        # Cache profiling 在 worker.query() 中进行
         try:
             results = self.algo.query(queries, self.k)
             
@@ -861,6 +916,30 @@ class BenchmarkRunner:
         self.counts['search'] += count
         # 记录一次批量查询的总延迟（秒）
         self.attrs['latencyQuery'].append(query_latency)
+        
+        # 收集查询的cache统计（如果有worker且启用了cache profiling）
+        # search操作的cache统计也追加到query_cache_miss_per_batch（与连续查询合并）
+        if self.use_worker and self.worker and hasattr(self.worker, 'query_cache_stats_list'):
+            # 获取从上次收集后新增的cache统计
+            current_count = len(self.worker.query_cache_stats_list)
+            last_collected_count = getattr(self, '_last_collected_query_cache_count', 0)
+            
+            if current_count > last_collected_count:
+                # 只收集新增的统计
+                new_stats = self.worker.query_cache_stats_list[last_collected_count:]
+                for cache_stat in new_stats:
+                    self.metrics.query_cache_miss_per_batch.append(cache_stat.cache_misses)
+                    self.metrics.query_cache_references_per_batch.append(cache_stat.cache_references)
+                    self.metrics.query_cache_miss_rate_per_batch.append(cache_stat.cache_miss_rate)
+                
+                # 更新已收集计数
+                self._last_collected_query_cache_count = current_count
+                
+                # 输出最新一次的cache统计
+                if new_stats:
+                    latest_cache_stat = new_stats[-1]
+                    print(f"    查询 Cache miss: {latest_cache_stat.cache_misses:,.0f}, "
+                          f"miss率: {latest_cache_stat.cache_miss_rate:.2%}")
         
         # 输出统计信息
         avg_latency_per_query = (query_latency * 1000) / count  # 每个查询的平均延迟（毫秒）
