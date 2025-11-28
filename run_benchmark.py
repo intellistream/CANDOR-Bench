@@ -163,7 +163,8 @@ def run_benchmark(
     dataset_name: str,
     k: int = 10,
     run_count: int = 1,
-    output_dir: str = "results"
+    output_dir: str = "results",
+    enable_cache_profiling: bool = False
 ) -> Tuple[BenchmarkMetrics, List]:
     """
     执行基准测试主逻辑
@@ -207,7 +208,8 @@ def run_benchmark(
                 dataset=dataset,
                 k=k,
                 save_timestamps=True,
-                output_dir=output_dir
+                output_dir=output_dir,
+                enable_cache_profiling=enable_cache_profiling
             )
             
             # 执行 runbook
@@ -446,7 +448,32 @@ def store_results(
             query_qps_df.to_csv(query_qps_file, index=False)
             print(f"✓ 批次查询QPS已保存: {query_qps_file} ({len(query_qps_list)} 个有效批次)")
     
-    # ========== 9. 批次级查询延迟 CSV (毫秒) ==========
+    # ========== 9. Cache Miss CSV ==========
+    # 保存插入的cache miss统计
+    if hasattr(metrics, 'cache_miss_per_batch') and len(metrics.cache_miss_per_batch) > 0:
+        cache_miss_file = result_dir / f"{base_name}_insert_cache_miss.csv"
+        cache_miss_df = pd.DataFrame({
+            'batch_idx': range(len(metrics.cache_miss_per_batch)),
+            'cache_misses': metrics.cache_miss_per_batch,
+            'cache_references': metrics.cache_references_per_batch if hasattr(metrics, 'cache_references_per_batch') else [0] * len(metrics.cache_miss_per_batch),
+            'cache_miss_rate': metrics.cache_miss_rate_per_batch if hasattr(metrics, 'cache_miss_rate_per_batch') else [0.0] * len(metrics.cache_miss_per_batch)
+        })
+        cache_miss_df.to_csv(cache_miss_file, index=False)
+        print(f"✓ 插入 Cache Miss 已保存: {cache_miss_file}")
+    
+    # 保存查询的cache miss统计
+    if hasattr(metrics, 'query_cache_miss_per_batch') and len(metrics.query_cache_miss_per_batch) > 0:
+        query_cache_miss_file = result_dir / f"{base_name}_query_cache_miss.csv"
+        query_cache_miss_df = pd.DataFrame({
+            'query_idx': range(len(metrics.query_cache_miss_per_batch)),
+            'cache_misses': metrics.query_cache_miss_per_batch,
+            'cache_references': metrics.query_cache_references_per_batch if hasattr(metrics, 'query_cache_references_per_batch') else [0] * len(metrics.query_cache_miss_per_batch),
+            'cache_miss_rate': metrics.query_cache_miss_rate_per_batch if hasattr(metrics, 'query_cache_miss_rate_per_batch') else [0.0] * len(metrics.query_cache_miss_per_batch)
+        })
+        query_cache_miss_df.to_csv(query_cache_miss_file, index=False)
+        print(f"✓ 查询 Cache Miss 已保存: {query_cache_miss_file}")
+    
+    # ========== 10. 批次级查询延迟 CSV (毫秒) ==========
     if 'continuousQueryLatencies' in attrs and len(attrs['continuousQueryLatencies']) > 0:
         query_latency_file = result_dir / f"{base_name}_batch_query_latency.csv"
         # 转换为毫秒，并过滤异常值
@@ -470,7 +497,7 @@ def store_results(
             query_latency_df.to_csv(query_latency_file, index=False)
             print(f"✓ 批次查询延迟已保存: {query_latency_file} ({len(query_latency_ms)} 个有效批次)")
     
-    # ========== 10. 生成人类可读的摘要 ==========
+    # ========== 11. 生成人类可读的摘要 ==========
     summary_file = result_dir / f"{base_name}_summary.txt"
     with open(summary_file, 'w', encoding='utf-8') as f:
         f.write("=" * 80 + "\n")
@@ -521,6 +548,22 @@ def store_results(
             if 'continuousQueryLatencies' in attrs and len(attrs['continuousQueryLatencies']) > 0:
                 f.write(f"批次查询QPS已保存到: {base_name}_batch_query_qps.csv\n")
                 f.write(f"批次查询延迟已保存到: {base_name}_batch_query_latency.csv\n")
+        
+        # Cache Miss 统计
+        if hasattr(metrics, 'cache_miss_per_batch') and len(metrics.cache_miss_per_batch) > 0:
+            f.write(f"\n[Cache Miss 统计]\n")
+            f.write(f"插入批次数量: {len(metrics.cache_miss_per_batch)}\n")
+            f.write(f"插入平均 Cache Misses: {np.mean(metrics.cache_miss_per_batch):,.0f}\n")
+            if hasattr(metrics, 'cache_miss_rate_per_batch') and len(metrics.cache_miss_rate_per_batch) > 0:
+                f.write(f"插入平均 Cache Miss Rate: {np.mean(metrics.cache_miss_rate_per_batch):.2%}\n")
+            f.write(f"插入 Cache Miss 已保存到: {base_name}_insert_cache_miss.csv\n")
+        
+        if hasattr(metrics, 'query_cache_miss_per_batch') and len(metrics.query_cache_miss_per_batch) > 0:
+            f.write(f"\n查询次数: {len(metrics.query_cache_miss_per_batch)}\n")
+            f.write(f"查询平均 Cache Misses: {np.mean(metrics.query_cache_miss_per_batch):,.0f}\n")
+            if hasattr(metrics, 'query_cache_miss_rate_per_batch') and len(metrics.query_cache_miss_rate_per_batch) > 0:
+                f.write(f"查询平均 Cache Miss Rate: {np.mean(metrics.query_cache_miss_rate_per_batch):.2%}\n")
+            f.write(f"查询 Cache Miss 已保存到: {base_name}_query_cache_miss.csv\n")
         
         f.write("\n" + "=" * 80 + "\n")
     
@@ -623,6 +666,8 @@ def main():
                        help='输出目录（默认: results）')
     parser.add_argument('--rebuild', action='store_true',
                        help='强制重建索引（即使索引文件存在）')
+    parser.add_argument('--enable-cache-profiling', action='store_true',
+                       help='启用 cache miss 性能监测（需要 perf 工具支持）')
     parser.add_argument('--no-save', action='store_true',
                        help='不保存结果文件')
         
@@ -726,7 +771,8 @@ def main():
             dataset_name=dataset_name,
             k=args.k,
             run_count=args.runs,
-            output_dir=args.output
+            output_dir=args.output,
+            enable_cache_profiling=args.enable_cache_profiling
         )
         print("✓ 测试执行完成")
     except Exception as e:

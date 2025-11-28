@@ -37,6 +37,21 @@ class BenchmarkMetrics:
     maintenance_live_points: int = 0  # 活跃数据点数
     maintenance_deleted_points: int = 0  # 已删除数据点数
     
+    # Cache miss 统计 - 插入操作
+    cache_miss_per_batch: List[int] = field(default_factory=list)  # 每个批次插入的 cache miss
+    cache_references_per_batch: List[int] = field(default_factory=list)  # 每个批次插入的 cache references
+    cache_miss_rate_per_batch: List[float] = field(default_factory=list)  # 每个批次插入的 cache miss 率
+    
+    # Cache miss 统计 - 查询操作（连续查询）
+    query_cache_miss_per_batch: List[int] = field(default_factory=list)  # 连续查询的 cache miss
+    query_cache_references_per_batch: List[int] = field(default_factory=list)  # 连续查询的 cache references
+    query_cache_miss_rate_per_batch: List[float] = field(default_factory=list)  # 连续查询的 cache miss 率
+    
+    # Cache miss 统计 - 查询操作（search操作）
+    query_cache_miss_per_search: List[int] = field(default_factory=list)  # search操作的 cache miss
+    query_cache_references_per_search: List[int] = field(default_factory=list)  # search操作的 cache references
+    query_cache_miss_rate_per_search: List[float] = field(default_factory=list)  # search操作的 cache miss 率
+    
     # 其他
     total_time: float = 0.0  # 总时间 (us)
     run_count: int = 0
@@ -63,6 +78,15 @@ class BenchmarkMetrics:
             'maintenance_deletion_ratio_final': self.maintenance_deletion_ratio_final,
             'maintenance_live_points': self.maintenance_live_points,
             'maintenance_deleted_points': self.maintenance_deleted_points,
+            'cache_miss_per_batch': self.cache_miss_per_batch,
+            'cache_references_per_batch': self.cache_references_per_batch,
+            'cache_miss_rate_per_batch': self.cache_miss_rate_per_batch,
+            'query_cache_miss_per_batch': self.query_cache_miss_per_batch,
+            'query_cache_references_per_batch': self.query_cache_references_per_batch,
+            'query_cache_miss_rate_per_batch': self.query_cache_miss_rate_per_batch,
+            'query_cache_miss_per_search': self.query_cache_miss_per_search,
+            'query_cache_references_per_search': self.query_cache_references_per_search,
+            'query_cache_miss_rate_per_search': self.query_cache_miss_rate_per_search,
             'total_time': self.total_time,
             'run_count': self.run_count,
             'distance': self.distance,

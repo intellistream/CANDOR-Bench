@@ -37,7 +37,8 @@ def save_run_results(
         - {algorithm}_batch_insert_qps.csv: 每批次插入QPS
         - {algorithm}_batch_query_qps.csv: 每批次查询QPS
         - {algorithm}_batch_query_latency.csv: 每批次查询延迟
-        - {algorithm}_batch_cache_miss.csv: 每批次 cache miss 统计
+        - {algorithm}_insert_cache_miss.csv: 插入操作的 cache miss 统计
+        - {algorithm}_query_cache_miss.csv: 查询操作的 cache miss 统计（包含连续查询和search）
     """
     # 创建输出目录
     output_path = Path(output_dir) / dataset_name / algorithm_name
@@ -92,15 +93,27 @@ def save_run_results(
             print(f"  ✓ Batch query latency saved to: {query_latency_file}")
     
     # 3.3 Cache Miss 统计
+    # 保存插入的cache miss统计
     if metrics.cache_miss_per_batch and len(metrics.cache_miss_per_batch) > 0:
-        cache_miss_file = output_path / f"{algorithm_name}_batch_cache_miss.csv"
+        cache_miss_file = output_path / f"{algorithm_name}_insert_cache_miss.csv"
         save_cache_miss_csv(
             cache_miss_file,
             metrics.cache_miss_per_batch,
             metrics.cache_references_per_batch,
             metrics.cache_miss_rate_per_batch
         )
-        print(f"  ✓ Batch cache miss saved to: {cache_miss_file}")
+        print(f"  ✓ Insert cache miss saved to: {cache_miss_file}")
+    
+    # 保存查询的cache miss统计（包含连续查询和search操作）
+    if metrics.query_cache_miss_per_batch and len(metrics.query_cache_miss_per_batch) > 0:
+        query_cache_miss_file = output_path / f"{algorithm_name}_query_cache_miss.csv"
+        save_cache_miss_csv(
+            query_cache_miss_file,
+            metrics.query_cache_miss_per_batch,
+            metrics.query_cache_references_per_batch,
+            metrics.query_cache_miss_rate_per_batch
+        )
+        print(f"  ✓ Query cache miss saved to: {query_cache_miss_file}")
 
 
 def save_hdf5_results(hdf5_file: Path, all_results_continuous: List[np.ndarray]):
@@ -168,5 +181,41 @@ def save_batch_metric_csv(csv_file: Path, values: List[float], column_name: str)
     df = pd.DataFrame({
         'batch_idx': list(range(len(values))),
         column_name: values
+    })
+    df.to_csv(csv_file, index=False)
+
+
+def save_cache_miss_csv(
+    csv_file: Path,
+    cache_miss_per_batch: List[int],
+    cache_references_per_batch: List[int],
+    cache_miss_rate_per_batch: List[float]
+):
+    """
+    保存 cache miss 统计数据到 CSV 文件
+    
+    Args:
+        csv_file: CSV文件路径
+        cache_miss_per_batch: 每个批次的 cache miss 数量列表
+        cache_references_per_batch: 每个批次的 cache references 数量列表
+        cache_miss_rate_per_batch: 每个批次的 cache miss 率列表
+    """
+    # 确保所有列表长度一致
+    max_len = max(
+        len(cache_miss_per_batch),
+        len(cache_references_per_batch),
+        len(cache_miss_rate_per_batch)
+    )
+    
+    # 填充缺失值
+    cache_miss = list(cache_miss_per_batch) + [0] * (max_len - len(cache_miss_per_batch))
+    cache_refs = list(cache_references_per_batch) + [0] * (max_len - len(cache_references_per_batch))
+    cache_rate = list(cache_miss_rate_per_batch) + [0.0] * (max_len - len(cache_miss_rate_per_batch))
+    
+    df = pd.DataFrame({
+        'batch_idx': list(range(max_len)),
+        'cache_misses': cache_miss,
+        'cache_references': cache_refs,
+        'cache_miss_rate': cache_rate
     })
     df.to_csv(csv_file, index=False)

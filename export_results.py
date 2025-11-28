@@ -305,7 +305,20 @@ def export_results(dataset_name: str, algorithm: str, runbook_name: str,
         query_latency_dict = dict(zip(query_latency_df['batch_idx'], query_latency_df['query_latency_ms']))
         data['query_latency_ms'] = [query_latency_dict.get(i, np.nan) for i in data['batch_idx']]
     
-    # 5.5 创建DataFrame并保存
+    # 5.5 Cache Miss 统计
+    batch_cache_miss_file = result_dir / f"{algorithm}_batch_cache_miss.csv"
+    if batch_cache_miss_file.exists():
+        cache_miss_df = pd.read_csv(batch_cache_miss_file)
+        # 对齐batch_idx
+        cache_miss_dict = dict(zip(cache_miss_df['batch_idx'], cache_miss_df['cache_misses']))
+        cache_refs_dict = dict(zip(cache_miss_df['batch_idx'], cache_miss_df['cache_references']))
+        cache_rate_dict = dict(zip(cache_miss_df['batch_idx'], cache_miss_df['cache_miss_rate']))
+        
+        data['cache_misses'] = [cache_miss_dict.get(i, np.nan) for i in data['batch_idx']]
+        data['cache_references'] = [cache_refs_dict.get(i, np.nan) for i in data['batch_idx']]
+        data['cache_miss_rate'] = [cache_rate_dict.get(i, np.nan) for i in data['batch_idx']]
+    
+    # 5.6 创建DataFrame并保存
     df = pd.DataFrame(data)
     
     if output_file is None:
@@ -331,6 +344,10 @@ def export_results(dataset_name: str, algorithm: str, runbook_name: str,
         print(f"平均查询QPS: {np.nanmean(data['query_qps']):.2f} queries/s")
     if 'query_latency_ms' in data:
         print(f"平均查询延迟: {np.nanmean(data['query_latency_ms']):.2f} ms")
+    if 'cache_misses' in data and not all(pd.isna(data['cache_misses'])):
+        print(f"平均 Cache Misses: {np.nanmean(data['cache_misses']):,.0f}")
+    if 'cache_miss_rate' in data and not all(pd.isna(data['cache_miss_rate'])):
+        print(f"平均 Cache Miss 率: {np.nanmean(data['cache_miss_rate']):.2%}")
     
     print(f"{'='*80}\n")
     
