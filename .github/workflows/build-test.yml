@@ -39,7 +39,7 @@ jobs:
     - name: Run deployment script
       run: |
         chmod +x deploy.sh
-        ./deploy.sh --skip-system-deps
+        ./deploy.sh
       timeout-minutes: 60
       
     - name: Verify Python packages
@@ -92,7 +92,7 @@ jobs:
     - name: Quick environment setup
       run: |
         chmod +x deploy.sh
-        ./deploy.sh --skip-system-deps --skip-build
+        ./deploy.sh --skip-build
       timeout-minutes: 10
       
     - name: Verify environment
