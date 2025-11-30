@@ -3,6 +3,9 @@
 
 set -e  # 遇到错误立即退出
 
+# 获取脚本所在目录的绝对路径
+ALGORITHMS_IMPL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 echo "========================================="
 echo "Building PyCANDYAlgo Module"
 echo "========================================="
@@ -26,8 +29,9 @@ if [ -d "build" ]; then
     rm -rf build
 fi
 
-# 创建构建目录
+# 创建构建目录和安装目录
 mkdir -p build
+mkdir -p build/install
 cd build
 
 echo ""
@@ -236,7 +240,7 @@ if [ -d "gti/GTI" ]; then
     fi
     mkdir -p bin build
     cd build
-    cmake -DCMAKE_BUILD_TYPE=Release .. || { echo "❌ GTI cmake failed"; exit 1; }
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$ALGORITHMS_IMPL_DIR/build/install" .. || { echo "❌ GTI cmake failed"; exit 1; }
     make -j${JOBS} || { echo "❌ GTI build failed"; exit 1; }
     make install || echo "  ⚠ GTI install failed (not critical)"
     cd ../../..
@@ -257,7 +261,7 @@ if [ -d "ipdiskann" ]; then
     fi
     mkdir -p build
     cd build
-    cmake .. || { echo "❌ IP-DiskANN cmake failed"; exit 1; }
+    cmake -DCMAKE_INSTALL_PREFIX="$ALGORITHMS_IMPL_DIR/build/install" .. || { echo "❌ IP-DiskANN cmake failed"; exit 1; }
     make -j${JOBS} || { echo "❌ IP-DiskANN build failed"; exit 1; }
     make install || echo "  ⚠ IP-DiskANN install failed (not critical)"
     cd ../..
@@ -278,7 +282,7 @@ if [ -d "plsh" ]; then
     fi
     mkdir -p build
     cd build
-    cmake .. || { echo "❌ PLSH cmake failed"; exit 1; }
+    cmake -DCMAKE_INSTALL_PREFIX="$ALGORITHMS_IMPL_DIR/build/install" .. || { echo "❌ PLSH cmake failed"; exit 1; }
     make -j${JOBS} || { echo "❌ PLSH build failed"; exit 1; }
     make install || echo "  ⚠ PLSH install failed (not critical)"
     cd ../..
