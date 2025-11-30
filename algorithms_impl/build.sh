@@ -119,6 +119,21 @@ pkg-config --exists libglog 2>/dev/null || MISSING_DEPS+=("libgoogle-glog-dev")
 pkg-config --exists spdlog 2>/dev/null || MISSING_DEPS+=("libspdlog-dev")
 dpkg -l | grep -q libgoogle-perftools-dev 2>/dev/null || MISSING_DEPS+=("libgoogle-perftools-dev")
 dpkg -l | grep -q libaio-dev 2>/dev/null || MISSING_DEPS+=("libaio-dev")
+dpkg -l | grep -q libgflags-dev 2>/dev/null || MISSING_DEPS+=("libgflags-dev")
+pkg-config --exists lapack 2>/dev/null || MISSING_DEPS+=("liblapack-dev")
+pkg-config --exists blas 2>/dev/null || MISSING_DEPS+=("libblas-dev")
+pkg-config --exists openblas 2>/dev/null || MISSING_DEPS+=("libopenblas-dev")
+dpkg -l | grep -q libboost-all-dev 2>/dev/null || MISSING_DEPS+=("libboost-all-dev")
+command -v swig &>/dev/null || MISSING_DEPS+=("swig")
+pkg-config --exists hdf5 2>/dev/null || MISSING_DEPS+=("libhdf5-dev")
+dpkg -l | grep -q libomp-dev 2>/dev/null || MISSING_DEPS+=("libomp-dev")
+pkg-config --exists tbb 2>/dev/null || MISSING_DEPS+=("libtbb-dev")
+pkg-config --exists libarchive 2>/dev/null || MISSING_DEPS+=("libarchive-dev")
+pkg-config --exists libcurl 2>/dev/null || MISSING_DEPS+=("libcurl4-openssl-dev")
+dpkg -l | grep -q python3-dev 2>/dev/null || MISSING_DEPS+=("python3-dev")
+dpkg -l | grep -q libeigen3-dev 2>/dev/null || MISSING_DEPS+=("libeigen3-dev")
+pkg-config --exists zlib 2>/dev/null || MISSING_DEPS+=("zlib1g-dev")
+pkg-config --exists openssl 2>/dev/null || MISSING_DEPS+=("libssl-dev")
 
 # 如果有缺失的依赖，则安装
 if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
@@ -138,6 +153,21 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
                 libspdlog-dev) YUM_DEPS+=("spdlog-devel") ;;
                 libgoogle-perftools-dev) YUM_DEPS+=("gperftools-devel") ;;
                 libaio-dev) YUM_DEPS+=("libaio-devel") ;;
+                libgflags-dev) YUM_DEPS+=("gflags-devel") ;;
+                liblapack-dev) YUM_DEPS+=("lapack-devel") ;;
+                libblas-dev) YUM_DEPS+=("blas-devel") ;;
+                libopenblas-dev) YUM_DEPS+=("openblas-devel") ;;
+                libboost-all-dev) YUM_DEPS+=("boost-devel") ;;
+                swig) YUM_DEPS+=("swig") ;;
+                libhdf5-dev) YUM_DEPS+=("hdf5-devel") ;;
+                libomp-dev) YUM_DEPS+=("libomp-devel") ;;
+                libtbb-dev) YUM_DEPS+=("tbb-devel") ;;
+                libarchive-dev) YUM_DEPS+=("libarchive-devel") ;;
+                libcurl4-openssl-dev) YUM_DEPS+=("libcurl-devel") ;;
+                python3-dev) YUM_DEPS+=("python3-devel") ;;
+                libeigen3-dev) YUM_DEPS+=("eigen3-devel") ;;
+                zlib1g-dev) YUM_DEPS+=("zlib-devel") ;;
+                libssl-dev) YUM_DEPS+=("openssl-devel") ;;
             esac
         done
         sudo yum install -y "${YUM_DEPS[@]}"
@@ -154,6 +184,21 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
                 libspdlog-dev) BREW_DEPS+=("spdlog") ;;
                 libgoogle-perftools-dev) BREW_DEPS+=("gperftools") ;;
                 libaio-dev) ;; # macOS doesn't need libaio
+                libgflags-dev) BREW_DEPS+=("gflags") ;;
+                liblapack-dev) BREW_DEPS+=("lapack") ;;
+                libblas-dev) BREW_DEPS+=("openblas") ;;
+                libopenblas-dev) BREW_DEPS+=("openblas") ;;
+                libboost-all-dev) BREW_DEPS+=("boost") ;;
+                swig) BREW_DEPS+=("swig") ;;
+                libhdf5-dev) BREW_DEPS+=("hdf5") ;;
+                libomp-dev) BREW_DEPS+=("libomp") ;;
+                libtbb-dev) BREW_DEPS+=("tbb") ;;
+                libarchive-dev) BREW_DEPS+=("libarchive") ;;
+                libcurl4-openssl-dev) BREW_DEPS+=("curl") ;;
+                python3-dev) ;; # Included with Python on macOS
+                libeigen3-dev) BREW_DEPS+=("eigen") ;;
+                zlib1g-dev) ;; # Built-in on macOS
+                libssl-dev) BREW_DEPS+=("openssl") ;;
             esac
         done
         brew install "${BREW_DEPS[@]}"
