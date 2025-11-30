@@ -105,24 +105,59 @@ echo ""
 # 返回到 algorithms_impl 目录
 cd ..
 
+# 安装所有缺失的系统依赖库（在构建前统一安装）
+echo "Checking and installing system dependencies..."
+echo "----------------------------------------"
+MISSING_DEPS=()
+
+# 检查各个库
+pkg-config --exists fmt 2>/dev/null || MISSING_DEPS+=("libfmt-dev")
+pkg-config --exists pybind11 2>/dev/null || MISSING_DEPS+=("pybind11-dev")
+dpkg -l | grep -q libnuma-dev 2>/dev/null || MISSING_DEPS+=("libnuma-dev")
+pkg-config --exists libglog 2>/dev/null || MISSING_DEPS+=("libgoogle-glog-dev")
+
+# 如果有缺失的依赖，则安装
+if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
+    echo "  Installing missing dependencies: ${MISSING_DEPS[*]}"
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get update -qq && sudo apt-get install -y "${MISSING_DEPS[@]}"
+    elif command -v yum &> /dev/null; then
+        # 转换包名为 yum 格式
+        YUM_DEPS=()
+        for dep in "${MISSING_DEPS[@]}"; do
+            case $dep in
+                libfmt-dev) YUM_DEPS+=("fmt-devel") ;;
+                pybind11-dev) YUM_DEPS+=("pybind11-devel") ;;
+                libnuma-dev) YUM_DEPS+=("numactl-devel") ;;
+                libgoogle-glog-dev) YUM_DEPS+=("glog-devel") ;;
+            esac
+        done
+        sudo yum install -y "${YUM_DEPS[@]}"
+    elif command -v brew &> /dev/null; then
+        # 转换包名为 brew 格式
+        BREW_DEPS=()
+        for dep in "${MISSING_DEPS[@]}"; do
+            case $dep in
+                libfmt-dev) BREW_DEPS+=("fmt") ;;
+                pybind11-dev) BREW_DEPS+=("pybind11") ;;
+                libnuma-dev) BREW_DEPS+=("numactl") ;;
+                libgoogle-glog-dev) BREW_DEPS+=("glog") ;;
+            esac
+        done
+        brew install "${BREW_DEPS[@]}"
+    else
+        echo "  ⚠ Warning: Could not install dependencies automatically"
+    fi
+    echo "  ✓ Dependencies installed"
+else
+    echo "  ✓ All dependencies already installed"
+fi
+echo ""
+
 # === 1. Build GTI ===
 if [ -d "gti/GTI" ]; then
     echo "Building GTI..."
     echo "----------------------------------------"
-    
-    # 检查并安装 fmt 库
-    if ! pkg-config --exists fmt 2>/dev/null; then
-        echo "  fmt library not found, installing..."
-        if command -v apt-get &> /dev/null; then
-            sudo apt-get update -qq && sudo apt-get install -y libfmt-dev
-        elif command -v yum &> /dev/null; then
-            sudo yum install -y fmt-devel
-        elif command -v brew &> /dev/null; then
-            brew install fmt
-        else
-            echo "  ⚠ Warning: Could not install fmt automatically"
-        fi
-    fi
     
     # 先构建 GTI 的依赖库 n2
     if [ -d "gti/GTI/extern_libraries/n2" ]; then
