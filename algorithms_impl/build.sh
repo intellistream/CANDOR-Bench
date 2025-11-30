@@ -110,6 +110,20 @@ if [ -d "gti/GTI" ]; then
     echo "Building GTI..."
     echo "----------------------------------------"
     
+    # 检查并安装 fmt 库
+    if ! pkg-config --exists fmt 2>/dev/null; then
+        echo "  fmt library not found, installing..."
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y libfmt-dev
+        elif command -v yum &> /dev/null; then
+            sudo yum install -y fmt-devel
+        elif command -v brew &> /dev/null; then
+            brew install fmt
+        else
+            echo "  ⚠ Warning: Could not install fmt automatically"
+        fi
+    fi
+    
     # 先构建 GTI 的依赖库 n2
     if [ -d "gti/GTI/extern_libraries/n2" ]; then
         echo "  Building GTI dependency: n2 library..."
