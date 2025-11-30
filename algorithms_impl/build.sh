@@ -114,6 +114,7 @@ MISSING_DEPS=()
 pkg-config --exists fmt 2>/dev/null || MISSING_DEPS+=("libfmt-dev")
 pkg-config --exists pybind11 2>/dev/null || MISSING_DEPS+=("pybind11-dev")
 dpkg -l | grep -q libnuma-dev 2>/dev/null || MISSING_DEPS+=("libnuma-dev")
+dpkg -l | grep -q libunwind-dev 2>/dev/null || MISSING_DEPS+=("libunwind-dev")
 pkg-config --exists libglog 2>/dev/null || MISSING_DEPS+=("libgoogle-glog-dev")
 
 # 如果有缺失的依赖，则安装
@@ -129,6 +130,7 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
                 libfmt-dev) YUM_DEPS+=("fmt-devel") ;;
                 pybind11-dev) YUM_DEPS+=("pybind11-devel") ;;
                 libnuma-dev) YUM_DEPS+=("numactl-devel") ;;
+                libunwind-dev) YUM_DEPS+=("libunwind-devel") ;;
                 libgoogle-glog-dev) YUM_DEPS+=("glog-devel") ;;
             esac
         done
@@ -141,6 +143,7 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
                 libfmt-dev) BREW_DEPS+=("fmt") ;;
                 pybind11-dev) BREW_DEPS+=("pybind11") ;;
                 libnuma-dev) BREW_DEPS+=("numactl") ;;
+                libunwind-dev) BREW_DEPS+=("libunwind") ;;
                 libgoogle-glog-dev) BREW_DEPS+=("glog") ;;
             esac
         done
