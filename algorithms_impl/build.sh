@@ -118,6 +118,7 @@ dpkg -l | grep -q libunwind-dev 2>/dev/null || MISSING_DEPS+=("libunwind-dev")
 pkg-config --exists libglog 2>/dev/null || MISSING_DEPS+=("libgoogle-glog-dev")
 pkg-config --exists spdlog 2>/dev/null || MISSING_DEPS+=("libspdlog-dev")
 dpkg -l | grep -q libgoogle-perftools-dev 2>/dev/null || MISSING_DEPS+=("libgoogle-perftools-dev")
+dpkg -l | grep -q libaio-dev 2>/dev/null || MISSING_DEPS+=("libaio-dev")
 
 # 如果有缺失的依赖，则安装
 if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
@@ -136,6 +137,7 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
                 libgoogle-glog-dev) YUM_DEPS+=("glog-devel") ;;
                 libspdlog-dev) YUM_DEPS+=("spdlog-devel") ;;
                 libgoogle-perftools-dev) YUM_DEPS+=("gperftools-devel") ;;
+                libaio-dev) YUM_DEPS+=("libaio-devel") ;;
             esac
         done
         sudo yum install -y "${YUM_DEPS[@]}"
@@ -151,6 +153,7 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
                 libgoogle-glog-dev) BREW_DEPS+=("glog") ;;
                 libspdlog-dev) BREW_DEPS+=("spdlog") ;;
                 libgoogle-perftools-dev) BREW_DEPS+=("gperftools") ;;
+                libaio-dev) ;; # macOS doesn't need libaio
             esac
         done
         brew install "${BREW_DEPS[@]}"
