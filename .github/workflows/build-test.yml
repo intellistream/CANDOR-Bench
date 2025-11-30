@@ -98,7 +98,7 @@ jobs:
     - name: Verify environment
       run: |
         source sage-db-bench/bin/activate
-        python -c "import numpy, torch; print('✓ Environment OK')"
+        python -c "import numpy, pandas, yaml; print('✓ Environment OK')"
 
   lint-and-format:
     runs-on: ubuntu-22.04
