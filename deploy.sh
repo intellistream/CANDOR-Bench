@@ -253,13 +253,21 @@ pip install --upgrade pip setuptools wheel
 # ============================================================================
 print_header "步骤 3/7: 安装 Python 依赖"
 
+# 先安装 PyTorch CPU 版本（避免默认安装 CUDA 版本）
+print_step "安装 PyTorch (CPU 版本)..."
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+print_success "PyTorch CPU 版本安装完成"
+
 if [ -f "requirements.txt" ]; then
-    print_step "从 requirements.txt 安装依赖..."
-    pip install -r requirements.txt
+    print_step "从 requirements.txt 安装其他依赖..."
+    # 跳过 torch（已安装）
+    grep -v "^torch" requirements.txt > /tmp/requirements_no_torch.txt || true
+    pip install -r /tmp/requirements_no_torch.txt
+    rm -f /tmp/requirements_no_torch.txt
     print_success "Python 依赖安装完成"
 else
     print_warning "requirements.txt 不存在，安装核心依赖..."
-    pip install torch numpy pybind11 PyYAML pandas scipy h5py matplotlib psutil
+    pip install numpy pybind11 PyYAML pandas scipy h5py matplotlib psutil
     print_success "核心 Python 依赖安装完成"
 fi
 

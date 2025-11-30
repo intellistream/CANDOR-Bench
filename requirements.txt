@@ -20,7 +20,9 @@ gdown>=4.0.0
 # 算法依赖（可选，根据需要安装）
 # ================================
 # faiss-cpu>=1.7.0  # FAISS相关算法（或使用 faiss-gpu）
-torch>=1.9.0  # CANDY相关算法需要
+# 注意：PyTorch 默认从 PyPI 安装可能包含 CUDA，建议手动安装 CPU 版本：
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch>=1.9.0,<2.6.0  # CANDY相关算法需要
 pybind11>=2.6.0  # 编译C++扩展必需
 
 # 开发依赖（可选）
