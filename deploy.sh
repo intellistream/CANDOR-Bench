@@ -201,6 +201,13 @@ if [ "$SKIP_SYSTEM_DEPS" = false ]; then
             sudo apt-get update -qq || print_warning "更新 Intel 源失败"
             sudo apt-get install -y intel-oneapi-mkl-devel || print_warning "Intel MKL 安装失败，Puck 可能无法构建"
             
+            # 设置 MKL 环境变量
+            if [ -f "/opt/intel/oneapi/setvars.sh" ]; then
+                print_step "设置 MKL 环境变量..."
+                source /opt/intel/oneapi/setvars.sh --force
+                print_success "MKL 环境已配置"
+            fi
+            
             echo ""
             print_success "系统依赖安装完成"
             ;;
