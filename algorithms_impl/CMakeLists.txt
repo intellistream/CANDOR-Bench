@@ -130,10 +130,11 @@ else()
     message(WARNING "torch_python library not found, linking may fail")
 endif()
 
-# 基础链接库
+# 基础链接库 - 注意顺序很重要！
+# faiss 必须在最前面，因为其他库（如 CANDY）依赖它
 set(PYCANDY_LIBS
-    ${TORCH_LIBRARIES}
     faiss
+    ${TORCH_LIBRARIES}
     gflags
 )
 
@@ -211,6 +212,10 @@ list(APPEND PYCANDY_LIBS
 
 # 系统库
 list(APPEND PYCANDY_LIBS pthread m dl)
+
+# 再次添加 faiss 到链接列表末尾，解决循环依赖
+# 这对于 Linux 链接器很重要
+list(APPEND PYCANDY_LIBS faiss)
 
 # 链接所有库
 target_link_libraries(PyCANDYAlgo PRIVATE ${PYCANDY_LIBS})
