@@ -20,6 +20,7 @@ set(FAISS_SRC
   IndexFlat.cpp
   IndexFlatCodes.cpp
   IndexHNSW.cpp
+  IndexHNSWOptimized.cpp
   IndexNSW.cpp
   IndexMNRU.cpp
   IndexIDMap.cpp
