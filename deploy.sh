@@ -169,6 +169,7 @@ if [ "$SKIP_SYSTEM_DEPS" = false ]; then
             echo "  - libgflags-dev, libboost-all-dev, libomp-dev"
             echo "  - python3.10, python3.10-venv, python3.10-dev"
             echo "  - wget, curl, linux-tools"
+            echo "  - Intel MKL (for Puck)"
             echo ""
             
             sudo apt-get install -y \
@@ -188,6 +189,13 @@ if [ "$SKIP_SYSTEM_DEPS" = false ]; then
                 linux-tools-common \
                 linux-tools-generic \
                 linux-tools-$(uname -r) || print_warning "部分 perf 工具可能未安装"
+            
+            # 安装 Intel MKL (Puck 需要)
+            print_step "安装 Intel MKL..."
+            wget -qO - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | sudo apt-key add - 2>/dev/null || print_warning "添加 Intel GPG key 失败"
+            echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list >/dev/null
+            sudo apt-get update -qq || print_warning "更新 Intel 源失败"
+            sudo apt-get install -y intel-oneapi-mkl-devel || print_warning "Intel MKL 安装失败，Puck 可能无法构建"
             
             echo ""
             print_success "系统依赖安装完成"
