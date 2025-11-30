@@ -184,5 +184,5 @@ python -m benchmark_anns run-streaming \
 ## 参考资料
 
 - [big-ann-benchmarks](https://github.com/harsha-simhadri/big-ann-benchmarks)
-- 测试文件位置: `benchmark_anns/tests/runbooks/`
+- 测试文件位置: `runbooks/`
 
