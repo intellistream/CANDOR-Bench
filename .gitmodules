@@ -2,18 +2,6 @@
 	path = DiskANN
 	url = https://github.com/microsoft/DiskANN.git
 	branch = main
-[submodule "GTI"]
-	path = algorithms_impl/gti
-	url = https://github.com/MingqiWang-coder/GTI-Graph-based-Tree-Index.git
-	branch = main
-[submodule "IP-DiskANN"]
-	path = algorithms_impl/ipdiskann
-	url = https://github.com/intellistream/IP-DiskANN.git
-	branch = main
-[submodule "PLSH"]
-	path = algorithms_impl/plsh
-	url = https://github.com/Kwan-Yiu/PLSH.git
-	branch = master
 [submodule "algorithms_impl/gti"]
 	path = algorithms_impl/gti
 	url = https://github.com/MingqiWang-coder/GTI-Graph-based-Tree-Index.git
@@ -26,3 +14,7 @@
 	path = algorithms_impl/plsh
 	url = https://github.com/Kwan-Yiu/PLSH.git
 	branch = master
+[submodule "algorithms_impl/vsag"]
+	path = algorithms_impl/vsag
+	url = https://github.com/intellistream/vasg.git
+	branch = main
