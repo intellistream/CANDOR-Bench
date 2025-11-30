@@ -36,14 +36,6 @@ jobs:
           wget \
           curl
           
-    - name: Cache virtual environment
-      uses: actions/cache@v4
-      with:
-        path: sage-db-bench
-        key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-venv-
-          
     - name: Run deployment script
       run: |
         chmod +x deploy.sh
