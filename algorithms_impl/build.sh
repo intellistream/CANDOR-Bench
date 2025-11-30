@@ -116,6 +116,7 @@ pkg-config --exists pybind11 2>/dev/null || MISSING_DEPS+=("pybind11-dev")
 dpkg -l | grep -q libnuma-dev 2>/dev/null || MISSING_DEPS+=("libnuma-dev")
 dpkg -l | grep -q libunwind-dev 2>/dev/null || MISSING_DEPS+=("libunwind-dev")
 pkg-config --exists libglog 2>/dev/null || MISSING_DEPS+=("libgoogle-glog-dev")
+pkg-config --exists spdlog 2>/dev/null || MISSING_DEPS+=("libspdlog-dev")
 
 # 如果有缺失的依赖，则安装
 if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
@@ -132,6 +133,7 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
                 libnuma-dev) YUM_DEPS+=("numactl-devel") ;;
                 libunwind-dev) YUM_DEPS+=("libunwind-devel") ;;
                 libgoogle-glog-dev) YUM_DEPS+=("glog-devel") ;;
+                libspdlog-dev) YUM_DEPS+=("spdlog-devel") ;;
             esac
         done
         sudo yum install -y "${YUM_DEPS[@]}"
@@ -145,6 +147,7 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
                 libnuma-dev) BREW_DEPS+=("numactl") ;;
                 libunwind-dev) BREW_DEPS+=("libunwind") ;;
                 libgoogle-glog-dev) BREW_DEPS+=("glog") ;;
+                libspdlog-dev) BREW_DEPS+=("spdlog") ;;
             esac
         done
         brew install "${BREW_DEPS[@]}"
