@@ -1,5 +1,6 @@
 """VSAG HNSW streaming integration for SAGE benchmarks."""
 
+#Todo: VSAG的查询似乎只支持单向量查询
 from __future__ import annotations
 
 import copy
