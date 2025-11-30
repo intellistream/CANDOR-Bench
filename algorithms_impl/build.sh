@@ -117,6 +117,7 @@ dpkg -l | grep -q libnuma-dev 2>/dev/null || MISSING_DEPS+=("libnuma-dev")
 dpkg -l | grep -q libunwind-dev 2>/dev/null || MISSING_DEPS+=("libunwind-dev")
 pkg-config --exists libglog 2>/dev/null || MISSING_DEPS+=("libgoogle-glog-dev")
 pkg-config --exists spdlog 2>/dev/null || MISSING_DEPS+=("libspdlog-dev")
+dpkg -l | grep -q libgoogle-perftools-dev 2>/dev/null || MISSING_DEPS+=("libgoogle-perftools-dev")
 
 # 如果有缺失的依赖，则安装
 if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
@@ -134,6 +135,7 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
                 libunwind-dev) YUM_DEPS+=("libunwind-devel") ;;
                 libgoogle-glog-dev) YUM_DEPS+=("glog-devel") ;;
                 libspdlog-dev) YUM_DEPS+=("spdlog-devel") ;;
+                libgoogle-perftools-dev) YUM_DEPS+=("gperftools-devel") ;;
             esac
         done
         sudo yum install -y "${YUM_DEPS[@]}"
@@ -148,6 +150,7 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
                 libunwind-dev) BREW_DEPS+=("libunwind") ;;
                 libgoogle-glog-dev) BREW_DEPS+=("glog") ;;
                 libspdlog-dev) BREW_DEPS+=("spdlog") ;;
+                libgoogle-perftools-dev) BREW_DEPS+=("gperftools") ;;
             esac
         done
         brew install "${BREW_DEPS[@]}"
