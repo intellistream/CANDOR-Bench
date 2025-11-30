@@ -62,7 +62,8 @@ if [ -n "$TORCH_CMAKE_PATH" ]; then
         -DFAISS_ENABLE_GPU=OFF \
         -DFAISS_ENABLE_PYTHON=OFF \
         -DBUILD_TESTING=OFF \
-        || { echo ""; echo "❌ CMake configuration failed"; exit 1; }
+        2>&1 | tee cmake_config.log \
+        || { echo ""; echo "❌ CMake configuration failed"; cat cmake_config.log | tail -100; exit 1; }
 else
     cmake .. \
         -DCMAKE_BUILD_TYPE=Release \
@@ -70,7 +71,8 @@ else
         -DFAISS_ENABLE_GPU=OFF \
         -DFAISS_ENABLE_PYTHON=OFF \
         -DBUILD_TESTING=OFF \
-        || { echo ""; echo "❌ CMake configuration failed"; exit 1; }
+        2>&1 | tee cmake_config.log \
+        || { echo ""; echo "❌ CMake configuration failed"; cat cmake_config.log | tail -100; exit 1; }
 fi
 
 echo ""

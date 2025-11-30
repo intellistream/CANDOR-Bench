@@ -110,27 +110,85 @@ pybind11_add_module(PyCANDYAlgo
 )
 
 # 查找 torch_python 库
-find_library(TORCH_PYTHON_LIBRARY torch_python PATHS "${TORCH_INSTALL_PREFIX}/lib")
+find_library(TORCH_PYTHON_LIBRARY torch_python PATHS "${TORCH_INSTALL_PREFIX}/lib" NO_DEFAULT_PATH)
+if(NOT TORCH_PYTHON_LIBRARY)
+    message(WARNING "torch_python library not found at ${TORCH_INSTALL_PREFIX}/lib, trying Python site-packages")
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))"
+        OUTPUT_VARIABLE TORCH_LIB_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    find_library(TORCH_PYTHON_LIBRARY torch_python PATHS "${TORCH_LIB_DIR}" NO_DEFAULT_PATH)
+endif()
 
-# 链接库
-target_link_libraries(PyCANDYAlgo PRIVATE
+if(TORCH_PYTHON_LIBRARY)
+    message(STATUS "Found torch_python: ${TORCH_PYTHON_LIBRARY}")
+else()
+    message(WARNING "torch_python library not found, linking may fail")
+endif()
+
+# 基础链接库
+set(PYCANDY_LIBS
     ${TORCH_LIBRARIES}
-    ${TORCH_PYTHON_LIBRARY}
     faiss
     gflags
-    glog
-    aio
-    diskann_s
-    SPTAGLibStatic
-    puck
+)
+
+# 可选: torch_python
+if(TORCH_PYTHON_LIBRARY)
+    list(APPEND PYCANDY_LIBS ${TORCH_PYTHON_LIBRARY})
+endif()
+
+# 可选: glog
+find_library(GLOG_LIB glog)
+if(GLOG_LIB)
+    list(APPEND PYCANDY_LIBS ${GLOG_LIB})
+    message(STATUS "Found glog: ${GLOG_LIB}")
+else()
+    message(WARNING "glog not found")
+endif()
+
+# 可选: aio
+find_library(AIO_LIB aio)
+if(AIO_LIB)
+    list(APPEND PYCANDY_LIBS ${AIO_LIB})
+endif()
+
+# 必需: DiskANN
+if(TARGET diskann_s)
+    list(APPEND PYCANDY_LIBS diskann_s)
+else()
+    message(FATAL_ERROR "diskann_s target not found - DiskANN build failed")
+endif()
+
+# 必需: SPTAG
+if(TARGET SPTAGLibStatic)
+    list(APPEND PYCANDY_LIBS SPTAGLibStatic)
+else()
+    message(FATAL_ERROR "SPTAGLibStatic target not found - SPTAG build failed")
+endif()
+
+# 必需: Puck
+if(TARGET puck)
+    list(APPEND PYCANDY_LIBS puck)
+else()
+    message(FATAL_ERROR "puck target not found - Puck build failed")
+endif()
+
+# MKL 库（Puck 依赖）
+list(APPEND PYCANDY_LIBS
     mkl_intel_ilp64
     mkl_intel_thread
     mkl_core
     iomp5
-    pthread
-    m
-    dl
 )
+
+# 系统库
+list(APPEND PYCANDY_LIBS pthread m dl)
+
+# 链接所有库
+target_link_libraries(PyCANDYAlgo PRIVATE ${PYCANDY_LIBS})
+message(STATUS "PyCANDYAlgo will link: ${PYCANDY_LIBS}")
 
 # 设置输出目录
 set_target_properties(PyCANDYAlgo PROPERTIES
