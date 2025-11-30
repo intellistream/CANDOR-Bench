@@ -34,15 +34,34 @@ echo ""
 echo "Configuring with CMake..."
 echo "----------------------------------------"
 
+# 获取 PyTorch CMake 路径（如果存在）
+TORCH_CMAKE_PATH=""
+if python3 -c "import torch; print(torch.utils.cmake_prefix_path)" 2>/dev/null; then
+    TORCH_CMAKE_PATH=$(python3 -c "import torch; print(torch.utils.cmake_prefix_path)")
+    echo "  PyTorch CMake path: $TORCH_CMAKE_PATH"
+else
+    echo "  ⚠ Warning: Could not get torch.utils.cmake_prefix_path"
+fi
+
 # 运行 CMake 配置 (CPU only)
-cmake .. \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DPYTHON_EXECUTABLE=$(which python3) \
-    -DCMAKE_PREFIX_PATH="$(python3 -c 'import torch;print(torch.utils.cmake_prefix_path)')" \
-    -DFAISS_ENABLE_GPU=OFF \
-    -DFAISS_ENABLE_PYTHON=OFF \
-    -DBUILD_TESTING=OFF \
-    || { echo ""; echo "❌ CMake configuration failed"; exit 1; }
+if [ -n "$TORCH_CMAKE_PATH" ]; then
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DPYTHON_EXECUTABLE=$(which python3) \
+        -DCMAKE_PREFIX_PATH="$TORCH_CMAKE_PATH" \
+        -DFAISS_ENABLE_GPU=OFF \
+        -DFAISS_ENABLE_PYTHON=OFF \
+        -DBUILD_TESTING=OFF \
+        || { echo ""; echo "❌ CMake configuration failed"; exit 1; }
+else
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DPYTHON_EXECUTABLE=$(which python3) \
+        -DFAISS_ENABLE_GPU=OFF \
+        -DFAISS_ENABLE_PYTHON=OFF \
+        -DBUILD_TESTING=OFF \
+        || { echo ""; echo "❌ CMake configuration failed"; exit 1; }
+fi
 
 echo ""
 echo "========================================="
