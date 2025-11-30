@@ -34,6 +34,16 @@ echo ""
 echo "Configuring with CMake..."
 echo "----------------------------------------"
 
+# 设置 MKL 环境变量（Puck 需要）
+if [ -d "/opt/intel/oneapi/mkl/latest" ]; then
+    export MKLROOT="/opt/intel/oneapi/mkl/latest"
+    export LD_LIBRARY_PATH="$MKLROOT/lib/intel64:$LD_LIBRARY_PATH"
+    echo "  MKL found: $MKLROOT"
+else
+    echo "  ⚠ Warning: MKL not found at /opt/intel/oneapi/mkl/latest"
+    echo "  Puck may fail to build"
+fi
+
 # 获取 PyTorch CMake 路径（如果存在）
 TORCH_CMAKE_PATH=""
 if python3 -c "import torch; print(torch.utils.cmake_prefix_path)" 2>/dev/null; then
