@@ -140,20 +140,23 @@ if [ "$BUILD_PYCANDY" = true ]; then
     
     if [ -f "build.sh" ]; then
         print_info "Running build.sh..."
-        bash build.sh
-        
-        # 检查生成的 .so 文件
-        SO_FILE=$(ls PyCANDYAlgo*.so 2>/dev/null | head -1)
-        if [ -n "$SO_FILE" ]; then
-            print_success "PyCANDY built: $SO_FILE"
-            
-            if [ "$AUTO_INSTALL" = true ]; then
-                print_info "Installing PyCANDYAlgo..."
-                pip install -e . --no-build-isolation
-                print_success "PyCANDYAlgo installed"
+        if bash build.sh; then
+            # 检查生成的 .so 文件
+            SO_FILE=$(ls PyCANDYAlgo*.so 2>/dev/null | head -1)
+            if [ -n "$SO_FILE" ]; then
+                print_success "PyCANDY built: $SO_FILE"
+                
+                if [ "$AUTO_INSTALL" = true ]; then
+                    print_info "Installing PyCANDYAlgo..."
+                    pip install -e . --no-build-isolation
+                    print_success "PyCANDYAlgo installed"
+                fi
+            else
+                print_error "PyCANDYAlgo.so not found after build"
+                exit 1
             fi
         else
-            print_error "PyCANDYAlgo.so not found after build"
+            print_error "build.sh failed with exit code $?"
             exit 1
         fi
     else
