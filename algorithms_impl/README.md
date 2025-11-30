@@ -14,37 +14,77 @@
 
 ## 🚀 快速开始
 
-### 1. 安装系统依赖
+### 方式 1: 一键构建所有算法（推荐）
+
 ```bash
+# 1. 安装系统依赖
 # Ubuntu/Debian
 sudo apt-get update && sudo apt-get install -y \
     build-essential cmake libgflags-dev libboost-all-dev libomp-dev
 
 # macOS
 brew install cmake gflags boost libomp
-```
 
-### 2. 安装 Python 依赖
-```bash
+# 2. 安装 Python 依赖
 pip install torch numpy pybind11
-```
 
-### 3. 初始化 Git Submodules（首次）
-```bash
-cd benchmark_anns/algorithms_impl
+# 3. 初始化 Git Submodules（首次）
 git submodule update --init --recursive
+
+# 4. 构建所有算法
+./build_all.sh
+
+# 5. 安装 Python 包
+./install_packages.sh
 ```
 
-### 4. 构建
+**构建选项**:
+```bash
+./build_all.sh --install              # 构建并自动安装
+./build_all.sh --skip-pycandy         # 跳过 PyCANDY
+./build_all.sh --skip-third-party     # 跳过第三方库
+./build_all.sh --skip-vsag            # 跳过 VSAG
+./build_all.sh --help                 # 显示帮助
+```
+
+### 方式 2: 分别构建各个算法
+
+#### 构建 PyCANDY 算法
 ```bash
 ./build.sh
 ```
+生成 `PyCANDYAlgo.cpython-310-x86_64-linux-gnu.so`
 
-构建脚本会自动编译所有第三方库（GTI, IP-DiskANN, PLSH）和主模块。首次编译需要 15-40 分钟，成功后生成 `PyCANDYAlgo.cpython-310-x86_64-linux-gnu.so`
-
-### 5. 验证
+#### 构建第三方库 (GTI, IP-DiskANN, PLSH)
 ```bash
-python3 -c "import PyCANDYAlgo; print('✅ Success!')"
+# GTI
+cd gti/GTI
+mkdir -p build && cd build
+cmake .. && make -j$(nproc) && make install
+
+# IP-DiskANN
+cd ipdiskann
+mkdir -p build && cd build
+cmake .. && make -j$(nproc) && make install
+
+# PLSH
+cd plsh
+mkdir -p build && cd build
+cmake .. && make -j$(nproc) && make install
+```
+
+#### 构建 VSAG
+```bash
+cd vsag
+make release                          # 构建 release 版本
+make pyvsag PY_VERSION=3.10          # 构建 Python wheel
+pip install wheelhouse/pyvsag*.whl   # 安装
+```
+
+### 验证安装
+```bash
+python3 -c "import PyCANDYAlgo; print('✅ PyCANDYAlgo OK')"
+python3 -c "import pyvsag; print('✅ pyvsag OK')"
 ```
 
 **故障排除**: 如遇到 `ImportError: undefined symbol` 错误，删除旧版本后重新安装：
@@ -66,27 +106,37 @@ algorithms_impl/                   # C++ 源码和编译配置
 ├── gti/                           # GTI 源码 (submodule)
 ├── ipdiskann/                     # IP-DiskANN 源码 (submodule)
 ├── plsh/                          # PLSH 源码 (submodule)
+├── vsag/                          # VSAG 源码 (submodule)
 ├── pybind11/                      # pybind11 库 (submodule)
-├── build.sh                       # 一键构建脚本
+├── build.sh                       # PyCANDY 构建脚本
+├── build_all.sh                   # 一键构建所有算法脚本
+├── install_packages.sh            # 安装 Python 包脚本
 ├── CMakeLists.txt                 # CMake 配置
+├── setup.py                       # PyCANDYAlgo 打包配置
 └── README.md                      # 本文件
 ```
 
-**Python wrapper 层**在 `benchmark_anns/bench/algorithms/` 目录，提供友好的 NumPy 接口。
+**Python wrapper 层**在 `bench/algorithms/` 目录，提供友好的 NumPy 接口。
 
 ## 第三方库管理
 
 本目录使用 **git submodule** 管理第三方库：
 
-| 库 | 说明 | 依赖要求 |
-|---|---|---|
-| **GTI** | 基于图的树索引 | OpenMP, fmt, n2(内置) |
-| **IP-DiskANN** | 插入优先的 DiskANN | Intel MKL, libaio, Boost |
-| **PLSH** | 并行局部敏感哈希 | pybind11, OpenMP |
-| **Faiss** | Meta 向量相似度搜索 | - |
-| **DiskANN** | 微软磁盘索引 | - |
-| **SPTAG** | 微软空间分区树和图 | - |
-| **Puck** | 百度向量搜索引擎 | - |
+| 库 | 说明 | 构建方式 | Python 包 |
+|---|---|---|---|
+| **GTI** | 基于图的树索引 | CMake | 无 (C++ only) |
+| **IP-DiskANN** | 插入优先的 DiskANN | CMake | 无 (C++ only) |
+| **PLSH** | 并行局部敏感哈希 | CMake | 无 (C++ only) |
+| **VSAG** | 向量搜索加速引擎 | Makefile + wheel | pyvsag |
+| **Faiss** | Meta 向量相似度搜索 | CMake (集成到 PyCANDY) | - |
+| **DiskANN** | 微软磁盘索引 | CMake (集成到 PyCANDY) | - |
+| **SPTAG** | 微软空间分区树和图 | CMake (集成到 PyCANDY) | - |
+| **Puck** | 百度向量搜索引擎 | CMake (集成到 PyCANDY) | - |
+
+**构建分类**：
+1. **通过 PyCANDY 构建**: Faiss, DiskANN, SPTAG, Puck → 生成 `PyCANDYAlgo.so`
+2. **独立 CMake 构建**: GTI, IP-DiskANN, PLSH → 生成 C++ 库
+3. **独立 Makefile + wheel**: VSAG → 生成 `pyvsag-*.whl`
 
 **Submodule 操作**:
 ```bash

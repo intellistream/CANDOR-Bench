@@ -1,0 +1,60 @@
+# ============================================================================
+# Dockerfile for Testing Algorithm Build in Isolated Environment
+# ============================================================================
+# 
+# 使用方法:
+#   cd tests
+#   docker build -f Dockerfile.algo_build_test -t sage-algo-test ..
+#   docker run --rm -it sage-algo-test
+#
+# ============================================================================
+
+FROM ubuntu:22.04
+
+# 设置非交互式安装
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+# 安装系统依赖
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    libgflags-dev \
+    libboost-all-dev \
+    libomp-dev \
+    pkg-config \
+    python3 \
+    python3-pip \
+    python3-dev \
+    wget \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 设置工作目录
+WORKDIR /workspace
+
+# 复制项目文件
+COPY . .
+
+# 安装 Python 依赖
+RUN pip3 install --no-cache-dir torch numpy pybind11
+
+# 初始化 submodules（如果需要）
+RUN git submodule update --init --recursive || echo "Submodules already initialized"
+
+# 默认命令：显示构建帮助
+CMD ["bash", "-c", "echo '=== SAGE-DB-Bench Algorithm Build Test ===' && \
+     echo '' && \
+     echo 'To build all algorithms:' && \
+     echo '  cd algorithms_impl && ./build_all.sh --install' && \
+     echo '' && \
+     echo 'To build selectively:' && \
+     echo '  cd algorithms_impl && ./build_all.sh --skip-pycandy' && \
+     echo '  cd algorithms_impl && ./build_all.sh --skip-third-party' && \
+     echo '  cd algorithms_impl && ./build_all.sh --skip-vsag' && \
+     echo '' && \
+     echo 'To test build:' && \
+     echo '  cd tests && ./test_build_algorithms.sh' && \
+     echo '' && \
+     bash"]

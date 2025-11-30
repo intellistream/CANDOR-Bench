@@ -21,16 +21,25 @@ dist/
 *.egg-info/
 algorithms_impl/build/
 algorithms_impl/*/build/
+algorithms_impl/build-release/
+algorithms_impl/vsag/build/
+algorithms_impl/vsag/build-release/
+algorithms_impl/vsag/wheelhouse/
+algorithms_impl/vsag/.venv/
+algorithms_impl/PyCANDYAlgo*.so
 
 # 数据文件（太大）
 raw_data/
 results/
+datasets/
 *.data
 *.fvecs
 *.ivecs
 *.bvecs
 *.hdf5
 *.h5
+*.index
+*.bin
 
 # 日志
 logs/

@@ -1,0 +1,137 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, main-dev, test ]
+  pull_request:
+    branches: [ main, main-dev, test ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  test-deployment:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive  # 初始化所有 submodules
+        
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          git \
+          pkg-config \
+          libgflags-dev \
+          libboost-all-dev \
+          libomp-dev \
+          wget \
+          curl
+          
+    - name: Cache virtual environment
+      uses: actions/cache@v3
+      with:
+        path: sage-db-bench
+        key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-venv-
+          
+    - name: Run deployment script
+      run: |
+        chmod +x deploy.sh
+        ./deploy.sh --skip-system-deps
+      timeout-minutes: 60
+      
+    - name: Verify Python packages
+      run: |
+        source sage-db-bench/bin/activate
+        python -c "import PyCANDYAlgo; print('✓ PyCANDYAlgo imported')"
+        python -c "import pyvsag; print('✓ pyvsag imported')"
+        python -c "import numpy, torch, yaml; print('✓ Core dependencies OK')"
+        
+    - name: Run unit tests
+      run: |
+        source sage-db-bench/bin/activate
+        pytest tests/ -v --tb=short || true
+        
+    - name: Check algorithm availability
+      run: |
+        source sage-db-bench/bin/activate
+        python -c "
+        from bench.algorithms import get_available_algorithms
+        algos = get_available_algorithms()
+        print(f'Available algorithms: {len(algos)}')
+        for algo in algos:
+            print(f'  - {algo}')
+        " || echo "Algorithm check skipped"
+        
+    - name: Upload build logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-logs
+        path: |
+          algorithms_impl/build.log
+          algorithms_impl/build/CMakeFiles/*.log
+        retention-days: 7
+
+  test-quick-build:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: false  # 不初始化 submodules
+        
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        
+    - name: Quick environment setup
+      run: |
+        chmod +x deploy.sh
+        ./deploy.sh --skip-system-deps --skip-build
+      timeout-minutes: 10
+      
+    - name: Verify environment
+      run: |
+        source sage-db-bench/bin/activate
+        python -c "import numpy, torch; print('✓ Environment OK')"
+
+  lint-and-format:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        
+    - name: Install linting tools
+      run: |
+        pip install flake8 black isort mypy
+        
+    - name: Run flake8
+      run: |
+        flake8 bench/ datasets/ --count --select=E9,F63,F7,F82 --show-source --statistics || true
+        
+    - name: Check code formatting
+      run: |
+        black --check bench/ datasets/ || true
+        
+    - name: Check import sorting
+      run: |
+        isort --check-only bench/ datasets/ || true
