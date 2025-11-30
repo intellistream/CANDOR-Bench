@@ -96,9 +96,12 @@ endif()
 # 添加 pybind11
 add_subdirectory(${PYBIND11_DIR} pybind11_build)
 
-# 收集 DiskANN Python 绑定源文件
+# 收集 DiskANN Python 绑定源文件（排除 module.cpp，因为它定义了独立的 PYBIND11_MODULE）
 file(GLOB DISKANN_PYTHON_SOURCES
-    "${DISKANN_DIR}/python/src/*.cpp"
+    "${DISKANN_DIR}/python/src/builder.cpp"
+    "${DISKANN_DIR}/python/src/dynamic_memory_index.cpp"
+    "${DISKANN_DIR}/python/src/static_disk_index.cpp"
+    "${DISKANN_DIR}/python/src/static_memory_index.cpp"
 )
 
 # 编译 PyCANDYAlgo 模块
