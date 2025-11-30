@@ -35,15 +35,22 @@ echo "Configuring with CMake..."
 echo "----------------------------------------"
 
 # 设置 MKL 环境变量（Puck 需要）
+if [ -f "/opt/intel/oneapi/setvars.sh" ]; then
+    echo "  Loading Intel oneAPI environment..."
+    source /opt/intel/oneapi/setvars.sh --force 2>/dev/null
+fi
+
 if [ -d "/opt/intel/oneapi/mkl/latest" ]; then
     export MKLROOT="/opt/intel/oneapi/mkl/latest"
     export LD_LIBRARY_PATH="$MKLROOT/lib/intel64:$LD_LIBRARY_PATH"
     export CPATH="$MKLROOT/include:$CPATH"
+    export CMAKE_PREFIX_PATH="$MKLROOT:$CMAKE_PREFIX_PATH"
     echo "  MKL found: $MKLROOT"
 elif [ -d "/opt/intel/mkl" ]; then
     export MKLROOT="/opt/intel/mkl"
     export LD_LIBRARY_PATH="$MKLROOT/lib/intel64:$LD_LIBRARY_PATH"
     export CPATH="$MKLROOT/include:$CPATH"
+    export CMAKE_PREFIX_PATH="$MKLROOT:$CMAKE_PREFIX_PATH"
     echo "  MKL found: $MKLROOT"
 else
     echo "  ⚠ Warning: MKL not found"
@@ -59,27 +66,25 @@ else
     echo "  ⚠ Warning: Could not get torch.utils.cmake_prefix_path"
 fi
 
-# 运行 CMake 配置 (CPU only)
+# 构建 CMake 参数
+CMAKE_ARGS=(
+    -DCMAKE_BUILD_TYPE=Release
+    -DPYTHON_EXECUTABLE=$(which python3)
+    -DFAISS_ENABLE_GPU=OFF
+    -DFAISS_ENABLE_PYTHON=OFF
+    -DBUILD_TESTING=OFF
+)
+
+# 添加 torch 路径
 if [ -n "$TORCH_CMAKE_PATH" ]; then
-    cmake .. \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DPYTHON_EXECUTABLE=$(which python3) \
-        -DCMAKE_PREFIX_PATH="$TORCH_CMAKE_PATH" \
-        -DFAISS_ENABLE_GPU=OFF \
-        -DFAISS_ENABLE_PYTHON=OFF \
-        -DBUILD_TESTING=OFF \
-        2>&1 | tee cmake_config.log \
-        || { echo ""; echo "❌ CMake configuration failed"; cat cmake_config.log | tail -100; exit 1; }
-else
-    cmake .. \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DPYTHON_EXECUTABLE=$(which python3) \
-        -DFAISS_ENABLE_GPU=OFF \
-        -DFAISS_ENABLE_PYTHON=OFF \
-        -DBUILD_TESTING=OFF \
-        2>&1 | tee cmake_config.log \
-        || { echo ""; echo "❌ CMake configuration failed"; cat cmake_config.log | tail -100; exit 1; }
+    CMAKE_ARGS+=(-DCMAKE_PREFIX_PATH="$TORCH_CMAKE_PATH")
 fi
+
+# 运行 CMake 配置
+echo "  Running: cmake ${CMAKE_ARGS[@]} .."
+cmake "${CMAKE_ARGS[@]}" .. \
+    2>&1 | tee cmake_config.log \
+    || { echo ""; echo "❌ CMake configuration failed"; cat cmake_config.log | tail -100; exit 1; }
 
 echo ""
 echo "========================================="
