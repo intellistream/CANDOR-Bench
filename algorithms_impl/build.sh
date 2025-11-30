@@ -38,9 +38,15 @@ echo "----------------------------------------"
 if [ -d "/opt/intel/oneapi/mkl/latest" ]; then
     export MKLROOT="/opt/intel/oneapi/mkl/latest"
     export LD_LIBRARY_PATH="$MKLROOT/lib/intel64:$LD_LIBRARY_PATH"
+    export CPATH="$MKLROOT/include:$CPATH"
+    echo "  MKL found: $MKLROOT"
+elif [ -d "/opt/intel/mkl" ]; then
+    export MKLROOT="/opt/intel/mkl"
+    export LD_LIBRARY_PATH="$MKLROOT/lib/intel64:$LD_LIBRARY_PATH"
+    export CPATH="$MKLROOT/include:$CPATH"
     echo "  MKL found: $MKLROOT"
 else
-    echo "  ⚠ Warning: MKL not found at /opt/intel/oneapi/mkl/latest"
+    echo "  ⚠ Warning: MKL not found"
     echo "  Puck may fail to build"
 fi
 

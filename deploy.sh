@@ -167,6 +167,7 @@ if [ "$SKIP_SYSTEM_DEPS" = false ]; then
             print_info "正在安装以下包:"
             echo "  - build-essential, cmake, git"
             echo "  - libgflags-dev, libboost-all-dev, libomp-dev"
+            echo "  - libgoogle-glog-dev, libfmt-dev, libnuma-dev"
             echo "  - python3.10, python3.10-venv, python3.10-dev"
             echo "  - wget, curl, linux-tools"
             echo "  - Intel MKL (for Puck)"
@@ -178,8 +179,11 @@ if [ "$SKIP_SYSTEM_DEPS" = false ]; then
                 git \
                 pkg-config \
                 libgflags-dev \
+                libgoogle-glog-dev \
+                libfmt-dev \
                 libboost-all-dev \
                 libomp-dev \
+                libnuma-dev \
                 python3.10 \
                 python3.10-venv \
                 python3.10-dev \
@@ -251,6 +255,9 @@ fi
 print_step "激活虚拟环境..."
 source "$VENV_DIR/bin/activate"
 print_success "虚拟环境已激活: $VIRTUAL_ENV"
+
+# 设置 LD_LIBRARY_PATH 优先使用系统库（避免 torch 的 libgomp 冲突）
+export LD_LIBRARY_PATH="/usr/lib/gcc/x86_64-linux-gnu/11:$LD_LIBRARY_PATH"
 
 # 升级 pip
 print_step "升级 pip..."
