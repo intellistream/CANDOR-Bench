@@ -37,7 +37,7 @@ jobs:
           curl
           
     - name: Cache virtual environment
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: sage-db-bench
         key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements.txt') }}
@@ -75,7 +75,7 @@ jobs:
         
     - name: Upload build logs on failure
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: build-logs
         path: |
