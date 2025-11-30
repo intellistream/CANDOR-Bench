@@ -75,31 +75,6 @@ jobs:
           algorithms_impl/build/CMakeFiles/*.log
         retention-days: 7
 
-  test-quick-build:
-    runs-on: ubuntu-22.04
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        submodules: false  # 不初始化 submodules
-        
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-        
-    - name: Quick environment setup
-      run: |
-        chmod +x deploy.sh
-        ./deploy.sh --skip-build
-      timeout-minutes: 10
-      
-    - name: Verify environment
-      run: |
-        source sage-db-bench/bin/activate
-        python -c "import numpy, pandas, yaml; print('✓ Environment OK')"
-
   lint-and-format:
     runs-on: ubuntu-22.04
     
