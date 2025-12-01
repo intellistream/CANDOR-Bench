@@ -207,9 +207,11 @@ if [ "$BUILD_THIRD_PARTY" = true ]; then
         [ -d build ] && rm -rf build
         mkdir -p build
         cd build
-        cmake ..
+        # 使用本地安装目录，避免权限问题
+        cmake -DCMAKE_INSTALL_PREFIX="$SCRIPT_DIR/build/install" ..
         make -j${MAX_JOBS}
-        make install || print_warning "IP-DiskANN install failed (not critical)"
+        # 尝试安装，失败也继续（CI 环境可能没有 sudo 权限）
+        make install 2>/dev/null || print_warning "IP-DiskANN install failed (not critical)"
         cd "$SCRIPT_DIR"
         print_success "IP-DiskANN built successfully"
     else
@@ -223,9 +225,11 @@ if [ "$BUILD_THIRD_PARTY" = true ]; then
         [ -d build ] && rm -rf build
         mkdir -p build
         cd build
-        cmake ..
+        # 使用本地安装目录，避免权限问题
+        cmake -DCMAKE_INSTALL_PREFIX="$SCRIPT_DIR/build/install" ..
         make -j${MAX_JOBS}
-        make install || print_warning "PLSH install failed (not critical)"
+        # 尝试安装，失败也继续
+        make install 2>/dev/null || print_warning "PLSH install failed (not critical)"
         cd "$SCRIPT_DIR"
         print_success "PLSH built successfully"
     else

@@ -244,7 +244,7 @@ if [ -d "gti/GTI" ]; then
     cd build
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$ALGORITHMS_IMPL_DIR/build/install" .. || { echo "❌ GTI cmake failed"; exit 1; }
     make -j${JOBS} || { echo "❌ GTI build failed"; exit 1; }
-    make install || echo "  ⚠ GTI install failed (not critical)"
+    make install 2>/dev/null || echo "  ⚠ GTI install failed (not critical)"
     cd ../../..
     echo "✓ GTI built successfully"
     echo ""
@@ -265,7 +265,7 @@ if [ -d "ipdiskann" ]; then
     cd build
     cmake -DCMAKE_INSTALL_PREFIX="$ALGORITHMS_IMPL_DIR/build/install" .. || { echo "❌ IP-DiskANN cmake failed"; exit 1; }
     make -j${JOBS} || { echo "❌ IP-DiskANN build failed"; exit 1; }
-    make install || echo "  ⚠ IP-DiskANN install failed (not critical)"
+    make install 2>/dev/null || echo "  ⚠ IP-DiskANN install failed (not critical)"
     cd ../..
     echo "✓ IP-DiskANN built successfully"
     echo ""
@@ -286,7 +286,7 @@ if [ -d "plsh" ]; then
     cd build
     cmake -DCMAKE_INSTALL_PREFIX="$ALGORITHMS_IMPL_DIR/build/install" .. || { echo "❌ PLSH cmake failed"; exit 1; }
     make -j${JOBS} || { echo "❌ PLSH build failed"; exit 1; }
-    make install || echo "  ⚠ PLSH install failed (not critical)"
+    make install 2>/dev/null || echo "  ⚠ PLSH install failed (not critical)"
     cd ../..
     echo "✓ PLSH built successfully"
     echo ""
