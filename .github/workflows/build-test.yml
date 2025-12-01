@@ -90,17 +90,21 @@ jobs:
     - name: Verify Python packages
       run: |
         source sage-db-bench/bin/activate
+        # 确认使用正确的 Python
+        which python3
+        python3 --version
+        
         # 设置库路径
-        TORCH_LIB=$(python -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))")
+        TORCH_LIB=$(python3 -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))")
         export LD_LIBRARY_PATH="$TORCH_LIB:$LD_LIBRARY_PATH"
         
         # 测试导入 PyCANDYAlgo（所有分支）
-        python -c "import PyCANDYAlgo; print('✓ PyCANDYAlgo imported')"
+        cd algorithms_impl && python3 -c "import PyCANDYAlgo; print('✓ PyCANDYAlgo imported'); print(f'  Version: {PyCANDYAlgo.__version__}'); print(f'  Compiled: {PyCANDYAlgo.__compiled_time__}')" && cd ..
         
         # 跳过 pyvsag 测试（所有分支都不构建 VSAG）
-        # python -c "import pyvsag; print('✓ pyvsag imported')"
+        # python3 -c "import pyvsag; print('✓ pyvsag imported')"
         
-        python -c "import numpy, torch, yaml; print('✓ Core dependencies OK')"
+        python3 -c "import numpy, torch, yaml; print('✓ Core dependencies OK')"
         
     - name: Run unit tests
       run: |
