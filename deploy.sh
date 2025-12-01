@@ -335,8 +335,15 @@ if [ "$SKIP_BUILD" = false ]; then
         print_info "这可能需要 15-40 分钟，请耐心等待..."
         echo ""
         
+        # 在 CI 环境中跳过 VSAG 构建（速度慢且容易出错）
+        BUILD_ARGS=""
+        if [ -n "$CI" ]; then
+            BUILD_ARGS="--skip-vsag"
+            print_info "CI 环境：跳过 VSAG 构建"
+        fi
+        
         # 运行构建脚本并保存退出代码
-        if bash build_all.sh; then
+        if bash build_all.sh $BUILD_ARGS; then
             print_success "算法构建完成"
         else
             BUILD_EXIT_CODE=$?
