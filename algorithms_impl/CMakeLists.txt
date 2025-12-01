@@ -74,7 +74,14 @@ add_compile_definitions(CANDY_INCLUDE_DIR="${CANDY_DIR}")
 
 # 编译 Faiss
 message(STATUS "Building Faiss...")
+set(FAISS_ENABLE_GPU OFF CACHE BOOL "Disable GPU support")
+set(FAISS_ENABLE_PYTHON OFF CACHE BOOL "Disable Python binding")
+set(BUILD_TESTING OFF CACHE BOOL "Disable tests")
 add_subdirectory(${FAISS_DIR} faiss_build)
+
+# 获取 faiss target 的实际库文件
+get_target_property(FAISS_LIB faiss LOCATION)
+message(STATUS "Faiss library location: ${FAISS_LIB}")
 
 # 编译 DiskANN
 message(STATUS "Building DiskANN...")
@@ -106,7 +113,7 @@ file(GLOB DISKANN_PYTHON_SOURCES
 
 # 编译 PyCANDYAlgo 模块
 message(STATUS "Building PyCANDYAlgo...")
-pybind11_add_module(PyCANDYAlgo 
+pybind11_add_module(PyCANDYAlgo MODULE
     bindings/PyCANDY.cpp
     ${CANDY_SOURCES}
     ${DISKANN_PYTHON_SOURCES}
@@ -131,12 +138,21 @@ else()
 endif()
 
 # 基础链接库 - 注意顺序很重要！
-# faiss 必须在最前面，因为其他库（如 CANDY）依赖它
-set(PYCANDY_LIBS
-    faiss
-    ${TORCH_LIBRARIES}
-    gflags
-)
+# 使用 WHOLE_ARCHIVE 确保 faiss 的所有符号都被包含
+set(PYCANDY_LIBS)
+
+# 第一组：faiss（使用 whole-archive 确保所有符号被导出）
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    list(APPEND PYCANDY_LIBS -Wl,--whole-archive faiss -Wl,--no-whole-archive)
+else()
+    list(APPEND PYCANDY_LIBS faiss)
+endif()
+
+# 第二组：Torch
+list(APPEND PYCANDY_LIBS ${TORCH_LIBRARIES})
+
+# 第三组：基础系统库
+list(APPEND PYCANDY_LIBS gflags pthread dl m)
 
 # 可选: torch_python
 if(TORCH_PYTHON_LIBRARY)
@@ -212,21 +228,31 @@ list(APPEND PYCANDY_LIBS
     iomp5
 )
 
-# 系统库
-list(APPEND PYCANDY_LIBS pthread m dl)
+# 系统库已在前面添加
 
-# 再次添加 faiss 到链接列表末尾，解决循环依赖
-# 这对于 Linux 链接器很重要
-list(APPEND PYCANDY_LIBS faiss)
+# 重要：使用 LINK_WHAT_YOU_USE 避免未使用符号
+set_target_properties(PyCANDYAlgo PROPERTIES
+    LINK_WHAT_YOU_USE FALSE
+)
 
 # 链接所有库
 target_link_libraries(PyCANDYAlgo PRIVATE ${PYCANDY_LIBS})
-message(STATUS "PyCANDYAlgo will link: ${PYCANDY_LIBS}")
+message(STATUS "PyCANDYAlgo linking order:")
+foreach(lib ${PYCANDY_LIBS})
+    message(STATUS "  -> ${lib}")
+endforeach()
+
+# 确保正确的链接器选项 - 允许未定义符号（由 Python 运行时提供）
+set_target_properties(PyCANDYAlgo PROPERTIES
+    LINK_FLAGS "-Wl,--allow-shlib-undefined"
+)
 
 # 设置输出目录
 set_target_properties(PyCANDYAlgo PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${ALGORITHMS_IMPL_DIR}
     CXX_STANDARD 20
+    PREFIX ""
+    SUFFIX ".so"
 )
 
 # 安装规则

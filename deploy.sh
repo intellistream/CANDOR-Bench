@@ -387,15 +387,37 @@ print_header "步骤 7/7: 验证安装"
 
 print_step "测试 Python 包导入..."
 
-# 测试 PyCANDYAlgo
-if python -c "import PyCANDYAlgo" 2>/dev/null; then
+# 测试 PyCANDYAlgo - 使用更详细的错误信息
+echo "正在测试 PyCANDYAlgo 导入..."
+PYCANDY_TEST=$(python3 << 'PYEOF'
+import sys
+try:
+    import PyCANDYAlgo
+    print("SUCCESS")
+    sys.exit(0)
+except ImportError as e:
+    print(f"IMPORT_ERROR: {e}")
+    sys.exit(1)
+except Exception as e:
+    print(f"OTHER_ERROR: {e}")
+    sys.exit(2)
+PYEOF
+)
+
+if echo "$PYCANDY_TEST" | grep -q "SUCCESS"; then
     print_success "PyCANDYAlgo 导入成功"
 else
-    print_warning "PyCANDYAlgo 导入失败（可能未构建）"
+    print_warning "PyCANDYAlgo 导入失败"
+    echo "$PYCANDY_TEST" | head -3
+    echo ""
+    print_info "可能的解决方案："
+    echo "  1. 检查 .so 文件是否存在: find algorithms_impl -name '*.so'"
+    echo "  2. 手动测试: python3 -c 'import PyCANDYAlgo'"
+    echo "  3. 查看详细错误: python3 -c 'import PyCANDYAlgo' 2>&1"
 fi
 
 # 测试 pyvsag
-if python -c "import pyvsag" 2>/dev/null; then
+if python3 -c "import pyvsag" 2>/dev/null; then
     print_success "pyvsag 导入成功"
 else
     print_warning "pyvsag 导入失败（可能未构建）"
@@ -404,7 +426,7 @@ fi
 # 测试其他核心包
 print_step "测试核心依赖..."
 for pkg in numpy torch yaml pandas; do
-    if python -c "import $pkg" 2>/dev/null; then
+    if python3 -c "import $pkg" 2>/dev/null; then
         print_success "$pkg 可用"
     else
         print_error "$pkg 不可用"
