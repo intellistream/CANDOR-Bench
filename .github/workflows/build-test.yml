@@ -10,6 +10,10 @@ on:
 jobs:
   test-deployment:
     runs-on: ubuntu-22.04
+    # test 分支做快速测试，main 和 main-dev 做完整测试
+    # 所有分支都跳过 VSAG（通过 CI 环境变量自动处理）
+    env:
+      FAST_BUILD: ${{ github.ref == 'refs/heads/test' && 'true' || 'false' }}
     
     steps:
     - name: Checkout code
@@ -21,6 +25,26 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
+    
+    - name: Cache pip packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Cache CMake build
+      uses: actions/cache@v4
+      with:
+        path: |
+          algorithms_impl/build
+          algorithms_impl/faiss/build
+          algorithms_impl/SPTAG/Release
+          algorithms_impl/DiskANN/build
+        key: ${{ runner.os }}-cmake-${{ hashFiles('algorithms_impl/CMakeLists.txt', 'algorithms_impl/**/*.cmake') }}
+        restore-keys: |
+          ${{ runner.os }}-cmake-
         
     - name: Install system dependencies
       run: |
@@ -38,15 +62,30 @@ jobs:
           
     - name: Clean old build artifacts
       run: |
-        # 清理可能存在的旧构建文件
+        # 只清理 .so 文件，保留 build 缓存
         rm -rf algorithms_impl/PyCANDYAlgo*.so
-        rm -rf algorithms_impl/build
         
     - name: Run deployment script
       run: |
         chmod +x deploy.sh
+        # 设置并行编译数量
+        export MAKEFLAGS="-j$(nproc)"
+        export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)
+        
+        # CI 环境变量已设置，deploy.sh 会自动跳过 VSAG
+        # test 分支：快速构建
+        # main/main-dev 分支：完整构建
+        if [ "${{ env.FAST_BUILD }}" = "true" ]; then
+          echo "🚀 快速构建模式（test 分支，跳过 VSAG）"
+        else
+          echo "🔨 完整构建模式（main/main-dev 分支，跳过 VSAG）"
+        fi
         ./deploy.sh
       timeout-minutes: 60
+      env:
+        # 加速 pip 安装
+        PIP_NO_CACHE_DIR: false
+        PIP_DISABLE_PIP_VERSION_CHECK: 1
       
     - name: Verify Python packages
       run: |
@@ -55,15 +94,26 @@ jobs:
         TORCH_LIB=$(python -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))")
         export LD_LIBRARY_PATH="$TORCH_LIB:$LD_LIBRARY_PATH"
         
-        # 测试导入
+        # 测试导入 PyCANDYAlgo（所有分支）
         python -c "import PyCANDYAlgo; print('✓ PyCANDYAlgo imported')"
-        python -c "import pyvsag; print('✓ pyvsag imported')"
+        
+        # 跳过 pyvsag 测试（所有分支都不构建 VSAG）
+        # python -c "import pyvsag; print('✓ pyvsag imported')"
+        
         python -c "import numpy, torch, yaml; print('✓ Core dependencies OK')"
         
     - name: Run unit tests
       run: |
         source sage-db-bench/bin/activate
-        pytest tests/ -v --tb=short || true
+        
+        # test 分支：快速测试（排除性能测试）
+        if [ "${{ env.FAST_BUILD }}" = "true" ]; then
+          echo "🧪 快速测试模式"
+          pytest tests/ -v --tb=short --ignore=tests/test_performance.py -m "not slow" || true
+        else
+          echo "🧪 完整测试模式"
+          pytest tests/ -v --tb=short || true
+        fi
         
     - name: Check algorithm availability
       run: |
