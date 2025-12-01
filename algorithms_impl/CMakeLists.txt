@@ -220,13 +220,58 @@ else()
     message(FATAL_ERROR "puck target not found - Puck build failed")
 endif()
 
-# MKL 库（Puck 依赖）
-list(APPEND PYCANDY_LIBS
-    mkl_intel_ilp64
-    mkl_intel_thread
-    mkl_core
-    iomp5
-)
+# MKL 库（Puck 依赖）- 使用 find_package 或直接查找
+if(DEFINED ENV{MKLROOT})
+    set(MKLROOT $ENV{MKLROOT})
+    message(STATUS "Using MKL from MKLROOT: ${MKLROOT}")
+    
+    # 添加 MKL 链接目录
+    link_directories(${MKLROOT}/lib/intel64)
+    
+    # 按正确顺序链接 MKL
+    list(APPEND PYCANDY_LIBS
+        mkl_intel_ilp64
+        mkl_intel_thread
+        mkl_core
+        iomp5
+    )
+else()
+    # 尝试直接查找 MKL 库
+    find_library(MKL_INTEL_ILP64 mkl_intel_ilp64 
+        PATHS /opt/intel/oneapi/mkl/latest/lib/intel64 /opt/intel/mkl/lib/intel64
+        NO_DEFAULT_PATH)
+    find_library(MKL_INTEL_THREAD mkl_intel_thread
+        PATHS /opt/intel/oneapi/mkl/latest/lib/intel64 /opt/intel/mkl/lib/intel64
+        NO_DEFAULT_PATH)
+    find_library(MKL_CORE mkl_core
+        PATHS /opt/intel/oneapi/mkl/latest/lib/intel64 /opt/intel/mkl/lib/intel64
+        NO_DEFAULT_PATH)
+    find_library(IOMP5 iomp5
+        PATHS /opt/intel/oneapi/mkl/latest/lib/intel64 /opt/intel/mkl/lib/intel64
+              /opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin
+        NO_DEFAULT_PATH)
+    
+    if(MKL_INTEL_ILP64 AND MKL_INTEL_THREAD AND MKL_CORE)
+        message(STATUS "Found MKL libraries:")
+        message(STATUS "  MKL_INTEL_ILP64: ${MKL_INTEL_ILP64}")
+        message(STATUS "  MKL_INTEL_THREAD: ${MKL_INTEL_THREAD}")
+        message(STATUS "  MKL_CORE: ${MKL_CORE}")
+        message(STATUS "  IOMP5: ${IOMP5}")
+        
+        list(APPEND PYCANDY_LIBS
+            ${MKL_INTEL_ILP64}
+            ${MKL_INTEL_THREAD}
+            ${MKL_CORE}
+        )
+        
+        if(IOMP5)
+            list(APPEND PYCANDY_LIBS ${IOMP5})
+        endif()
+    else()
+        message(WARNING "MKL libraries not found - Puck may not work properly")
+        message(WARNING "Install Intel MKL or set MKLROOT environment variable")
+    endif()
+endif()
 
 # 系统库已在前面添加
 
@@ -255,13 +300,10 @@ set_target_properties(PyCANDYAlgo PROPERTIES
     SUFFIX ".so"
 )
 
-# 安装规则
+# 安装规则 - 简化版本，只安装到当前目录
 install(TARGETS PyCANDYAlgo
-    LIBRARY DESTINATION .
+    LIBRARY DESTINATION ${ALGORITHMS_IMPL_DIR}
+    COMPONENT python
 )
 
-message(STATUS "PyCANDYAlgo will be installed to: ${CMAKE_INSTALL_PREFIX}")
-
-install(TARGETS PyCANDYAlgo
-    LIBRARY DESTINATION ${Python3_SITELIB}/benchmark_anns/algorithms_impl
-)
+message(STATUS "PyCANDYAlgo will be built in: ${ALGORITHMS_IMPL_DIR}")

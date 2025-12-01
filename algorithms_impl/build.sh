@@ -41,7 +41,7 @@ echo "----------------------------------------"
 # 设置 MKL 环境变量（Puck 需要）
 if [ -f "/opt/intel/oneapi/setvars.sh" ]; then
     echo "  Loading Intel oneAPI environment..."
-    source /opt/intel/oneapi/setvars.sh --force 2>/dev/null
+    source /opt/intel/oneapi/setvars.sh --force 2>/dev/null || true
 fi
 
 if [ -d "/opt/intel/oneapi/mkl/latest" ]; then
@@ -49,12 +49,14 @@ if [ -d "/opt/intel/oneapi/mkl/latest" ]; then
     export LD_LIBRARY_PATH="$MKLROOT/lib/intel64:$LD_LIBRARY_PATH"
     export CPATH="$MKLROOT/include:$CPATH"
     export CMAKE_PREFIX_PATH="$MKLROOT:$CMAKE_PREFIX_PATH"
+    export LIBRARY_PATH="$MKLROOT/lib/intel64:$LIBRARY_PATH"
     echo "  MKL found: $MKLROOT"
 elif [ -d "/opt/intel/mkl" ]; then
     export MKLROOT="/opt/intel/mkl"
     export LD_LIBRARY_PATH="$MKLROOT/lib/intel64:$LD_LIBRARY_PATH"
     export CPATH="$MKLROOT/include:$CPATH"
     export CMAKE_PREFIX_PATH="$MKLROOT:$CMAKE_PREFIX_PATH"
+    export LIBRARY_PATH="$MKLROOT/lib/intel64:$LIBRARY_PATH"
     echo "  MKL found: $MKLROOT"
 else
     echo "  ⚠ Warning: MKL not found"
