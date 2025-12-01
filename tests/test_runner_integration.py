@@ -16,6 +16,7 @@ sys.path.insert(0, str(project_root))
 
 from bench.runner import BenchmarkRunner
 from datasets.registry import DATASETS
+from datasets import load_dataset
 
 
 def create_mock_algorithm():
@@ -130,7 +131,7 @@ def test_enable_scenario():
     print("=" * 80)
     
     algorithm = create_mock_algorithm()
-    dataset = get_dataset('random-xs')
+    dataset = load_dataset('random-xs')
     
     runner = BenchmarkRunner(
         algorithm=algorithm,
