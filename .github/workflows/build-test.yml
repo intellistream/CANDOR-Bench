@@ -45,6 +45,11 @@ jobs:
     - name: Verify Python packages
       run: |
         source sage-db-bench/bin/activate
+        # 设置库路径
+        TORCH_LIB=$(python -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))")
+        export LD_LIBRARY_PATH="$TORCH_LIB:$LD_LIBRARY_PATH"
+        
+        # 测试导入
         python -c "import PyCANDYAlgo; print('✓ PyCANDYAlgo imported')"
         python -c "import pyvsag; print('✓ pyvsag imported')"
         python -c "import numpy, torch, yaml; print('✓ Core dependencies OK')"

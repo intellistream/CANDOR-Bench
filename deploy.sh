@@ -368,8 +368,38 @@ cd "$SCRIPT_DIR/algorithms_impl"
 print_step "安装 PyCANDYAlgo..."
 SO_FILE=$(ls PyCANDYAlgo*.so 2>/dev/null | head -1)
 if [ -n "$SO_FILE" ] && [ -f "setup.py" ]; then
+    # 设置运行时库路径
+    if [ -d "/opt/intel/oneapi/mkl/latest/lib/intel64" ]; then
+        export LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/latest/lib/intel64:$LD_LIBRARY_PATH"
+    fi
+    
+    # 添加 torch 库路径
+    TORCH_LIB=$(python3 -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))" 2>/dev/null)
+    if [ -n "$TORCH_LIB" ] && [ -d "$TORCH_LIB" ]; then
+        export LD_LIBRARY_PATH="$TORCH_LIB:$LD_LIBRARY_PATH"
+    fi
+    
     pip install -e . --no-build-isolation
     print_success "PyCANDYAlgo 已安装"
+    
+    # 保存库路径到 activate 脚本
+    VENV_ACTIVATE="$SCRIPT_DIR/sage-db-bench/bin/activate"
+    if [ -f "$VENV_ACTIVATE" ]; then
+        # 在 activate 脚本中添加 LD_LIBRARY_PATH 设置
+        if ! grep -q "# PyCANDYAlgo library paths" "$VENV_ACTIVATE"; then
+            cat >> "$VENV_ACTIVATE" << 'ACTIVATE_EOF'
+
+# PyCANDYAlgo library paths
+if [ -d "/opt/intel/oneapi/mkl/latest/lib/intel64" ]; then
+    export LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/latest/lib/intel64:$LD_LIBRARY_PATH"
+fi
+TORCH_LIB=$(python3 -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))" 2>/dev/null)
+if [ -n "$TORCH_LIB" ] && [ -d "$TORCH_LIB" ]; then
+    export LD_LIBRARY_PATH="$TORCH_LIB:$LD_LIBRARY_PATH"
+fi
+ACTIVATE_EOF
+        fi
+    fi
 else
     print_warning "PyCANDYAlgo.so 未找到，跳过安装"
 fi
@@ -397,19 +427,43 @@ print_header "步骤 7/7: 验证安装"
 
 print_step "测试 Python 包导入..."
 
+# 设置运行时库路径
+if [ -d "/opt/intel/oneapi/mkl/latest/lib/intel64" ]; then
+    export LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/latest/lib/intel64:$LD_LIBRARY_PATH"
+fi
+TORCH_LIB=$(python3 -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))" 2>/dev/null)
+if [ -n "$TORCH_LIB" ] && [ -d "$TORCH_LIB" ]; then
+    export LD_LIBRARY_PATH="$TORCH_LIB:$LD_LIBRARY_PATH"
+fi
+
 # 测试 PyCANDYAlgo - 使用更详细的错误信息
 echo "正在测试 PyCANDYAlgo 导入..."
+
+# 首先检查 .so 文件是否存在
+SO_FILE=$(find algorithms_impl -name "PyCANDYAlgo*.so" 2>/dev/null | head -1)
+if [ -n "$SO_FILE" ]; then
+    print_info "找到 .so 文件: $SO_FILE"
+    # 检查依赖库
+    print_info "检查依赖库..."
+    ldd "$SO_FILE" | grep "not found" || echo "  所有依赖库都已找到"
+else
+    print_warning "未找到 PyCANDYAlgo.so 文件"
+fi
+
 PYCANDY_TEST=$(python3 << 'PYEOF'
 import sys
+import traceback
 try:
     import PyCANDYAlgo
     print("SUCCESS")
     sys.exit(0)
 except ImportError as e:
     print(f"IMPORT_ERROR: {e}")
+    traceback.print_exc()
     sys.exit(1)
 except Exception as e:
     print(f"OTHER_ERROR: {e}")
+    traceback.print_exc()
     sys.exit(2)
 PYEOF
 )
@@ -418,12 +472,13 @@ if echo "$PYCANDY_TEST" | grep -q "SUCCESS"; then
     print_success "PyCANDYAlgo 导入成功"
 else
     print_warning "PyCANDYAlgo 导入失败"
-    echo "$PYCANDY_TEST" | head -3
+    echo "$PYCANDY_TEST"
     echo ""
     print_info "可能的解决方案："
     echo "  1. 检查 .so 文件是否存在: find algorithms_impl -name '*.so'"
     echo "  2. 手动测试: python3 -c 'import PyCANDYAlgo'"
     echo "  3. 查看详细错误: python3 -c 'import PyCANDYAlgo' 2>&1"
+    echo "  4. 检查依赖库: ldd \$(find algorithms_impl -name 'PyCANDYAlgo*.so')"
 fi
 
 # 测试 pyvsag
