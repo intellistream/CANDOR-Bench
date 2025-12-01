@@ -347,7 +347,6 @@ class SIFT(Dataset):
     def short_name(self) -> str:
         return "sift"
 
-
 class SIFT100M(Dataset):
     """
     SIFT 100M 数据集

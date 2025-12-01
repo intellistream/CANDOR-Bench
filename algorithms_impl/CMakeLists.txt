@@ -175,11 +175,13 @@ else()
     endif()
 endif()
 
-# 可选: aio
-find_library(AIO_LIB aio)
-if(AIO_LIB)
-    list(APPEND PYCANDY_LIBS ${AIO_LIB})
+# 必需: libaio (DiskANN 需要)
+find_library(AIO_LIB aio REQUIRED)
+if(NOT AIO_LIB)
+    message(FATAL_ERROR "libaio not found - install libaio-dev or libaio-devel")
 endif()
+list(APPEND PYCANDY_LIBS ${AIO_LIB})
+message(STATUS "Found libaio: ${AIO_LIB}")
 
 # 必需: DiskANN (依赖 glog)
 if(TARGET diskann_s)
