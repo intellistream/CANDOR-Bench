@@ -112,7 +112,7 @@ file(GLOB DISKANN_PYTHON_SOURCES
 
 # 编译 PyCANDYAlgo 模块
 message(STATUS "Building PyCANDYAlgo...")
-pybind11_add_module(PyCANDYAlgo 
+pybind11_add_module(PyCANDYAlgo MODULE
     bindings/PyCANDY.cpp
     ${CANDY_SOURCES}
     ${DISKANN_PYTHON_SOURCES}
@@ -286,17 +286,27 @@ foreach(lib ${PYCANDY_LIBS})
     message(STATUS "  -> ${lib}")
 endforeach()
 
-# 确保正确的链接器选项 - 允许未定义符号（由 Python 运行时提供）
-set_target_properties(PyCANDYAlgo PROPERTIES
-    LINK_FLAGS "-Wl,--allow-shlib-undefined"
-)
+# 设置链接器选项
+# 注意：Python 扩展模块需要允许一些由 Python 运行时提供的未定义符号
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set_target_properties(PyCANDYAlgo PROPERTIES
+        LINK_FLAGS "-Wl,--no-as-needed"
+    )
+endif()
 
-# 设置输出目录
+# 设置输出目录和编译选项
 set_target_properties(PyCANDYAlgo PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${ALGORITHMS_IMPL_DIR}
     CXX_STANDARD 20
     PREFIX ""
     # 不设置 SUFFIX，让 pybind11 自动处理
+    CXX_VISIBILITY_PRESET "default"
+    VISIBILITY_INLINES_HIDDEN OFF
+)
+
+# 确保 PyInit_PyCANDYAlgo 符号被导出
+target_compile_options(PyCANDYAlgo PRIVATE
+    -fvisibility=default
 )
 
 # 安装规则 - 简化版本，只安装到当前目录
