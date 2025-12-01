@@ -9,7 +9,7 @@ on:
 
 jobs:
   test-deployment:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     
     steps:
     - name: Checkout code
@@ -36,6 +36,12 @@ jobs:
           wget \
           curl
           
+    - name: Clean old build artifacts
+      run: |
+        # 清理可能存在的旧构建文件
+        rm -rf algorithms_impl/PyCANDYAlgo*.so
+        rm -rf algorithms_impl/build
+        
     - name: Run deployment script
       run: |
         chmod +x deploy.sh
@@ -81,7 +87,7 @@ jobs:
         retention-days: 7
 
   lint-and-format:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     
     steps:
     - name: Checkout code

@@ -335,15 +335,12 @@ if [ "$SKIP_BUILD" = false ]; then
         print_info "这可能需要 15-40 分钟，请耐心等待..."
         echo ""
         
-        # 显示进度
-        bash build_all.sh 2>&1 | while IFS= read -r line; do
-            echo "$line"
-        done
-        
-        if [ $? -eq 0 ]; then
+        # 运行构建脚本并保存退出代码
+        if bash build_all.sh; then
             print_success "算法构建完成"
         else
-            print_error "算法构建失败"
+            BUILD_EXIT_CODE=$?
+            print_error "算法构建失败 (退出代码: $BUILD_EXIT_CODE)"
             exit 1
         fi
     else
