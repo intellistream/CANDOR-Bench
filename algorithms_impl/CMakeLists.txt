@@ -112,10 +112,17 @@ file(GLOB DISKANN_PYTHON_SOURCES
 
 # 编译 PyCANDYAlgo 模块
 message(STATUS "Building PyCANDYAlgo...")
-pybind11_add_module(PyCANDYAlgo MODULE
+pybind11_add_module(PyCANDYAlgo
+    MODULE
     bindings/PyCANDY.cpp
     ${CANDY_SOURCES}
     ${DISKANN_PYTHON_SOURCES}
+)
+
+# 设置模块属性，确保是 Python 扩展模块
+set_target_properties(PyCANDYAlgo PROPERTIES
+    PREFIX ""
+    OUTPUT_NAME "PyCANDYAlgo"
 )
 
 # 查找 torch_python 库
@@ -298,7 +305,6 @@ endif()
 set_target_properties(PyCANDYAlgo PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${ALGORITHMS_IMPL_DIR}
     CXX_STANDARD 20
-    PREFIX ""
     # 不设置 SUFFIX，让 pybind11 自动处理
     CXX_VISIBILITY_PRESET "default"
     VISIBILITY_INLINES_HIDDEN OFF
@@ -307,6 +313,11 @@ set_target_properties(PyCANDYAlgo PROPERTIES
 # 确保 PyInit_PyCANDYAlgo 符号被导出
 target_compile_options(PyCANDYAlgo PRIVATE
     -fvisibility=default
+)
+
+# 添加链接选项，确保符号正确导出
+target_link_options(PyCANDYAlgo PRIVATE
+    -Wl,--export-dynamic
 )
 
 # 安装规则 - 简化版本，只安装到当前目录

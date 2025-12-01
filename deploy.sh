@@ -450,6 +450,16 @@ if [ -n "$SO_FILE" ]; then
     # 检查依赖库
     print_info "检查依赖库..."
     ldd "$SO_FILE" | grep "not found" || echo "  所有依赖库都已找到"
+    
+    # 检查 PyInit 符号
+    print_info "检查 PyInit_PyCANDYAlgo 符号..."
+    if nm -D "$SO_FILE" 2>/dev/null | grep -q "PyInit_PyCANDYAlgo"; then
+        echo "  ✓ PyInit_PyCANDYAlgo 符号已导出"
+    else
+        print_warning "PyInit_PyCANDYAlgo 符号未找到"
+        echo "  导出的符号列表（前20个）:"
+        nm -D "$SO_FILE" 2>/dev/null | grep " T " | head -20 || echo "  无法读取符号表"
+    fi
 else
     print_warning "未找到 PyCANDYAlgo.so 文件"
 fi

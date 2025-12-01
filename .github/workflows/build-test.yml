@@ -98,6 +98,23 @@ jobs:
         TORCH_LIB=$(python3 -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))")
         export LD_LIBRARY_PATH="$TORCH_LIB:$LD_LIBRARY_PATH"
         
+        # 检查 .so 文件和符号表
+        echo "检查 PyCANDYAlgo.so 文件..."
+        SO_FILE=$(find algorithms_impl -name "PyCANDYAlgo*.so" -type f | head -1)
+        if [ -n "$SO_FILE" ]; then
+          echo "找到: $SO_FILE"
+          echo "文件大小: $(ls -lh "$SO_FILE" | awk '{print $5}')"
+          echo ""
+          echo "检查 PyInit 符号..."
+          nm -D "$SO_FILE" | grep PyInit || echo "⚠ 未找到 PyInit 符号"
+          echo ""
+          echo "检查所有导出符号..."
+          nm -D "$SO_FILE" | grep " T " | head -20
+        else
+          echo "❌ 未找到 .so 文件"
+          exit 1
+        fi
+        
         # 测试导入 PyCANDYAlgo（所有分支）
         cd algorithms_impl && python3 -c "import PyCANDYAlgo; print('✓ PyCANDYAlgo imported'); print(f'  Version: {PyCANDYAlgo.__version__}'); print(f'  Compiled: {PyCANDYAlgo.__compiled_time__}')" && cd ..
         
