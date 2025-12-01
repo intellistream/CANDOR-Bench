@@ -296,7 +296,7 @@ set_target_properties(PyCANDYAlgo PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${ALGORITHMS_IMPL_DIR}
     CXX_STANDARD 20
     PREFIX ""
-    SUFFIX ".so"
+    # 不设置 SUFFIX，让 pybind11 自动处理
 )
 
 # 安装规则 - 简化版本，只安装到当前目录
