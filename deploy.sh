@@ -199,13 +199,23 @@ if [ "$SKIP_SYSTEM_DEPS" = false ]; then
             wget -qO - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | sudo apt-key add - 2>/dev/null || print_warning "添加 Intel GPG key 失败"
             echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list >/dev/null
             sudo apt-get update -qq || print_warning "更新 Intel 源失败"
-            sudo apt-get install -y intel-oneapi-mkl-devel || print_warning "Intel MKL 安装失败，Puck 可能无法构建"
+            sudo apt-get install -y intel-oneapi-mkl-devel intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic || print_warning "Intel MKL 安装失败，Puck 可能无法构建"
             
-            # 设置 MKL 环境变量
+            # 设置 MKL 环境变量（全局）
             if [ -f "/opt/intel/oneapi/setvars.sh" ]; then
                 print_step "设置 MKL 环境变量..."
-                source /opt/intel/oneapi/setvars.sh --force
-                print_success "MKL 环境已配置"
+                source /opt/intel/oneapi/setvars.sh --force 2>/dev/null || true
+                
+                # 导出环境变量以便后续步骤使用
+                export MKLROOT="/opt/intel/oneapi/mkl/latest"
+                export LD_LIBRARY_PATH="$MKLROOT/lib/intel64:$LD_LIBRARY_PATH"
+                export LIBRARY_PATH="$MKLROOT/lib/intel64:$LIBRARY_PATH"
+                export CPATH="$MKLROOT/include:$CPATH"
+                export PKG_CONFIG_PATH="$MKLROOT/lib/pkgconfig:$PKG_CONFIG_PATH"
+                
+                print_success "MKL 环境已配置: $MKLROOT"
+            else
+                print_warning "未找到 Intel oneAPI setvars.sh"
             fi
             
             echo ""
