@@ -456,7 +456,14 @@ fi
 
 PYCANDY_TEST=$(python3 << 'PYEOF'
 import sys
+import os
 import traceback
+
+# 添加 algorithms_impl 目录到 Python 路径
+algorithms_impl = os.path.join(os.getcwd(), 'algorithms_impl')
+if os.path.exists(algorithms_impl):
+    sys.path.insert(0, algorithms_impl)
+
 try:
     import PyCANDYAlgo
     print("SUCCESS")
