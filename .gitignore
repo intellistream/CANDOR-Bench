@@ -85,4 +85,4 @@ algorithms_impl/*.log
 *.log
 test_report_*.txt
 .coverage
-htmlcov/
+htmlcov/SAGE-DB-Bench/
