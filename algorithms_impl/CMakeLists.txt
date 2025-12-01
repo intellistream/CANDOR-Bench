@@ -79,9 +79,8 @@ set(FAISS_ENABLE_PYTHON OFF CACHE BOOL "Disable Python binding")
 set(BUILD_TESTING OFF CACHE BOOL "Disable tests")
 add_subdirectory(${FAISS_DIR} faiss_build)
 
-# 获取 faiss target 的实际库文件
-get_target_property(FAISS_LIB faiss LOCATION)
-message(STATUS "Faiss library location: ${FAISS_LIB}")
+# Faiss target 将直接在链接时使用
+message(STATUS "Faiss library target: faiss")
 
 # 编译 DiskANN
 message(STATUS "Building DiskANN...")
@@ -113,7 +112,7 @@ file(GLOB DISKANN_PYTHON_SOURCES
 
 # 编译 PyCANDYAlgo 模块
 message(STATUS "Building PyCANDYAlgo...")
-pybind11_add_module(PyCANDYAlgo MODULE
+pybind11_add_module(PyCANDYAlgo 
     bindings/PyCANDY.cpp
     ${CANDY_SOURCES}
     ${DISKANN_PYTHON_SOURCES}
@@ -141,9 +140,9 @@ endif()
 # 使用 WHOLE_ARCHIVE 确保 faiss 的所有符号都被包含
 set(PYCANDY_LIBS)
 
-# 第一组：faiss（使用 whole-archive 确保所有符号被导出）
+# 第一组：faiss（使用 whole-archive 确保所有符号被导出，并禁用 as-needed）
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    list(APPEND PYCANDY_LIBS -Wl,--whole-archive faiss -Wl,--no-whole-archive)
+    list(APPEND PYCANDY_LIBS -Wl,--no-as-needed -Wl,--whole-archive faiss -Wl,--no-whole-archive -Wl,--as-needed)
 else()
     list(APPEND PYCANDY_LIBS faiss)
 endif()
