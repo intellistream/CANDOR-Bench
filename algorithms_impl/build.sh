@@ -360,20 +360,23 @@ if [ -n "$SO_FILE" ]; then
         echo "This is not critical - the .so file was built successfully"
     fi
     
-    # 询问是否安装到 site-packages
-    echo ""
-    read -p "Install PyCANDYAlgo to site-packages for global use? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        SITE_PACKAGES=$(python3 -c "import site; print(site.USER_SITE)")
-        mkdir -p "$SITE_PACKAGES"
-        cp "$SO_FILE" "$SITE_PACKAGES/"
-        echo "✅ Installed to $SITE_PACKAGES"
+    # 在 CI 环境中跳过交互式提示
+    if [ -z "$CI" ]; then
+        # 询问是否安装到 site-packages
         echo ""
-        echo "Testing global import..."
-        cd /tmp
-        python3 -c "import PyCANDYAlgo; print('✅ Global import successful')" || echo "⚠ Global import failed"
-        cd - > /dev/null
+        read -p "Install PyCANDYAlgo to site-packages for global use? (y/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            SITE_PACKAGES=$(python3 -c "import site; print(site.USER_SITE)")
+            mkdir -p "$SITE_PACKAGES"
+            cp "$SO_FILE" "$SITE_PACKAGES/"
+            echo "✅ Installed to $SITE_PACKAGES"
+            echo ""
+            echo "Testing global import..."
+            cd /tmp
+            python3 -c "import PyCANDYAlgo; print('✅ Global import successful')" || echo "⚠ Global import failed"
+            cd - > /dev/null
+        fi
     fi
 else
     echo "⚠ PyCANDYAlgo.so not found in current directory"
@@ -386,3 +389,5 @@ echo ""
 echo "To use PyCANDYAlgo:"
 echo "  python3 -c 'import PyCANDYAlgo'"
 echo ""
+
+exit 0
