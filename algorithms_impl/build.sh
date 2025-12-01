@@ -293,17 +293,41 @@ else
     echo ""
 fi
 
-# 返回到 build 目录
-cd build
+# 返回到 algorithms_impl 根目录,确保路径正确
+cd "$ALGORITHMS_IMPL_DIR"
 
 echo ""
 echo "========================================="
 echo "Building PyCANDYAlgo Main Module"
 echo "========================================="
 echo ""
+
+# 确保 build 目录存在且包含 Makefile
+if [ ! -f "build/Makefile" ]; then
+    echo "⚠ Makefile not found, re-running CMake..."
+    cd build
+    
+    # 重新配置 CMake
+    CMAKE_ARGS=(
+        -DCMAKE_BUILD_TYPE=Release
+        -DPYTHON_EXECUTABLE=$(which python3)
+        -DFAISS_ENABLE_GPU=OFF
+        -DFAISS_ENABLE_PYTHON=OFF
+        -DBUILD_TESTING=OFF
+    )
+    
+    if [ -n "$TORCH_CMAKE_PATH" ]; then
+        CMAKE_ARGS+=(-DCMAKE_PREFIX_PATH="$TORCH_CMAKE_PATH")
+    fi
+    
+    cmake "${CMAKE_ARGS[@]}" .. || { echo "❌ CMake reconfiguration failed"; exit 1; }
+    cd ..
+fi
+
+cd build
+
 echo "Compiling..."
 echo "----------------------------------------"
-
 
 # 编译 PyCANDYAlgo (JOBS 已经在前面计算好了)
 make -j${JOBS} || { echo ""; echo "❌ Build failed"; exit 1; }
