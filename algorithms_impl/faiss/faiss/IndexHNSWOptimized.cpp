@@ -62,8 +62,6 @@ using MinimaxHeap = HNSW::MinimaxHeap;
 using storage_idx_t = HNSW::storage_idx_t;
 using NodeDistFarther = HNSW::NodeDistFarther;
 
-HNSWStats hnsw_stats;
-
 /**************************************************************
  * add / search blocks of descriptors
  **************************************************************/
