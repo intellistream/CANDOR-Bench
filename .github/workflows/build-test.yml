@@ -73,6 +73,16 @@ jobs:
       run: |
         source sage-db-bench/bin/activate
         
+        # 设置 MKL 库路径
+        if [ -d "/opt/intel/oneapi/mkl/latest/lib/intel64" ]; then
+          export LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/latest/lib/intel64:$LD_LIBRARY_PATH"
+        fi
+        # 设置 Torch 库路径
+        TORCH_LIB=$(python3 -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))" 2>/dev/null || true)
+        if [ -n "$TORCH_LIB" ] && [ -d "$TORCH_LIB" ]; then
+          export LD_LIBRARY_PATH="$TORCH_LIB:$LD_LIBRARY_PATH"
+        fi
+        
         echo "=== Python Environment ==="
         which python3
         python3 --version
@@ -95,6 +105,12 @@ jobs:
     - name: Test core dependencies
       run: |
         source sage-db-bench/bin/activate
+        
+        # 设置 MKL 库路径
+        if [ -d "/opt/intel/oneapi/mkl/latest/lib/intel64" ]; then
+          export LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/latest/lib/intel64:$LD_LIBRARY_PATH"
+        fi
+        
         python3 -c "import numpy; import torch; print('numpy:', numpy.__version__); print('torch:', torch.__version__)"
 
     - name: Upload build logs on failure

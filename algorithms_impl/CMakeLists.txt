@@ -301,6 +301,40 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     )
 endif()
 
+# 设置 RPATH，让 .so 文件在运行时能找到依赖库
+# 这样用户不需要每次都设置 LD_LIBRARY_PATH
+set(MKL_LIB_DIR "")
+if(DEFINED ENV{MKLROOT})
+    set(MKL_LIB_DIR "$ENV{MKLROOT}/lib/intel64")
+elseif(EXISTS "/opt/intel/oneapi/mkl/latest/lib/intel64")
+    set(MKL_LIB_DIR "/opt/intel/oneapi/mkl/latest/lib/intel64")
+elseif(EXISTS "/opt/intel/mkl/lib/intel64")
+    set(MKL_LIB_DIR "/opt/intel/mkl/lib/intel64")
+endif()
+
+# 获取 PyTorch 库路径
+execute_process(
+    COMMAND ${Python3_EXECUTABLE} -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))"
+    OUTPUT_VARIABLE TORCH_LIB_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+)
+
+# 构建 RPATH 列表
+set(PYCANDY_RPATH "")
+if(MKL_LIB_DIR AND EXISTS ${MKL_LIB_DIR})
+    list(APPEND PYCANDY_RPATH ${MKL_LIB_DIR})
+    message(STATUS "Adding MKL to RPATH: ${MKL_LIB_DIR}")
+endif()
+if(TORCH_LIB_DIR AND EXISTS ${TORCH_LIB_DIR})
+    list(APPEND PYCANDY_RPATH ${TORCH_LIB_DIR})
+    message(STATUS "Adding PyTorch to RPATH: ${TORCH_LIB_DIR}")
+endif()
+# 添加 Intel OpenMP 库路径
+if(EXISTS "/opt/intel/oneapi/compiler/latest/lib")
+    list(APPEND PYCANDY_RPATH "/opt/intel/oneapi/compiler/latest/lib")
+endif()
+
 # 设置输出目录和编译选项
 set_target_properties(PyCANDYAlgo PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${ALGORITHMS_IMPL_DIR}
@@ -308,6 +342,10 @@ set_target_properties(PyCANDYAlgo PROPERTIES
     # 不设置 SUFFIX，让 pybind11 自动处理
     CXX_VISIBILITY_PRESET "default"
     VISIBILITY_INLINES_HIDDEN OFF
+    # 设置 RPATH - 关键！让 .so 文件知道去哪里找动态库
+    BUILD_WITH_INSTALL_RPATH TRUE
+    INSTALL_RPATH "${PYCANDY_RPATH}"
+    INSTALL_RPATH_USE_LINK_PATH TRUE
 )
 
 # 确保 PyInit_PyCANDYAlgo 符号被导出
