@@ -90,26 +90,12 @@ jobs:
         
         echo ""
         echo "=== Test PyCANDYAlgo Import ==="
-        python3 << 'EOF'
-import PyCANDYAlgo
-print('PyCANDYAlgo imported successfully')
-print('Version:', PyCANDYAlgo.__version__)
-print('Compiled:', PyCANDYAlgo.__compiled_time__)
-print()
-print('Available classes:')
-print('IndexHNSWFlatOptimized:', hasattr(PyCANDYAlgo, 'IndexHNSWFlatOptimized'))
-print('MetricType:', hasattr(PyCANDYAlgo, 'MetricType'))
-EOF
+        python3 -c "import PyCANDYAlgo; print('PyCANDYAlgo imported successfully'); print('Version:', PyCANDYAlgo.__version__)"
         
     - name: Test core dependencies
       run: |
         source sage-db-bench/bin/activate
-        python3 << 'EOF'
-import numpy
-import torch
-print('numpy:', numpy.__version__)
-print('torch:', torch.__version__)
-EOF
+        python3 -c "import numpy; import torch; print('numpy:', numpy.__version__); print('torch:', torch.__version__)"
 
     - name: Upload build logs on failure
       if: failure()
