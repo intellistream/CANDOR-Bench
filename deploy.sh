@@ -284,7 +284,7 @@ if [ "$SKIP_BUILD" = false ]; then
         print_info "构建 GTI 主项目..."
         rm -rf build bin 2>/dev/null || true
         mkdir -p bin build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release 2>&1 | tail -5 || print_warning "GTI 主项目 cmake 失败"
+        cmake .. -DCMAKE_BUILD_TYPE=Release $PYBIND11_CMAKE_ARG 2>&1 | tail -5 || print_warning "GTI 主项目 cmake 失败"
         make -j${JOBS} 2>&1 | tail -10 || print_warning "GTI 主项目编译失败"
         make install 2>&1 | tail -3 || true
         
