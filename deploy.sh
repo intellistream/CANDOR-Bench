@@ -271,14 +271,11 @@ SO_FILE=$(ls PyCANDYAlgo*.so 2>/dev/null | head -1)
 if [ -n "$SO_FILE" ]; then
     print_info "找到: $SO_FILE"
     
-    if [ -f "setup.py" ]; then
-        pip install -e . --no-build-isolation -q
-        print_success "PyCANDYAlgo 已安装到虚拟环境"
-    else
-        SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])")
-        cp "$SO_FILE" "$SITE_PACKAGES/"
-        print_success "PyCANDYAlgo 已复制到 $SITE_PACKAGES"
-    fi
+    # 直接复制 .so 文件到 site-packages，不使用 pip install
+    SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])")
+    print_step "复制到 $SITE_PACKAGES..."
+    cp "$SO_FILE" "$SITE_PACKAGES/"
+    print_success "PyCANDYAlgo 已复制到 $SITE_PACKAGES"
 else
     print_error "PyCANDYAlgo.so 未找到"
     exit 1
