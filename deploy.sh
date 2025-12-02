@@ -280,22 +280,22 @@ if [ "$SKIP_BUILD" = false ]; then
     if [ -d "$GTI_DIR" ]; then
         cd "$GTI_DIR"
         
-        # 先构建 n2 依赖
-        N2_DIR="$GTI_DIR/extern_libraries/n2"
-        if [ -d "$N2_DIR" ] && [ ! -f "$N2_DIR/build/lib/libn2.so" ]; then
-            print_info "构建 n2 依赖..."
-            cd "$N2_DIR"
-            mkdir -p build && cd build
-            cmake .. -DCMAKE_BUILD_TYPE=Release 2>&1 | tail -3 || true
-            make -j${JOBS} 2>&1 | tail -5 || true
-        fi
+        # 先构建 GTI 主项目（生成库和头文件）
+        print_info "构建 GTI 主项目..."
+        rm -rf build bin 2>/dev/null || true
+        mkdir -p bin build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release 2>&1 | tail -5 || print_warning "GTI 主项目 cmake 失败"
+        make -j${JOBS} 2>&1 | tail -10 || print_warning "GTI 主项目编译失败"
+        make install 2>&1 | tail -3 || true
         
-        # 在 bindings 目录构建 gti_wrapper
+        # 再构建 Python bindings
+        print_info "构建 GTI Python bindings..."
         cd "$GTI_DIR/bindings"
         rm -rf build 2>/dev/null || true
         mkdir -p build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=$(which python3) $PYBIND11_CMAKE_ARG 2>&1 | tail -5
-        make -j${JOBS} 2>&1 | tail -10
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=$(which python3) $PYBIND11_CMAKE_ARG 2>&1 | tail -5 || print_warning "GTI bindings cmake 失败"
+        make -j${JOBS} 2>&1 | tail -10 || print_warning "GTI bindings 编译失败"
+        
         # 查找并复制 .so 文件
         SO_FILE=$(find . -name "gti_wrapper*.so" 2>/dev/null | head -1)
         if [ -n "$SO_FILE" ]; then
