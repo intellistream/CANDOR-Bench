@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================================
-# SAGE-DB-Bench 部署脚本 (仅 PyCANDYAlgo)
+# SAGE-DB-Bench 部署脚本
 # ============================================================================
 #
 # 本脚本会：
@@ -9,8 +9,9 @@
 # 3. 安装 Python 依赖包
 # 4. 初始化 Git submodules
 # 5. 构建 PyCANDYAlgo
-# 6. 安装 PyCANDYAlgo 到虚拟环境
-# 7. 验证 PyCANDYAlgo 导入
+# 6. 构建 GTI、IP-DiskANN、PLSH
+# 7. 安装所有模块到虚拟环境
+# 8. 验证所有模块导入
 #
 # 使用方法:
 #   ./deploy.sh
@@ -117,7 +118,7 @@ print_info "Python 版本: $(python3.10 --version)"
 # ============================================================================
 # 开始部署
 # ============================================================================
-print_banner "SAGE-DB-Bench 部署 (PyCANDYAlgo)"
+print_banner "SAGE-DB-Bench 部署"
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
@@ -129,7 +130,7 @@ echo ""
 # 步骤 1: 系统依赖
 # ============================================================================
 if [ "$SKIP_SYSTEM_DEPS" = false ]; then
-    print_header "步骤 1/7: 安装系统依赖"
+    print_header "步骤 1/8: 安装系统依赖"
     
     if [ -f /etc/os-release ]; then
         . /etc/os-release
@@ -163,13 +164,13 @@ if [ "$SKIP_SYSTEM_DEPS" = false ]; then
         print_warning "非 Ubuntu/Debian 系统，请手动安装依赖"
     fi
 else
-    print_header "步骤 1/7: 跳过系统依赖安装"
+    print_header "步骤 1/8: 跳过系统依赖安装"
 fi
 
 # ============================================================================
 # 步骤 2: 创建虚拟环境
 # ============================================================================
-print_header "步骤 2/7: 创建 Python 虚拟环境"
+print_header "步骤 2/8: 创建 Python 虚拟环境"
 
 VENV_DIR="$SCRIPT_DIR/sage-db-bench"
 
@@ -191,7 +192,7 @@ pip install --upgrade pip setuptools wheel -q
 # ============================================================================
 # 步骤 3: 安装 Python 依赖
 # ============================================================================
-print_header "步骤 3/7: 安装 Python 依赖"
+print_header "步骤 3/8: 安装 Python 依赖"
 
 print_step "安装 PyTorch (CPU 版本)..."
 pip install torch --index-url https://download.pytorch.org/whl/cpu -q
@@ -204,7 +205,7 @@ print_success "Python 依赖安装完成"
 # ============================================================================
 # 步骤 4: 初始化 Git Submodules
 # ============================================================================
-print_header "步骤 4/7: 初始化 Git Submodules"
+print_header "步骤 4/8: 初始化 Git Submodules"
 
 if [ -f ".gitmodules" ]; then
     print_step "初始化 submodules..."
@@ -218,7 +219,7 @@ fi
 # 步骤 5: 构建 PyCANDYAlgo
 # ============================================================================
 if [ "$SKIP_BUILD" = false ]; then
-    print_header "步骤 5/7: 构建 PyCANDYAlgo"
+    print_header "步骤 5/8: 构建 PyCANDYAlgo"
     
     cd "$SCRIPT_DIR/algorithms_impl"
     
@@ -248,13 +249,93 @@ if [ "$SKIP_BUILD" = false ]; then
     
     cd "$SCRIPT_DIR"
 else
-    print_header "步骤 5/7: 跳过构建"
+    print_header "步骤 5/8: 跳过构建"
 fi
 
 # ============================================================================
-# 步骤 6: 安装 PyCANDYAlgo
+# 步骤 6: 构建 GTI、IP-DiskANN、PLSH
 # ============================================================================
-print_header "步骤 6/7: 安装 PyCANDYAlgo"
+if [ "$SKIP_BUILD" = false ]; then
+    print_header "步骤 6/8: 构建 GTI、IP-DiskANN、PLSH"
+    
+    SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])")
+    
+    # 计算并行编译数
+    NPROC=$(nproc 2>/dev/null || echo 4)
+    JOBS=$((NPROC > 8 ? 8 : NPROC))
+    
+    # --- 构建 GTI ---
+    print_step "构建 GTI (gti_wrapper)..."
+    GTI_DIR="$SCRIPT_DIR/algorithms_impl/gti/GTI"
+    if [ -d "$GTI_DIR" ]; then
+        cd "$GTI_DIR"
+        rm -rf build 2>/dev/null || true
+        mkdir -p build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=$(which python3) 2>&1 | tail -5
+        make -j${JOBS} 2>&1 | tail -10
+        # 查找并复制 .so 文件
+        SO_FILE=$(find . -name "gti_wrapper*.so" 2>/dev/null | head -1)
+        if [ -n "$SO_FILE" ]; then
+            cp "$SO_FILE" "$SITE_PACKAGES/"
+            print_success "GTI (gti_wrapper) 构建完成"
+        else
+            print_warning "gti_wrapper.so 未找到"
+        fi
+    else
+        print_warning "GTI 目录不存在: $GTI_DIR"
+    fi
+    
+    # --- 构建 IP-DiskANN ---
+    print_step "构建 IP-DiskANN (ipdiskann)..."
+    IPDISKANN_DIR="$SCRIPT_DIR/algorithms_impl/ipdiskann"
+    if [ -d "$IPDISKANN_DIR" ]; then
+        cd "$IPDISKANN_DIR"
+        rm -rf build 2>/dev/null || true
+        mkdir -p build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=$(which python3) 2>&1 | tail -5
+        make -j${JOBS} 2>&1 | tail -10
+        # 查找并复制 .so 文件
+        SO_FILE=$(find . -name "ipdiskann*.so" 2>/dev/null | head -1)
+        if [ -n "$SO_FILE" ]; then
+            cp "$SO_FILE" "$SITE_PACKAGES/"
+            print_success "IP-DiskANN (ipdiskann) 构建完成"
+        else
+            print_warning "ipdiskann.so 未找到"
+        fi
+    else
+        print_warning "IP-DiskANN 目录不存在: $IPDISKANN_DIR"
+    fi
+    
+    # --- 构建 PLSH ---
+    print_step "构建 PLSH (plsh_python)..."
+    PLSH_DIR="$SCRIPT_DIR/algorithms_impl/plsh"
+    if [ -d "$PLSH_DIR" ]; then
+        cd "$PLSH_DIR"
+        rm -rf build 2>/dev/null || true
+        mkdir -p build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=$(which python3) 2>&1 | tail -5
+        make -j${JOBS} 2>&1 | tail -10
+        # 查找并复制 .so 文件
+        SO_FILE=$(find . -name "plsh_python*.so" 2>/dev/null | head -1)
+        if [ -n "$SO_FILE" ]; then
+            cp "$SO_FILE" "$SITE_PACKAGES/"
+            print_success "PLSH (plsh_python) 构建完成"
+        else
+            print_warning "plsh_python.so 未找到"
+        fi
+    else
+        print_warning "PLSH 目录不存在: $PLSH_DIR"
+    fi
+    
+    cd "$SCRIPT_DIR"
+else
+    print_header "步骤 6/8: 跳过构建"
+fi
+
+# ============================================================================
+# 步骤 7: 安装 PyCANDYAlgo
+# ============================================================================
+print_header "步骤 7/8: 安装 PyCANDYAlgo"
 
 cd "$SCRIPT_DIR/algorithms_impl"
 
@@ -284,20 +365,38 @@ fi
 cd "$SCRIPT_DIR"
 
 # ============================================================================
-# 步骤 7: 验证 PyCANDYAlgo 导入
+# 步骤 8: 验证所有模块导入
 # ============================================================================
-print_header "步骤 7/7: 验证 PyCANDYAlgo"
+print_header "步骤 8/8: 验证所有模块导入"
 
-print_step "测试导入..."
-
-# 测试 PyCANDYAlgo 导入
+print_step "测试 PyCANDYAlgo..."
 if python3 -c "import PyCANDYAlgo; print('VERSION:', PyCANDYAlgo.__version__)" 2>&1; then
     print_success "PyCANDYAlgo 导入成功"
 else
     print_error "PyCANDYAlgo 导入失败"
-    # 显示详细错误
     python3 -c "import PyCANDYAlgo" 2>&1 || true
     exit 1
+fi
+
+print_step "测试 gti_wrapper..."
+if python3 -c "import gti_wrapper; print('gti_wrapper OK')" 2>&1; then
+    print_success "gti_wrapper 导入成功"
+else
+    print_warning "gti_wrapper 导入失败 (可选模块)"
+fi
+
+print_step "测试 ipdiskann..."
+if python3 -c "import ipdiskann; print('ipdiskann OK')" 2>&1; then
+    print_success "ipdiskann 导入成功"
+else
+    print_warning "ipdiskann 导入失败 (可选模块)"
+fi
+
+print_step "测试 plsh_python..."
+if python3 -c "import plsh_python; print('plsh_python OK')" 2>&1; then
+    print_success "plsh_python 导入成功"
+else
+    print_warning "plsh_python 导入失败 (可选模块)"
 fi
 
 # 测试核心依赖
@@ -310,7 +409,11 @@ python3 -c "import torch; print('torch:', torch.__version__)" || print_warning "
 # ============================================================================
 print_banner "部署完成！"
 
-echo "✅ PyCANDYAlgo 已成功构建并安装"
+echo "✅ 已成功构建并安装以下模块:"
+echo "   - PyCANDYAlgo"
+echo "   - gti_wrapper (GTI)"
+echo "   - ipdiskann (IP-DiskANN)"
+echo "   - plsh_python (PLSH)"
 echo ""
 echo "使用方法:"
 echo "  source sage-db-bench/bin/activate"

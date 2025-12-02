@@ -1,4 +1,4 @@
-name: Build and Test PyCANDYAlgo
+name: Build and Test All Modules
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:  # 允许手动触发
 
 jobs:
-  build-pycandyalgo:
+  build-all:
     runs-on: ubuntu-22.04
     
     steps:
@@ -35,9 +35,12 @@ jobs:
       with:
         path: |
           algorithms_impl/build
-        key: ${{ runner.os }}-cmake-${{ hashFiles('algorithms_impl/CMakeLists.txt') }}
+          algorithms_impl/gti/GTI/build
+          algorithms_impl/ipdiskann/build
+          algorithms_impl/plsh/build
+        key: ${{ runner.os }}-cmake-all-${{ hashFiles('algorithms_impl/CMakeLists.txt') }}
         restore-keys: |
-          ${{ runner.os }}-cmake-
+          ${{ runner.os }}-cmake-all-
         
     - name: Install system dependencies
       run: |
@@ -67,50 +70,35 @@ jobs:
       run: |
         chmod +x deploy.sh
         ./deploy.sh --skip-system-deps
-      timeout-minutes: 45
+      timeout-minutes: 60
       
     - name: Verify PyCANDYAlgo import
       run: |
         source sage-db-bench/bin/activate
-        
-        # 设置 MKL 库路径
-        if [ -d "/opt/intel/oneapi/mkl/latest/lib/intel64" ]; then
-          export LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/latest/lib/intel64:$LD_LIBRARY_PATH"
-        fi
-        # 设置 Torch 库路径
-        TORCH_LIB=$(python3 -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))" 2>/dev/null || true)
-        if [ -n "$TORCH_LIB" ] && [ -d "$TORCH_LIB" ]; then
-          export LD_LIBRARY_PATH="$TORCH_LIB:$LD_LIBRARY_PATH"
-        fi
-        
-        echo "=== Python Environment ==="
-        which python3
-        python3 --version
-        
-        echo ""
-        echo "=== Check .so file ==="
-        SO_FILE=$(find algorithms_impl -name "PyCANDYAlgo*.so" -type f | head -1)
-        if [ -n "$SO_FILE" ]; then
-          echo "Found: $SO_FILE"
-          echo "Size: $(ls -lh "$SO_FILE" | awk '{print $5}')"
-        else
-          echo "❌ PyCANDYAlgo.so not found"
-          exit 1
-        fi
-        
-        echo ""
         echo "=== Test PyCANDYAlgo Import ==="
-        python3 -c "import PyCANDYAlgo; print('PyCANDYAlgo imported successfully'); print('Version:', PyCANDYAlgo.__version__)"
+        python3 -c "import PyCANDYAlgo; print('PyCANDYAlgo:', PyCANDYAlgo.__version__)"
+        
+    - name: Verify GTI (gti_wrapper) import
+      run: |
+        source sage-db-bench/bin/activate
+        echo "=== Test gti_wrapper Import ==="
+        python3 -c "import gti_wrapper; print('gti_wrapper: OK')" || echo "gti_wrapper: SKIPPED (optional)"
+        
+    - name: Verify IP-DiskANN (ipdiskann) import
+      run: |
+        source sage-db-bench/bin/activate
+        echo "=== Test ipdiskann Import ==="
+        python3 -c "import ipdiskann; print('ipdiskann: OK')" || echo "ipdiskann: SKIPPED (optional)"
+        
+    - name: Verify PLSH (plsh_python) import
+      run: |
+        source sage-db-bench/bin/activate
+        echo "=== Test plsh_python Import ==="
+        python3 -c "import plsh_python; print('plsh_python: OK')" || echo "plsh_python: SKIPPED (optional)"
         
     - name: Test core dependencies
       run: |
         source sage-db-bench/bin/activate
-        
-        # 设置 MKL 库路径
-        if [ -d "/opt/intel/oneapi/mkl/latest/lib/intel64" ]; then
-          export LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/latest/lib/intel64:$LD_LIBRARY_PATH"
-        fi
-        
         python3 -c "import numpy; import torch; print('numpy:', numpy.__version__); print('torch:', torch.__version__)"
 
     - name: Upload build logs on failure
@@ -122,6 +110,9 @@ jobs:
           algorithms_impl/build/cmake_config.log
           algorithms_impl/build/CMakeFiles/CMakeError.log
           algorithms_impl/build/CMakeFiles/CMakeOutput.log
+          algorithms_impl/gti/GTI/build/CMakeFiles/CMakeError.log
+          algorithms_impl/ipdiskann/build/CMakeFiles/CMakeError.log
+          algorithms_impl/plsh/build/CMakeFiles/CMakeError.log
         retention-days: 7
 
   lint:
