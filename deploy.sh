@@ -145,7 +145,7 @@ if [ "$SKIP_SYSTEM_DEPS" = false ]; then
             build-essential cmake git pkg-config \
             libgflags-dev libgoogle-glog-dev libfmt-dev \
             libboost-all-dev libomp-dev libnuma-dev libaio-dev \
-            libeigen3-dev \
+            libeigen3-dev libspdlog-dev \
             python3.10 python3.10-venv python3.10-dev python3-pip \
             || print_warning "部分包可能未安装"
         
@@ -281,11 +281,23 @@ if [ "$SKIP_BUILD" = false ]; then
     if [ -d "$GTI_DIR" ]; then
         cd "$GTI_DIR"
         
-        # 先构建 GTI 主项目（生成库和头文件）
+        # 先构建 n2 库
+        N2_DIR="$GTI_DIR/extern_libraries/n2"
+        if [ -d "$N2_DIR" ]; then
+            print_info "构建 n2 库..."
+            cd "$N2_DIR"
+            rm -rf build 2>/dev/null || true
+            mkdir -p build && cd build
+            cmake .. -DCMAKE_BUILD_TYPE=Release 2>&1 | tail -5 || print_warning "n2 cmake 失败"
+            make -j${JOBS} 2>&1 | tail -10 || print_warning "n2 编译失败"
+        fi
+        
+        # 再构建 GTI 主项目（生成库和头文件）
         print_info "构建 GTI 主项目..."
+        cd "$GTI_DIR"
         rm -rf build bin 2>/dev/null || true
         mkdir -p bin build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release $PYBIND11_CMAKE_ARG 2>&1 | tail -5 || print_warning "GTI 主项目 cmake 失败"
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=$(which python3) $PYBIND11_CMAKE_ARG 2>&1 | tail -5 || print_warning "GTI 主项目 cmake 失败"
         make -j${JOBS} 2>&1 | tail -10 || print_warning "GTI 主项目编译失败"
         make install 2>&1 | tail -3 || true
         

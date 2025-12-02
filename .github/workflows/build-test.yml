@@ -58,7 +58,8 @@ jobs:
           libomp-dev \
           libnuma-dev \
           libaio-dev \
-          libeigen3-dev
+          libeigen3-dev \
+          libspdlog-dev
           
     - name: Install Intel MKL
       run: |
