@@ -281,15 +281,15 @@ if [ "$SKIP_BUILD" = false ]; then
     if [ -d "$GTI_DIR" ]; then
         cd "$GTI_DIR"
         
-        # 先构建 n2 库
+        # 先构建 n2 库 (使用 Makefile)
         N2_DIR="$GTI_DIR/extern_libraries/n2"
         if [ -d "$N2_DIR" ]; then
             print_info "构建 n2 库..."
             cd "$N2_DIR"
-            rm -rf build 2>/dev/null || true
-            mkdir -p build && cd build
-            cmake .. -DCMAKE_BUILD_TYPE=Release 2>&1 | tail -5 || print_warning "n2 cmake 失败"
-            make -j${JOBS} 2>&1 | tail -10 || print_warning "n2 编译失败"
+            # n2 使用 Makefile 而不是 CMake
+            make clean 2>/dev/null || true
+            make shared_lib -j${JOBS} 2>&1 | tail -10 || print_warning "n2 编译失败"
+            # 库文件在 build/lib/ 目录下
         fi
         
         # 再构建 GTI 主项目（生成库和头文件）
