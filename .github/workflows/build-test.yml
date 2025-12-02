@@ -35,6 +35,7 @@ jobs:
       with:
         path: |
           algorithms_impl/build
+          algorithms_impl/vsag/build-release
           algorithms_impl/gti/GTI/build
           algorithms_impl/ipdiskann/build
           algorithms_impl/plsh/build
@@ -80,6 +81,12 @@ jobs:
         echo "=== Test PyCANDYAlgo Import ==="
         python3 -c "import PyCANDYAlgo; print('PyCANDYAlgo:', PyCANDYAlgo.__version__)"
         
+    - name: Verify VSAG (pyvsag) import
+      run: |
+        source sage-db-bench/bin/activate
+        echo "=== Test pyvsag Import ==="
+        python3 -c "import pyvsag; print('pyvsag:', pyvsag.__version__)" || echo "pyvsag: SKIPPED (optional)"
+        
     - name: Verify GTI (gti_wrapper) import
       run: |
         source sage-db-bench/bin/activate
@@ -112,6 +119,7 @@ jobs:
           algorithms_impl/build/cmake_config.log
           algorithms_impl/build/CMakeFiles/CMakeError.log
           algorithms_impl/build/CMakeFiles/CMakeOutput.log
+          algorithms_impl/vsag/build-release/CMakeFiles/CMakeError.log
           algorithms_impl/gti/GTI/build/CMakeFiles/CMakeError.log
           algorithms_impl/ipdiskann/build/CMakeFiles/CMakeError.log
           algorithms_impl/plsh/build/CMakeFiles/CMakeError.log

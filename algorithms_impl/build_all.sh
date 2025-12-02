@@ -183,8 +183,16 @@ if [ "$BUILD_THIRD_PARTY" = true ]; then
         if [ -d "gti/GTI/extern_libraries/n2" ]; then
             print_info "  Building n2 dependency..."
             cd gti/GTI/extern_libraries/n2
+            
+            # 修复 spdlog 头文件包含问题（构建时临时修复，不提交到 git）
+            if ! grep -q "stdout_color_sinks.h" include/n2/hnsw_build.h 2>/dev/null; then
+                print_info "  Applying spdlog include fix..."
+                sed -i '/#include "spdlog\/spdlog.h"/a #include "spdlog/sinks/stdout_color_sinks.h"' include/n2/hnsw_build.h
+            fi
+            
             [ -d build ] && rm -rf build
-            make shared_lib -j${MAX_JOBS}
+            # 使用旧 ABI 以匹配 GTI (添加 -D_GLIBCXX_USE_CXX11_ABI=0)
+            CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0" make shared_lib -j${MAX_JOBS}
             print_success "  n2 library built"
             cd "$SCRIPT_DIR"
         fi
