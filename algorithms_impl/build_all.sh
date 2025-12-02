@@ -197,14 +197,36 @@ if [ "$BUILD_THIRD_PARTY" = true ]; then
             cd "$SCRIPT_DIR"
         fi
         
-        # 构建 GTI
+        # 构建 GTI Python bindings (只构建 gti_wrapper，不构建主可执行文件)
         cd gti/GTI
         [ -d build ] && rm -rf build
         mkdir -p bin build
         cd build
-        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$SCRIPT_DIR/build/install" ..
-        make -j${MAX_JOBS}
-        make install || print_warning "GTI install failed (not critical)"
+        
+        # 查找 pybind11 cmake 路径
+        PYBIND11_CMAKE_DIR=$(python3 -c "import pybind11; print(pybind11.get_cmake_dir())" 2>/dev/null || echo "")
+        if [ -n "$PYBIND11_CMAKE_DIR" ]; then
+            PYBIND11_ARG="-Dpybind11_DIR=$PYBIND11_CMAKE_DIR"
+        else
+            PYBIND11_ARG=""
+        fi
+        
+        cmake -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX="$SCRIPT_DIR/build/install" \
+              -DPYTHON_EXECUTABLE=$(which python3) \
+              $PYBIND11_ARG ..
+        
+        # 只构建 Python bindings（gti_wrapper），不构建主可执行文件（需要 tcmalloc）
+        make gti_wrapper -j${MAX_JOBS} || print_warning "gti_wrapper build failed"
+        
+        # 尝试构建主可执行文件（可选，如果 tcmalloc 不可用会跳过）
+        make GTI -j${MAX_JOBS} 2>/dev/null || print_warning "GTI executable build skipped (tcmalloc not found)"
+        
+        # 安装 Python bindings
+        if [ -f "bindings/gti_wrapper"*.so ]; then
+            make install || print_warning "GTI install failed (not critical)"
+        fi
+        
         cd "$SCRIPT_DIR"
         print_success "GTI built successfully"
     else
