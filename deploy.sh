@@ -145,7 +145,7 @@ if [ "$SKIP_SYSTEM_DEPS" = false ]; then
             build-essential cmake git pkg-config \
             libgflags-dev libgoogle-glog-dev libfmt-dev \
             libboost-all-dev libomp-dev libnuma-dev libaio-dev \
-            libeigen3-dev libspdlog-dev \
+            libeigen3-dev libspdlog-dev libgoogle-perftools-dev \
             python3.10 python3.10-venv python3.10-dev python3-pip \
             || print_warning "部分包可能未安装"
         
@@ -259,6 +259,29 @@ fi
 if [ "$SKIP_BUILD" = false ]; then
     print_header "步骤 6/9: 构建 VSAG (pyvsag)"
     
+    # 设置 MKL 环境变量（VSAG 依赖 Intel MKL）
+    if [ -f "/opt/intel/oneapi/setvars.sh" ]; then
+        print_step "加载 Intel oneAPI 环境..."
+        source /opt/intel/oneapi/setvars.sh --force 2>/dev/null || true
+        export LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/latest/lib/intel64:$LD_LIBRARY_PATH"
+        print_success "MKL 环境已配置"
+    elif [ -d "/opt/intel/oneapi/mkl/latest" ]; then
+        export MKLROOT="/opt/intel/oneapi/mkl/latest"
+        export LD_LIBRARY_PATH="$MKLROOT/lib/intel64:$LD_LIBRARY_PATH"
+        export LIBRARY_PATH="$MKLROOT/lib/intel64:$LIBRARY_PATH"
+        export CPATH="$MKLROOT/include:$CPATH"
+        print_success "MKL 环境已配置: $MKLROOT"
+    elif [ -d "/opt/intel/mkl" ]; then
+        export MKLROOT="/opt/intel/mkl"
+        export LD_LIBRARY_PATH="$MKLROOT/lib/intel64:$LD_LIBRARY_PATH"
+        export LIBRARY_PATH="$MKLROOT/lib/intel64:$LIBRARY_PATH"
+        export CPATH="$MKLROOT/include:$CPATH"
+        print_success "MKL 环境已配置: $MKLROOT"
+    else
+        print_warning "MKL 未找到 - VSAG 可能无法运行（需要 libmkl_intel_lp64.so.2）"
+        print_info "可选方案: 安装 OpenBLAS 替代 MKL"
+    fi
+    
     VSAG_DIR="$SCRIPT_DIR/algorithms_impl/vsag"
     if [ -d "$VSAG_DIR" ]; then
         cd "$VSAG_DIR"
@@ -266,14 +289,28 @@ if [ "$SKIP_BUILD" = false ]; then
         # 配置 CMake (如果需要)
         if [ ! -f "build-release/CMakeCache.txt" ]; then
             print_step "配置 VSAG CMake..."
-            cmake -DCMAKE_BUILD_TYPE=Release \
-                  -DENABLE_PYBINDS=ON \
-                  -DENABLE_TESTS=OFF \
-                  -DENABLE_EXAMPLES=OFF \
-                  -DENABLE_TOOLS=OFF \
-                  -DPython3_EXECUTABLE=$(which python3) \
-                  -B build-release \
-                  -S . 2>&1 | tail -10
+            
+            # 构建 CMake 参数数组
+            CMAKE_ARGS=(
+                -DCMAKE_BUILD_TYPE=Release
+                -DENABLE_PYBINDS=ON
+                -DENABLE_TESTS=OFF
+                -DENABLE_EXAMPLES=OFF
+                -DENABLE_TOOLS=OFF
+                -DPython3_EXECUTABLE=$(which python3)
+                -B build-release
+                -S .
+            )
+            
+            # 如果找到 MKL，添加 MKL 路径
+            if [ -n "$MKLROOT" ]; then
+                CMAKE_ARGS+=(
+                    -DMKLROOT="$MKLROOT"
+                    -DCMAKE_PREFIX_PATH="$MKLROOT"
+                )
+            fi
+            
+            cmake "${CMAKE_ARGS[@]}" 2>&1 | tail -10
         fi
         
         # 增量编译
@@ -358,16 +395,18 @@ if [ "$SKIP_BUILD" = false ]; then
             CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0" make shared_lib -j${JOBS} 2>&1 | tail -10 || print_warning "n2 编译失败"
         fi
         
-        # 构建 GTI（包含主项目和 Python bindings）
+        # 构建 GTI（只构建 Python bindings，不构建主可执行文件）
         print_info "构建 GTI 和 Python bindings..."
         cd "$GTI_DIR"
         rm -rf build bin 2>/dev/null || true
         mkdir -p bin build && cd build
         cmake .. -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=$(which python3) $PYBIND11_CMAKE_ARG 2>&1 | tail -5 || print_warning "GTI cmake 失败"
-        make -j${JOBS} 2>&1 | tail -10 || print_warning "GTI 编译失败"
+        
+        # 只构建 gti_wrapper（Python bindings），不构建主可执行文件（需要 tcmalloc）
+        make gti_wrapper -j${JOBS} 2>&1 | tail -10 || print_warning "GTI 编译失败"
         
         # 查找并复制 .so 文件（在 build/bindings 目录）
-        SO_FILE=$(find build/bindings -name "gti_wrapper*.so" 2>/dev/null | head -1)
+        SO_FILE=$(find . -name "gti_wrapper*.so" 2>/dev/null | head -1)
         if [ -n "$SO_FILE" ]; then
             cp "$SO_FILE" "$SITE_PACKAGES/"
             print_success "GTI (gti_wrapper) 构建完成"
