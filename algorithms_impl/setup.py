@@ -1,10 +1,11 @@
 """
-Setup script for PyCANDYAlgo package
+Setup script for PyCANDYAlgo package - 仅用于安装预编译的 .so 文件
 """
-from setuptools import setup, Extension
+from setuptools import setup
 from setuptools.dist import Distribution
 import os
 import glob
+import shutil
 import sys
 
 class BinaryDistribution(Distribution):
@@ -15,36 +16,24 @@ class BinaryDistribution(Distribution):
 # 查找所有编译好的 .so 文件
 so_files = glob.glob('PyCANDYAlgo*.so')
 
-# 如果 .so 文件存在，直接使用预编译的二进制文件
-if so_files:
-    setup(
-        name='PyCANDYAlgo',
-        version='0.1.0',
-        description='CANDY Algorithm implementations with Python bindings',
-        author='IntelliStream',
-        # 使用 py_modules 而不是 packages，因为这是一个单独的扩展模块
-        py_modules=[],
-        # 直接指定扩展模块的位置
-        ext_modules=[
-            Extension(
-                name='PyCANDYAlgo',
-                sources=[],  # 已经编译好，不需要源文件
-            ),
-        ],
-        package_data={
-            '': ['*.so'],
-        },
-        data_files=[
-            ('', so_files),  # 将 .so 文件安装到 site-packages 根目录
-        ],
-        distclass=BinaryDistribution,
-        zip_safe=False,
-        python_requires='>=3.8',
-        install_requires=[
-            'numpy',
-            'torch',
-        ],
-    )
-else:
+if not so_files:
     print("Error: No PyCANDYAlgo*.so file found. Please run ./build.sh first.", file=sys.stderr)
     sys.exit(1)
+
+# 使用最简单的 setup，不定义任何 ext_modules
+# 这样 setuptools 不会尝试编译任何东西
+setup(
+    name='PyCANDYAlgo',
+    version='0.1.2',
+    description='CANDY Algorithm implementations with Python bindings',
+    author='IntelliStream',
+    py_modules=[],
+    packages=[],
+    # 关键：不使用 ext_modules，直接用 data_files 复制 .so 文件
+    data_files=[
+        ('', so_files),  # 将 .so 文件安装到 site-packages 根目录
+    ],
+    distclass=BinaryDistribution,
+    zip_safe=False,
+    python_requires='>=3.8',
+)
