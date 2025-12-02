@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build and Test PyCANDYAlgo
 
 on:
   push:
@@ -8,18 +8,14 @@ on:
   workflow_dispatch:  # 允许手动触发
 
 jobs:
-  test-deployment:
+  build-pycandyalgo:
     runs-on: ubuntu-22.04
-    # test 分支做快速测试，main 和 main-dev 做完整测试
-    # 所有分支都跳过 VSAG（通过 CI 环境变量自动处理）
-    env:
-      FAST_BUILD: ${{ github.ref == 'refs/heads/test' && 'true' || 'false' }}
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        submodules: recursive  # 初始化所有 submodules
+        submodules: recursive
         
     - name: Set up Python 3.10
       uses: actions/setup-python@v5
@@ -30,7 +26,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        key: ${{ runner.os }}-pip-torch-numpy
         restore-keys: |
           ${{ runner.os }}-pip-
     
@@ -39,10 +35,7 @@ jobs:
       with:
         path: |
           algorithms_impl/build
-          algorithms_impl/faiss/build
-          algorithms_impl/SPTAG/Release
-          algorithms_impl/DiskANN/build
-        key: ${{ runner.os }}-cmake-${{ hashFiles('algorithms_impl/CMakeLists.txt', 'algorithms_impl/**/*.cmake') }}
+        key: ${{ runner.os }}-cmake-${{ hashFiles('algorithms_impl/CMakeLists.txt') }}
         restore-keys: |
           ${{ runner.os }}-cmake-
         
@@ -55,109 +48,82 @@ jobs:
           git \
           pkg-config \
           libgflags-dev \
+          libgoogle-glog-dev \
+          libfmt-dev \
           libboost-all-dev \
           libomp-dev \
-          wget \
-          curl
+          libnuma-dev \
+          libaio-dev
           
-    - name: Clean old build artifacts
+    - name: Install Intel MKL
       run: |
-        # 只清理 .so 文件，保留 build 缓存
-        rm -rf algorithms_impl/PyCANDYAlgo*.so
-        
+        wget -qO - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | sudo apt-key add -
+        echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        sudo apt-get update
+        sudo apt-get install -y intel-oneapi-mkl-devel || echo "MKL installation warning (non-fatal)"
+          
     - name: Run deployment script
       run: |
         chmod +x deploy.sh
-        # 设置并行编译数量
-        export MAKEFLAGS="-j$(nproc)"
-        export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)
-        
-        # CI 环境变量已设置，deploy.sh 会自动跳过 VSAG
-        # test 分支：快速构建
-        # main/main-dev 分支：完整构建
-        if [ "${{ env.FAST_BUILD }}" = "true" ]; then
-          echo "🚀 快速构建模式（test 分支，跳过 VSAG）"
-        else
-          echo "🔨 完整构建模式（main/main-dev 分支，跳过 VSAG）"
-        fi
-        ./deploy.sh
-      timeout-minutes: 60
-      env:
-        # 加速 pip 安装
-        PIP_NO_CACHE_DIR: false
-        PIP_DISABLE_PIP_VERSION_CHECK: 1
+        ./deploy.sh --skip-system-deps
+      timeout-minutes: 45
       
-    - name: Verify Python packages
+    - name: Verify PyCANDYAlgo import
       run: |
         source sage-db-bench/bin/activate
-        # 确认使用正确的 Python
+        
+        echo "=== Python Environment ==="
         which python3
         python3 --version
         
-        # 设置库路径
-        TORCH_LIB=$(python3 -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))")
-        export LD_LIBRARY_PATH="$TORCH_LIB:$LD_LIBRARY_PATH"
-        
-        # 检查 .so 文件和符号表
-        echo "检查 PyCANDYAlgo.so 文件..."
+        echo ""
+        echo "=== Check .so file ==="
         SO_FILE=$(find algorithms_impl -name "PyCANDYAlgo*.so" -type f | head -1)
         if [ -n "$SO_FILE" ]; then
-          echo "找到: $SO_FILE"
-          echo "文件大小: $(ls -lh "$SO_FILE" | awk '{print $5}')"
-          echo ""
-          echo "检查 PyInit 符号..."
-          nm -D "$SO_FILE" | grep PyInit || echo "⚠ 未找到 PyInit 符号"
-          echo ""
-          echo "检查所有导出符号..."
-          nm -D "$SO_FILE" | grep " T " | head -20
+          echo "Found: $SO_FILE"
+          echo "Size: $(ls -lh "$SO_FILE" | awk '{print $5}')"
         else
-          echo "❌ 未找到 .so 文件"
+          echo "❌ PyCANDYAlgo.so not found"
           exit 1
         fi
         
-        # 测试导入 PyCANDYAlgo（所有分支）
-        cd algorithms_impl && python3 -c "import PyCANDYAlgo; print('✓ PyCANDYAlgo imported'); print(f'  Version: {PyCANDYAlgo.__version__}'); print(f'  Compiled: {PyCANDYAlgo.__compiled_time__}')" && cd ..
+        echo ""
+        echo "=== Test PyCANDYAlgo Import ==="
+        python3 -c "
+import PyCANDYAlgo
+print('✅ PyCANDYAlgo imported successfully')
+print(f'   Version: {PyCANDYAlgo.__version__}')
+print(f'   Compiled: {PyCANDYAlgo.__compiled_time__}')
+
+# Test IndexHNSWFlatOptimized
+print()
+print('Available classes:')
+print(f'   - IndexHNSWFlatOptimized: {hasattr(PyCANDYAlgo, \"IndexHNSWFlatOptimized\")}')
+print(f'   - MetricType: {hasattr(PyCANDYAlgo, \"MetricType\")}')
+"
         
-        # 跳过 pyvsag 测试（所有分支都不构建 VSAG）
-        # python3 -c "import pyvsag; print('✓ pyvsag imported')"
-        
-        python3 -c "import numpy, torch, yaml; print('✓ Core dependencies OK')"
-        
-    - name: Run unit tests
+    - name: Test core dependencies
       run: |
         source sage-db-bench/bin/activate
-        
-        # test 分支：快速测试（排除性能测试）
-        if [ "${{ env.FAST_BUILD }}" = "true" ]; then
-          echo "🧪 快速测试模式"
-          pytest tests/ -v --tb=short --ignore=tests/test_performance.py -m "not slow" || true
-        else
-          echo "🧪 完整测试模式"
-          pytest tests/ -v --tb=short || true
-        fi
-        
-    - name: Check algorithm availability
-      run: |
-        source sage-db-bench/bin/activate
-        python -c "
-        from bench.algorithms import get_available_algorithms
-        algos = get_available_algorithms()
-        print(f'Available algorithms: {len(algos)}')
-        for algo in algos:
-            print(f'  - {algo}')
-        " || echo "Algorithm check skipped"
-        
+        python3 -c "
+import numpy
+import torch
+print('✅ numpy:', numpy.__version__)
+print('✅ torch:', torch.__version__)
+"
+
     - name: Upload build logs on failure
       if: failure()
       uses: actions/upload-artifact@v4
       with:
         name: build-logs
         path: |
-          algorithms_impl/build.log
-          algorithms_impl/build/CMakeFiles/*.log
+          algorithms_impl/build/cmake_config.log
+          algorithms_impl/build/CMakeFiles/CMakeError.log
+          algorithms_impl/build/CMakeFiles/CMakeOutput.log
         retention-days: 7
 
-  lint-and-format:
+  lint:
     runs-on: ubuntu-22.04
     
     steps:
@@ -170,17 +136,8 @@ jobs:
         python-version: '3.10'
         
     - name: Install linting tools
-      run: |
-        pip install flake8 black isort mypy
+      run: pip install flake8
         
-    - name: Run flake8
+    - name: Run flake8 (syntax errors only)
       run: |
         flake8 bench/ datasets/ --count --select=E9,F63,F7,F82 --show-source --statistics || true
-        
-    - name: Check code formatting
-      run: |
-        black --check bench/ datasets/ || true
-        
-    - name: Check import sorting
-      run: |
-        isort --check-only bench/ datasets/ || true

@@ -16,11 +16,35 @@ import sys
 import h5py
 import numpy as np
 import pandas as pd
+import yaml
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
 from datasets.registry import get_dataset, DATASETS
-from utils.runbook import load_runbook
+
+
+def load_runbook(dataset_name: str, nb: int, runbook_path: str) -> Tuple[int, Dict]:
+    """
+    加载 runbook 文件
+    
+    Args:
+        dataset_name: 数据集名称
+        nb: 数据集大小
+        runbook_path: runbook 文件路径
+        
+    Returns:
+        (max_pts, runbook) 元组
+    """
+    with open(runbook_path, 'r') as f:
+        content = yaml.safe_load(f)
+    
+    if dataset_name not in content:
+        raise ValueError(f"Dataset {dataset_name} not found in runbook: {runbook_path}")
+    
+    runbook = content[dataset_name]
+    max_pts = runbook.get('max_pts', nb)
+    
+    return max_pts, runbook
 
 
 def knn_result_read(filepath: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -230,7 +254,6 @@ def export_results(dataset_name: str, algorithm: str, runbook_name: str,
     max_pts, runbook_config = load_runbook(dataset_name, dataset.nb, runbook_path)
     
     # 将 runbook_config 转换为字典格式（用于后续处理）
-    import yaml
     with open(runbook_path) as f:
         runbook = yaml.safe_load(f)
     

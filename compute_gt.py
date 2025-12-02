@@ -24,10 +24,35 @@ import argparse
 import os
 import sys
 import numpy as np
+import yaml
 from pathlib import Path
+from typing import Dict, Tuple
 
 from datasets.registry import DATASETS
-from utils.runbook import load_runbook
+
+
+def load_runbook(dataset_name: str, nb: int, runbook_path: str) -> Tuple[int, Dict]:
+    """
+    加载 runbook 文件
+    
+    Args:
+        dataset_name: 数据集名称
+        nb: 数据集大小
+        runbook_path: runbook 文件路径
+        
+    Returns:
+        (max_pts, runbook) 元组
+    """
+    with open(runbook_path, 'r') as f:
+        content = yaml.safe_load(f)
+    
+    if dataset_name not in content:
+        raise ValueError(f"Dataset {dataset_name} not found in runbook: {runbook_path}")
+    
+    runbook = content[dataset_name]
+    max_pts = runbook.get('max_pts', nb)
+    
+    return max_pts, runbook
 
 
 def find_compute_groundtruth_tool():
@@ -242,6 +267,7 @@ def output_gt_batch(ds, tag_to_id: dict, num_batch_insert: int, step: int,
     
     # 这些实验类型需要保留批量 GT
     important_experiments = [
+        'simple',  # 简单测试
         'test_experiment', 'test_simple', 'test_congestion',  # 测试实验
         'general_experiment', 'baseline',  # 基础实验
         'deletion', 'bulk_deletion', 'batch_deletion',  # 删除相关实验
@@ -390,15 +416,24 @@ def main():
     common_cmd += ' --query_file ' + os.path.join(ds.basedir, query_file)
 
     # Process runbook - 参考 big-ann-benchmarks 的处理流程
+    # runbook 是一个字典，key 是步骤号，需要按顺序处理
     step = 1
     ids = np.empty(0, dtype=np.uint32)
     num_batch_insert = 0
+    tag_to_id = {}
     
-    for entry in runbook[1:]:
+    # 获取所有步骤号并排序
+    step_keys = sorted([k for k in runbook.keys() if isinstance(k, int)])
+    
+    for step_key in step_keys:
+        entry = runbook[step_key]
+        if not isinstance(entry, dict) or 'operation' not in entry:
+            continue
+            
         # The first step must be an HPC and second must be initial
-        if step == 1:
+        if entry['operation'] == 'initial':
             tag_to_id = get_range_start_end(entry, {})
-        elif entry['operation'] not in ['batch_insert', 'batch_insert_delete']:
+        elif entry['operation'] not in ['batch_insert', 'batch_insert_delete', 'startHPC', 'endHPC', 'waitPending']:
             tag_to_id = get_next_set(tag_to_id, entry)
         
         # Handle search operation

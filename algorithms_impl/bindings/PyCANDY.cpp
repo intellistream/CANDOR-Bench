@@ -25,6 +25,7 @@
 #include <DiskANN/python/include/builder.h>
 //#endif
 #include <faiss/index_factory.h>
+#include <faiss/IndexHNSWOptimized.h>
 
 
 #include<puck/pyapi_wrapper/py_api_wrapper.h>
@@ -366,7 +367,43 @@ PYBIND11_MODULE(PyCANDYAlgo, m) {
 
   m.def("index_factory_ip", &faiss::index_factory_IP, "Create custom index from faiss with IP");
 
-  m.def("index_factory_l2", &faiss::index_factory_L2, "Create custom index from faiss with IP");
+  m.def("index_factory_l2", &faiss::index_factory_L2, "Create custom index from faiss with L2");
+
+  /// Metric type enum for faiss (needed before IndexHNSW classes)
+  py::enum_<faiss::MetricType>(m, "MetricType")
+      .value("METRIC_L2", faiss::METRIC_L2)
+      .value("METRIC_INNER_PRODUCT", faiss::METRIC_INNER_PRODUCT)
+      .export_values();
+
+  /// IndexHNSWFlatOptimized - HNSW index with Flat storage and Gorder optimization
+  /// This is the main class to use for HNSW with Gorder reordering
+  py::class_<faiss::IndexHNSWFlatOptimized, std::shared_ptr<faiss::IndexHNSWFlatOptimized>>(m, "IndexHNSWFlatOptimized")
+      .def(py::init<int, int, faiss::MetricType>(),
+           py::arg("d"), py::arg("M") = 32, py::arg("metric") = faiss::METRIC_L2,
+           "Create HNSW index with Flat storage.\n"
+           "Args:\n"
+           "  d: vector dimension\n"
+           "  M: number of neighbors per node (default 32)\n"
+           "  metric: distance metric (METRIC_L2 or METRIC_INNER_PRODUCT)")
+      .def("add", &faiss::IndexHNSWFlatOptimized::add_arrays,
+           "Add vectors to the index")
+      .def("search", &faiss::IndexHNSWFlatOptimized::search_arrays,
+           py::arg("n"), py::arg("x"), py::arg("k"), py::arg("ef_search"),
+           "Search k nearest neighbors with given efSearch parameter")
+      .def("train", &faiss::IndexHNSWFlatOptimized::train_arrays,
+           "Train the index (no-op for Flat storage)")
+      .def("reset", &faiss::IndexHNSWFlatOptimized::reset,
+           "Remove all vectors from the index")
+      .def("reorder_gorder", &faiss::IndexHNSWFlatOptimized::reorder_gorder,
+           py::arg("window") = 5,
+           "Reorder the HNSW graph using Gorder algorithm for better cache locality.\n"
+           "Args:\n"
+           "  window: sliding window size for Gorder algorithm (default 5)")
+      .def_readwrite("verbose", &faiss::IndexHNSWFlatOptimized::verbose)
+      .def_readonly("ntotal", &faiss::IndexHNSWFlatOptimized::ntotal,
+           "Total number of vectors in the index")
+      .def_readonly("d", &faiss::IndexHNSWFlatOptimized::d,
+           "Vector dimension");
 
 
 

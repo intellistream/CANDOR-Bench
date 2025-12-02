@@ -8,17 +8,14 @@ random-xs:
         args: |
           [
             {
-              "index_name": "hnsw",
+              "index_name": "hgraph",
               "index_config": {
-                "hnsw": {
-                  "max_degree": 32,
+                "dtype": "float32",
+                "index_param": {
+                  "base_quantization_type": "fp32",
+                  "max_degree": 16,
                   "ef_construction": 120,
-                  "use_static": false
-                },
-                "optimizer": {
-                  "prefetch_stride_codes": 2,
-                  "prefetch_stride_visit": 2,
-                  "prefetch_depth_codes": 2
+                  "use_elp_optimizer": False
                 }
               }
             }
@@ -27,8 +24,8 @@ random-xs:
           [
             {
               "search_params": {
-                "hnsw": {
-                  "ef_search": 80
+                "hgraph": {
+                  "ef_search": 40
                 }
               }
             }
@@ -44,17 +41,14 @@ sift:
         args: |
           [
             {
-              "index_name": "hnsw",
+              "index_name": "hgraph",
               "index_config": {
-                "hnsw": {
-                  "max_degree": 48,
-                  "ef_construction": 200,
-                  "skip_ratio": 0.1
-                },
-                "optimizer": {
-                  "prefetch_stride_codes": 1,
-                  "prefetch_stride_visit": 2,
-                  "prefetch_depth_codes": 2
+                "dtype": "float32",
+                "index_param": {
+                  "base_quantization_type": "sq8",
+                  "max_degree": 16,
+                  "ef_construction": 120,
+                  "use_elp_optimizer": True
                 }
               }
             }
@@ -63,9 +57,8 @@ sift:
           [
             {
               "search_params": {
-                "hnsw": {
-                  "ef_search": 128,
-                  "searcher_type": "parallel"
+                "hgraph": {
+                  "ef_search": 40
                 }
               }
             }

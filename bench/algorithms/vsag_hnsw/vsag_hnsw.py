@@ -51,6 +51,9 @@ class VsagIndexWrapper:
         if base_payload is None:
             base_payload = raw
         self._index_payload_template: Dict[str, Any] = base_payload or {}
+        
+        # 判断是否为 hgraph 索引
+        self._is_hgraph = self.index_name == "hgraph"
 
         self.metric = metric
         self.dim: Optional[int] = None
@@ -74,8 +77,9 @@ class VsagIndexWrapper:
         self.max_pts = max_pts
         self.dim = ndims
         self._pyvsag = _import_pyvsag()
-        params = json.dumps(self._build_index_params())
-        self._index = self._pyvsag.Index(self.index_name, params)
+        params = self._build_index_params()
+        params_json = json.dumps(params)
+        self._index = self._pyvsag.Index(self.index_name, params_json)
         self._is_built = False
         self._last_results = None
         self._search_params_json = json.dumps(self._effective_search_params(self._search_params_template))
@@ -120,6 +124,7 @@ class VsagIndexWrapper:
             dists_np = dists_np.reshape(1, -1)
         
         self._last_results = ids_np
+        self.res = ids_np  # 兼容 worker.py 的直接属性访问
         return ids_np, dists_np
 
     def update_search_params(self, overrides: Optional[Dict[str, Any]]) -> None:
@@ -139,11 +144,26 @@ class VsagIndexWrapper:
         if self.dim is None:
             raise RuntimeError("setup() must be called before building index parameters")
         payload = copy.deepcopy(self._index_payload_template)
-        payload["dim"] = self.dim
-        payload["metric_type"] = self._metric_to_vsag(self.metric)
-        payload.setdefault("dtype", self._dtype_to_vsag(self.dtype))
-        if self.max_pts is not None:
-            payload.setdefault("max_elements", self.max_pts)
+        
+        if self._is_hgraph:
+            # hgraph 参数结构: {"dtype", "metric_type", "dim", "index_param": {...}}
+            payload["dim"] = self.dim
+            payload["metric_type"] = self._metric_to_vsag(self.metric)
+            payload.setdefault("dtype", self._dtype_to_vsag(self.dtype))
+            # 确保 index_param 存在并设置必要的默认值
+            if "index_param" not in payload:
+                payload["index_param"] = {}
+            # base_quantization_type 是必需的
+            payload["index_param"].setdefault("base_quantization_type", "fp32")
+            if self.max_pts is not None:
+                payload["index_param"].setdefault("hgraph_init_capacity", self.max_pts)
+        else:
+            # hnsw 参数结构: {"dtype", "metric_type", "dim", "hnsw": {...}}
+            payload["dim"] = self.dim
+            payload["metric_type"] = self._metric_to_vsag(self.metric)
+            payload.setdefault("dtype", self._dtype_to_vsag(self.dtype))
+            if self.max_pts is not None:
+                payload.setdefault("max_elements", self.max_pts)
         return payload
 
     def _prepare_dense_vectors(self, vectors: np.ndarray) -> np.ndarray:
@@ -164,7 +184,11 @@ class VsagIndexWrapper:
         return np.ascontiguousarray(arr, dtype=np.int64)
 
     def _effective_search_params(self, overrides: Dict[str, Any]) -> Dict[str, Any]:
-        defaults = {"hnsw": {"ef_search": 64}}
+        # 根据索引类型选择默认搜索参数
+        if self._is_hgraph:
+            defaults = {"hgraph": {"ef_search": 64}}
+        else:
+            defaults = {"hnsw": {"ef_search": 64}}
         return _deep_merge(defaults, overrides or {})
 
     def _metric_to_vsag(self, metric: str) -> str:
@@ -187,9 +211,11 @@ class VsagHnsw(BaseStreamingANN):
         super().__init__(metric)
         self.name = "vsag_hnsw"
         self._wrapper = VsagIndexWrapper(metric, index_params)
+        self.res = None  # 兼容 worker.py 的直接属性访问
 
     def setup(self, dtype: str, max_pts: int, ndims: int) -> None:
         self._wrapper.setup(dtype, max_pts, ndims)
+        self.res = None
 
     def insert(self, X: np.ndarray, ids: np.ndarray) -> None:
         self._wrapper.insert(X, ids)
@@ -198,7 +224,9 @@ class VsagHnsw(BaseStreamingANN):
         self._wrapper.delete(ids)
 
     def query(self, X: np.ndarray, k: int):
-        return self._wrapper.query(X, k)
+        ids, dists = self._wrapper.query(X, k)
+        self.res = ids  # 兼容 worker.py 的直接属性访问
+        return ids, dists
 
     def set_query_arguments(self, query_args: Dict[str, Any]) -> None:
         self._wrapper.update_search_params(query_args)

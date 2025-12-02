@@ -172,6 +172,9 @@ fi
 if [ "$BUILD_THIRD_PARTY" = true ]; then
     print_header "Building Third-Party Libraries"
     
+    # 创建安装目录
+    mkdir -p "$SCRIPT_DIR/build/install"
+    
     # === GTI ===
     if [ -d "gti" ]; then
         print_info "Building GTI..."
@@ -191,7 +194,7 @@ if [ "$BUILD_THIRD_PARTY" = true ]; then
         [ -d build ] && rm -rf build
         mkdir -p bin build
         cd build
-        cmake -DCMAKE_BUILD_TYPE=Release ..
+        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$SCRIPT_DIR/build/install" ..
         make -j${MAX_JOBS}
         make install || print_warning "GTI install failed (not critical)"
         cd "$SCRIPT_DIR"
