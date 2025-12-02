@@ -145,6 +145,7 @@ if [ "$SKIP_SYSTEM_DEPS" = false ]; then
             build-essential cmake git pkg-config \
             libgflags-dev libgoogle-glog-dev libfmt-dev \
             libboost-all-dev libomp-dev libnuma-dev libaio-dev \
+            libeigen3-dev \
             python3.10 python3.10-venv python3.10-dev python3-pip \
             || print_warning "部分包可能未安装"
         
