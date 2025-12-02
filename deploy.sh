@@ -264,14 +264,37 @@ if [ "$SKIP_BUILD" = false ]; then
     NPROC=$(nproc 2>/dev/null || echo 4)
     JOBS=$((NPROC > 8 ? 8 : NPROC))
     
+    # 获取 pybind11 cmake 路径
+    PYBIND11_CMAKE_DIR=$(python3 -c "import pybind11; print(pybind11.get_cmake_dir())" 2>/dev/null || echo "")
+    if [ -n "$PYBIND11_CMAKE_DIR" ]; then
+        print_info "pybind11 cmake dir: $PYBIND11_CMAKE_DIR"
+        PYBIND11_CMAKE_ARG="-Dpybind11_DIR=$PYBIND11_CMAKE_DIR"
+    else
+        print_warning "pybind11 cmake 路径未找到"
+        PYBIND11_CMAKE_ARG=""
+    fi
+    
     # --- 构建 GTI ---
     print_step "构建 GTI (gti_wrapper)..."
     GTI_DIR="$SCRIPT_DIR/algorithms_impl/gti/GTI"
     if [ -d "$GTI_DIR" ]; then
         cd "$GTI_DIR"
+        
+        # 先构建 n2 依赖
+        N2_DIR="$GTI_DIR/extern_libraries/n2"
+        if [ -d "$N2_DIR" ] && [ ! -f "$N2_DIR/build/lib/libn2.so" ]; then
+            print_info "构建 n2 依赖..."
+            cd "$N2_DIR"
+            mkdir -p build && cd build
+            cmake .. -DCMAKE_BUILD_TYPE=Release 2>&1 | tail -3 || true
+            make -j${JOBS} 2>&1 | tail -5 || true
+        fi
+        
+        # 在 bindings 目录构建 gti_wrapper
+        cd "$GTI_DIR/bindings"
         rm -rf build 2>/dev/null || true
         mkdir -p build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=$(which python3) 2>&1 | tail -5
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=$(which python3) $PYBIND11_CMAKE_ARG 2>&1 | tail -5
         make -j${JOBS} 2>&1 | tail -10
         # 查找并复制 .so 文件
         SO_FILE=$(find . -name "gti_wrapper*.so" 2>/dev/null | head -1)
@@ -292,7 +315,7 @@ if [ "$SKIP_BUILD" = false ]; then
         cd "$IPDISKANN_DIR"
         rm -rf build 2>/dev/null || true
         mkdir -p build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=$(which python3) 2>&1 | tail -5
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=$(which python3) -DPYBIND=ON $PYBIND11_CMAKE_ARG 2>&1 | tail -5
         make -j${JOBS} 2>&1 | tail -10
         # 查找并复制 .so 文件
         SO_FILE=$(find . -name "ipdiskann*.so" 2>/dev/null | head -1)
@@ -313,7 +336,7 @@ if [ "$SKIP_BUILD" = false ]; then
         cd "$PLSH_DIR"
         rm -rf build 2>/dev/null || true
         mkdir -p build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=$(which python3) 2>&1 | tail -5
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=$(which python3) $PYBIND11_CMAKE_ARG 2>&1 | tail -5
         make -j${JOBS} 2>&1 | tail -10
         # 查找并复制 .so 文件
         SO_FILE=$(find . -name "plsh_python*.so" 2>/dev/null | head -1)
