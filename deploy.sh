@@ -294,36 +294,19 @@ print_header "步骤 7/7: 验证 PyCANDYAlgo"
 print_step "测试导入..."
 
 # 测试 PyCANDYAlgo 导入
-IMPORT_TEST=$(python3 << 'PYEOF'
-import sys
-try:
-    import PyCANDYAlgo
-    print(f"VERSION:{PyCANDYAlgo.__version__}")
-    print("SUCCESS")
-except Exception as e:
-    print(f"ERROR:{e}")
-    sys.exit(1)
-PYEOF
-)
-
-if echo "$IMPORT_TEST" | grep -q "SUCCESS"; then
-    VERSION=$(echo "$IMPORT_TEST" | grep "VERSION:" | cut -d: -f2)
-    print_success "PyCANDYAlgo 导入成功 (版本: $VERSION)"
+if python3 -c "import PyCANDYAlgo; print('VERSION:', PyCANDYAlgo.__version__)" 2>&1; then
+    print_success "PyCANDYAlgo 导入成功"
 else
     print_error "PyCANDYAlgo 导入失败"
-    echo "$IMPORT_TEST"
+    # 显示详细错误
+    python3 -c "import PyCANDYAlgo" 2>&1 || true
     exit 1
 fi
 
 # 测试核心依赖
 print_step "测试核心依赖..."
-for pkg in numpy torch; do
-    if python3 -c "import $pkg" 2>/dev/null; then
-        print_success "$pkg 可用"
-    else
-        print_error "$pkg 不可用"
-    fi
-done
+python3 -c "import numpy; print('numpy:', numpy.__version__)" || print_warning "numpy 不可用"
+python3 -c "import torch; print('torch:', torch.__version__)" || print_warning "torch 不可用"
 
 # ============================================================================
 # 完成
