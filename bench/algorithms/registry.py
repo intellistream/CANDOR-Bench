@@ -107,6 +107,100 @@ def get_algorithm_params_from_config(algo_name: str, dataset: str = 'random-xs')
     return {}
 
 
+def get_all_algorithm_param_combinations(algo_name: str, dataset: str = 'random-xs') -> List[Dict[str, Any]]:
+    """
+    获取算法配置中所有参数组合（args × query-args 的笛卡尔积）
+    
+    Args:
+        algo_name: 算法名称（支持带后缀，如 vsag_hnsw_no_opt -> vsag_hnsw）
+        dataset: 数据集名称
+        
+    Returns:
+        参数组合列表，每个元素包含 build_params 和 query_params
+    """
+    import itertools
+    import ast
+    
+    config_path = Path(__file__).parent / algo_name / 'config.yaml'
+    base_algo_name = algo_name
+    
+    # 处理带后缀的算法名
+    if not config_path.exists():
+        parts = algo_name.split('_')
+        for i in range(len(parts) - 1, 0, -1):
+            test_base = '_'.join(parts[:i])
+            test_path = Path(__file__).parent / test_base / 'config.yaml'
+            if test_path.exists():
+                config_path = test_path
+                base_algo_name = test_base
+                break
+    
+    if not config_path.exists():
+        return [{'build_params': {}, 'query_params': {}}]
+    
+    try:
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        
+        if dataset not in config:
+            return [{'build_params': {}, 'query_params': {}}]
+            
+        dataset_config = config[dataset]
+        algo_key = algo_name if algo_name in dataset_config else base_algo_name
+        
+        if algo_key not in dataset_config:
+            return [{'build_params': {}, 'query_params': {}}]
+            
+        algo_config = dataset_config[algo_key]
+        
+        build_params_list = [{}]
+        query_params_list = [{}]
+        
+        # 解析 run-groups 中的参数
+        if 'run-groups' in algo_config:
+            run_groups = algo_config['run-groups']
+            if 'base' in run_groups:
+                base_group = run_groups['base']
+                
+                # 解析 args（构建参数列表）
+                if 'args' in base_group:
+                    args_str = base_group['args']
+                    if isinstance(args_str, str):
+                        args_str = args_str.strip()
+                        try:
+                            args_list = ast.literal_eval(args_str)
+                            if args_list and isinstance(args_list, list):
+                                build_params_list = args_list
+                        except:
+                            pass
+                
+                # 解析 query-args（查询参数列表）
+                if 'query-args' in base_group:
+                    query_args_str = base_group['query-args']
+                    if isinstance(query_args_str, str):
+                        query_args_str = query_args_str.strip()
+                        try:
+                            query_args_list = ast.literal_eval(query_args_str)
+                            if query_args_list and isinstance(query_args_list, list):
+                                query_params_list = query_args_list
+                        except:
+                            pass
+        
+        # 生成笛卡尔积
+        combinations = []
+        for build_params, query_params in itertools.product(build_params_list, query_params_list):
+            combinations.append({
+                'build_params': build_params,
+                'query_params': query_params
+            })
+        
+        return combinations if combinations else [{'build_params': {}, 'query_params': {}}]
+        
+    except Exception as e:
+        print(f"⚠ Failed to get param combinations for {algo_name}: {e}")
+        return [{'build_params': {}, 'query_params': {}}]
+
+
 def register_algorithm(name: str, factory: Callable[..., BaseANN]) -> None:
     """
     注册新算法
