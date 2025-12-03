@@ -17,11 +17,16 @@ ImportError: libmkl_intel_lp64.so.2: cannot open shared object file: No such fil
 
 **解决方案:**
 1. 在 `deploy.sh` 步骤 1 中确保 Intel MKL 被正确安装
-2. 在 `deploy.sh` 步骤 6 构建 VSAG 之前，设置 MKL 环境变量：
+2. 在 `deploy.sh` 步骤 2 创建虚拟环境后，修改 `activate` 脚本：
+   - 在虚拟环境的 `activate` 脚本中添加 MKL 库路径配置
+   - 确保每次激活虚拟环境时自动设置 `LD_LIBRARY_PATH`
+   - 这样无论是否退出虚拟环境，再次进入都能找到 MKL 库
+3. 在 `deploy.sh` 步骤 6 构建 VSAG 之前，设置 MKL 环境变量：
    - 加载 Intel oneAPI 环境（如果可用）
    - 设置 `LD_LIBRARY_PATH` 包含 MKL 库路径
    - 设置 `LIBRARY_PATH` 和 `CPATH` 用于编译
    - 在 CMake 配置中传递 `MKLROOT` 参数
+4. 在 `deploy.sh` 步骤 9 测试模块导入前，再次确认 MKL 环境变量
 
 ### 2. GTI - tcmalloc 依赖问题
 
@@ -59,7 +64,32 @@ sudo apt-get install -y \
     ...
 ```
 
-#### b) 步骤 6: 配置 MKL 环境
+#### b) 步骤 2: 配置虚拟环境，持久化 MKL 路径
+```bash
+# 激活虚拟环境
+source "$VENV_DIR/bin/activate"
+
+# 配置虚拟环境的 activate 脚本，自动设置 MKL 路径
+ACTIVATE_SCRIPT="$VENV_DIR/bin/activate"
+if ! grep -q "# MKL Library Path" "$ACTIVATE_SCRIPT"; then
+    cat >> "$ACTIVATE_SCRIPT" << 'EOF'
+
+# MKL Library Path (added by deploy.sh)
+if [ -d "/opt/intel/oneapi/mkl/latest/lib/intel64" ]; then
+    export LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/latest/lib/intel64:$LD_LIBRARY_PATH"
+elif [ -d "/opt/intel/mkl/lib/intel64" ]; then
+    export LD_LIBRARY_PATH="/opt/intel/mkl/lib/intel64:$LD_LIBRARY_PATH"
+fi
+EOF
+fi
+
+# 重新加载 activate 脚本以应用 MKL 路径
+source "$ACTIVATE_SCRIPT"
+```
+
+**关键改进**: 将 MKL 路径写入虚拟环境的 `activate` 脚本，确保每次激活虚拟环境时都能找到 MKL 库，解决了退出虚拟环境再进入后无法导入 pyvsag 的问题。
+
+#### c) 步骤 6: 配置 MKL 环境
 ```bash
 # 设置 MKL 环境变量（VSAG 依赖 Intel MKL）
 if [ -f "/opt/intel/oneapi/setvars.sh" ]; then
@@ -73,7 +103,7 @@ elif [ -d "/opt/intel/oneapi/mkl/latest" ]; then
 fi
 ```
 
-#### c) 步骤 6: VSAG CMake 配置添加 MKL 参数
+#### d) 步骤 6: VSAG CMake 配置添加 MKL 参数
 ```bash
 CMAKE_ARGS=(
     ...
@@ -90,10 +120,20 @@ fi
 cmake "${CMAKE_ARGS[@]}" ...
 ```
 
-#### d) 步骤 7: GTI 只构建 Python bindings
+#### e) 步骤 7: GTI 只构建 Python bindings
 ```bash
 # 只构建 gti_wrapper（Python bindings），不构建主可执行文件（需要 tcmalloc）
 make gti_wrapper -j${JOBS} 2>&1 | tail -10
+```
+
+#### f) 步骤 9: 测试前确保 MKL 环境已配置
+```bash
+# 确保 MKL 环境变量已配置（用于 VSAG）
+if [ -d "/opt/intel/oneapi/mkl/latest/lib/intel64" ]; then
+    export LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/latest/lib/intel64:$LD_LIBRARY_PATH"
+elif [ -d "/opt/intel/mkl/lib/intel64" ]; then
+    export LD_LIBRARY_PATH="/opt/intel/mkl/lib/intel64:$LD_LIBRARY_PATH"
+fi
 ```
 
 ### 2. `/home/mingqi/SAGE-DB-Bench/algorithms_impl/gti/GTI/src/CMakeLists.txt`
