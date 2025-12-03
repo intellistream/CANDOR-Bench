@@ -32,6 +32,38 @@ random-xs:
           ]
 
 sift:
+  # 无优化版本
+  vsag_hnsw_no_opt:
+    module: benchmark_anns.bench.algorithms.vsag_hnsw.vsag_hnsw
+    constructor: VsagHnsw
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [
+            {
+              "index_name": "hnsw",
+              "index_config": {
+                "dtype": "float32",
+                "hnsw": {
+                  "max_degree": 32,
+                  "ef_construction": 200
+                }
+              }
+            }
+          ]
+        query-args: |
+          [
+            {
+              "search_params": {
+                "hnsw": {
+                  "ef_search": 40
+                }
+              }
+            }
+          ]
+
+  # hardcoded 优化版本
   vsag_hnsw:
     module: benchmark_anns.bench.algorithms.vsag_hnsw.vsag_hnsw
     constructor: VsagHnsw
@@ -41,14 +73,13 @@ sift:
         args: |
           [
             {
-              "index_name": "hgraph",
+              "index_name": "hnsw",
               "index_config": {
                 "dtype": "float32",
-                "index_param": {
-                  "base_quantization_type": "sq8",
-                  "max_degree": 16,
-                  "ef_construction": 120,
-                  "use_elp_optimizer": True
+                "hnsw": {
+                  "max_degree": 32,
+                  "ef_construction": 200,
+                  "prefetch_mode": "hardcoded"
                 }
               }
             }
@@ -57,7 +88,39 @@ sift:
           [
             {
               "search_params": {
-                "hgraph": {
+                "hnsw": {
+                  "ef_search": 40
+                }
+              }
+            }
+          ]
+
+  # 自定义优化版本
+  vsag_hnsw_customized:
+    module: benchmark_anns.bench.algorithms.vsag_hnsw.vsag_hnsw
+    constructor: VsagHnsw
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [
+            {
+              "index_name": "hnsw",
+              "index_config": {
+                "dtype": "float32",
+                "hnsw": {
+                  "max_degree": 32,
+                  "ef_construction": 200,
+                  "prefetch_mode": "customized"
+                }
+              }
+            }
+          ]
+        query-args: |
+          [
+            {
+              "search_params": {
+                "hnsw": {
                   "ef_search": 40
                 }
               }

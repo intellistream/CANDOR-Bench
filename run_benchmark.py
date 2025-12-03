@@ -41,10 +41,111 @@ from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
 
 # benchmark_anns 是独立项目，使用相对导入
-from bench.algorithms.registry import get_algorithm, auto_register_algorithms, ALGORITHMS
+from bench.algorithms.registry import get_algorithm, auto_register_algorithms, ALGORITHMS, get_algorithm_params_from_config
 from datasets.registry import get_dataset, DATASETS
 from bench.runner import BenchmarkRunner
 from bench.metrics import BenchmarkMetrics
+
+
+def _extract_key_params(params: Dict[str, Any], max_depth: int = 4) -> Dict[str, Any]:
+    """
+    从嵌套参数中提取关键参数用于生成文件夹名
+    
+    Args:
+        params: 参数字典（可能嵌套）
+        max_depth: 最大递归深度
+        
+    Returns:
+        扁平化的关键参数字典
+    """
+    result = {}
+    
+    # 我们关心的关键参数
+    key_params = {
+        'max_degree', 'M', 'ef_construction', 'efConstruction', 
+        'ef_search', 'efSearch', 'prefetch_mode', 'nlist', 'nprobe',
+        'search_L', 'index_L', 'R', 'L', 'alpha'
+    }
+    
+    def _flatten(d: Dict[str, Any], prefix: str = "", depth: int = 0):
+        if depth >= max_depth:
+            return
+        for key, value in d.items():
+            new_key = f"{prefix}{key}" if prefix else key
+            if isinstance(value, dict):
+                _flatten(value, f"{new_key}_", depth + 1)
+            elif isinstance(value, (str, int, float, bool)):
+                # 只保留关键参数，或 prefetch_mode 这类特殊参数
+                if key in key_params or 'prefetch' in key.lower():
+                    result[key] = value  # 使用简短的 key，不带前缀
+    
+    _flatten(params)
+    return result
+
+
+def _generate_params_folder_name(algorithm_params: Dict[str, Any]) -> str:
+    """
+    根据算法参数生成有意义的文件夹名
+    
+    Args:
+        algorithm_params: 包含 build_params 和 query_params 的字典
+        
+    Returns:
+        文件夹名（如 "M32_ef200_prefetch-hardcoded_efsearch40"）
+    """
+    if not algorithm_params:
+        return "default"
+    
+    parts = []
+    
+    # 处理构建参数
+    build_params = algorithm_params.get('build_params', {})
+    if build_params:
+        flat_build = _extract_key_params(build_params)
+        for key, value in sorted(flat_build.items()):
+            # 简化参数名
+            short_key = key.replace('max_degree', 'M').replace('ef_construction', 'ef')
+            short_key = short_key.replace('efConstruction', 'ef').replace('prefetch_mode', 'prefetch')
+            
+            # 格式化值
+            if isinstance(value, bool):
+                if value:
+                    parts.append(short_key)
+            elif isinstance(value, float):
+                parts.append(f"{short_key}{value:.0f}")
+            else:
+                parts.append(f"{short_key}-{value}")
+    
+    # 处理查询参数
+    query_params = algorithm_params.get('query_params', {})
+    if query_params:
+        flat_query = _extract_key_params(query_params)
+        for key, value in sorted(flat_query.items()):
+            short_key = key.replace('ef_search', 'efsearch').replace('efSearch', 'efsearch')
+            
+            if isinstance(value, bool):
+                if value:
+                    parts.append(short_key)
+            elif isinstance(value, float):
+                parts.append(f"{short_key}{value:.0f}")
+            else:
+                parts.append(f"{short_key}-{value}")
+    
+    if not parts:
+        return "default"
+    
+    # 组合并限制长度
+    folder_name = "_".join(parts)
+    
+    # 清理非法字符
+    folder_name = re.sub(r'[^\w\-]', '_', folder_name)
+    folder_name = re.sub(r'_+', '_', folder_name).strip('_')
+    
+    # 限制长度
+    if len(folder_name) > 100:
+        folder_name = folder_name[:100]
+    
+    return folder_name if folder_name else "default"
 
 
 def list_algorithms():
@@ -248,14 +349,14 @@ def get_result_filename(
     output_dir: Optional[Path] = None
 ) -> str:
     """
-    生成结果文件路径，兼容 big-ann-benchmarks 的目录结构
+    生成结果文件路径，按数据集/算法/参数组织
     
-    格式: results/[dataset]/[algorithm]/[params_hash]
+    格式: results/[dataset]/[algorithm]/[params_folder]
     
     Args:
         dataset: 数据集名称
         algorithm: 算法名称
-        algorithm_params: 算法参数字典
+        algorithm_params: 算法参数字典（包含 build_params 和 query_params）
         runbook_name: runbook 名称
         output_dir: 输出根目录
     
@@ -268,16 +369,9 @@ def get_result_filename(
     # 构建目录结构: results/dataset/algorithm/
     parts = [str(output_dir), dataset, algorithm]
     
-    # 参数哈希（模仿 big-ann-benchmarks 的格式）
-    # 将参数序列化为 JSON 并去除非字母数字字符
-    params_str = json.dumps(algorithm_params, sort_keys=True)
-    params_hash = re.sub(r'\W+', '_', params_str).strip('_')
-    
-    # 限制长度（避免路径过长）
-    if len(params_hash) > 150:
-        params_hash = params_hash[-149:]
-    
-    parts.append(params_hash)
+    # 生成参数文件夹名
+    params_folder = _generate_params_folder_name(algorithm_params)
+    parts.append(params_folder)
     
     return os.path.join(*parts)
 
@@ -784,9 +878,18 @@ def main():
     print("\n[5/5] 保存结果...")
     if not args.no_save:
         try:
+            # 获取实际使用的算法参数（从配置文件）
+            actual_algo_params = get_algorithm_params_from_config(args.algorithm, args.dataset)
+            
+            # 如果命令行指定了参数，则合并（命令行优先）
+            if algo_params:
+                if 'build_params' not in actual_algo_params:
+                    actual_algo_params['build_params'] = {}
+                actual_algo_params['build_params'].update(algo_params)
+            
             metadata = {
                 'algorithm': args.algorithm,
-                'algorithm_params': algo_params,
+                'algorithm_params': actual_algo_params,  # 使用实际的算法参数
                 'dataset': args.dataset,
                 'runbook': args.runbook,
                 'k': args.k,
