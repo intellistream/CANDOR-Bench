@@ -187,6 +187,29 @@ fi
 source "$VENV_DIR/bin/activate"
 print_success "虚拟环境已激活: $VIRTUAL_ENV"
 
+# 配置虚拟环境的 activate 脚本，自动设置 MKL 路径
+print_step "配置虚拟环境 MKL 路径..."
+ACTIVATE_SCRIPT="$VENV_DIR/bin/activate"
+
+# 检查是否已经添加了 MKL 配置
+if ! grep -q "# MKL Library Path" "$ACTIVATE_SCRIPT" 2>/dev/null; then
+    cat >> "$ACTIVATE_SCRIPT" << 'EOF'
+
+# MKL Library Path (added by deploy.sh)
+if [ -d "/opt/intel/oneapi/mkl/latest/lib/intel64" ]; then
+    export LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/latest/lib/intel64:$LD_LIBRARY_PATH"
+elif [ -d "/opt/intel/mkl/lib/intel64" ]; then
+    export LD_LIBRARY_PATH="/opt/intel/mkl/lib/intel64:$LD_LIBRARY_PATH"
+fi
+EOF
+    print_success "MKL 路径已添加到虚拟环境"
+else
+    print_info "MKL 路径已存在于虚拟环境"
+fi
+
+# 重新加载 activate 脚本以应用 MKL 路径
+source "$ACTIVATE_SCRIPT"
+
 # 升级 pip
 pip install --upgrade pip setuptools wheel -q
 
@@ -500,6 +523,13 @@ cd "$SCRIPT_DIR"
 # 步骤 9: 验证所有模块导入
 # ============================================================================
 print_header "步骤 9/9: 验证所有模块导入"
+
+# 确保 MKL 环境变量已配置（用于 VSAG）
+if [ -d "/opt/intel/oneapi/mkl/latest/lib/intel64" ]; then
+    export LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/latest/lib/intel64:$LD_LIBRARY_PATH"
+elif [ -d "/opt/intel/mkl/lib/intel64" ]; then
+    export LD_LIBRARY_PATH="/opt/intel/mkl/lib/intel64:$LD_LIBRARY_PATH"
+fi
 
 print_step "测试 PyCANDYAlgo..."
 if python3 -c "import PyCANDYAlgo; print('VERSION:', PyCANDYAlgo.__version__)" 2>&1; then
