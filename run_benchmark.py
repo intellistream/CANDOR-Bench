@@ -41,10 +41,111 @@ from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
 
 # benchmark_anns 是独立项目，使用相对导入
-from bench.algorithms.registry import get_algorithm, auto_register_algorithms, ALGORITHMS
+from bench.algorithms.registry import get_algorithm, auto_register_algorithms, ALGORITHMS, get_algorithm_params_from_config, get_all_algorithm_param_combinations
 from datasets.registry import get_dataset, DATASETS
 from bench.runner import BenchmarkRunner
 from bench.metrics import BenchmarkMetrics
+
+
+def _extract_key_params(params: Dict[str, Any], max_depth: int = 4) -> Dict[str, Any]:
+    """
+    从嵌套参数中提取关键参数用于生成文件夹名
+    
+    Args:
+        params: 参数字典（可能嵌套）
+        max_depth: 最大递归深度
+        
+    Returns:
+        扁平化的关键参数字典
+    """
+    result = {}
+    
+    # 我们关心的关键参数
+    key_params = {
+        'max_degree', 'M', 'ef_construction', 'efConstruction', 
+        'ef_search', 'efSearch', 'prefetch_mode', 'nlist', 'nprobe',
+        'search_L', 'index_L', 'R', 'L', 'alpha'
+    }
+    
+    def _flatten(d: Dict[str, Any], prefix: str = "", depth: int = 0):
+        if depth >= max_depth:
+            return
+        for key, value in d.items():
+            new_key = f"{prefix}{key}" if prefix else key
+            if isinstance(value, dict):
+                _flatten(value, f"{new_key}_", depth + 1)
+            elif isinstance(value, (str, int, float, bool)):
+                # 只保留关键参数，或 prefetch_mode 这类特殊参数
+                if key in key_params or 'prefetch' in key.lower():
+                    result[key] = value  # 使用简短的 key，不带前缀
+    
+    _flatten(params)
+    return result
+
+
+def _generate_params_folder_name(algorithm_params: Dict[str, Any]) -> str:
+    """
+    根据算法参数生成有意义的文件夹名
+    
+    Args:
+        algorithm_params: 包含 build_params 和 query_params 的字典
+        
+    Returns:
+        文件夹名（如 "M32_ef200_prefetch-hardcoded_efsearch40"）
+    """
+    if not algorithm_params:
+        return "default"
+    
+    parts = []
+    
+    # 处理构建参数
+    build_params = algorithm_params.get('build_params', {})
+    if build_params:
+        flat_build = _extract_key_params(build_params)
+        for key, value in sorted(flat_build.items()):
+            # 简化参数名
+            short_key = key.replace('max_degree', 'M').replace('ef_construction', 'ef')
+            short_key = short_key.replace('efConstruction', 'ef').replace('prefetch_mode', 'prefetch')
+            
+            # 格式化值
+            if isinstance(value, bool):
+                if value:
+                    parts.append(short_key)
+            elif isinstance(value, float):
+                parts.append(f"{short_key}{value:.0f}")
+            else:
+                parts.append(f"{short_key}-{value}")
+    
+    # 处理查询参数
+    query_params = algorithm_params.get('query_params', {})
+    if query_params:
+        flat_query = _extract_key_params(query_params)
+        for key, value in sorted(flat_query.items()):
+            short_key = key.replace('ef_search', 'efsearch').replace('efSearch', 'efsearch')
+            
+            if isinstance(value, bool):
+                if value:
+                    parts.append(short_key)
+            elif isinstance(value, float):
+                parts.append(f"{short_key}{value:.0f}")
+            else:
+                parts.append(f"{short_key}-{value}")
+    
+    if not parts:
+        return "default"
+    
+    # 组合并限制长度
+    folder_name = "_".join(parts)
+    
+    # 清理非法字符
+    folder_name = re.sub(r'[^\w\-]', '_', folder_name)
+    folder_name = re.sub(r'_+', '_', folder_name).strip('_')
+    
+    # 限制长度
+    if len(folder_name) > 100:
+        folder_name = folder_name[:100]
+    
+    return folder_name if folder_name else "default"
 
 
 def list_algorithms():
@@ -248,14 +349,14 @@ def get_result_filename(
     output_dir: Optional[Path] = None
 ) -> str:
     """
-    生成结果文件路径，兼容 big-ann-benchmarks 的目录结构
+    生成结果文件路径，按数据集/算法/参数组织
     
-    格式: results/[dataset]/[algorithm]/[params_hash]
+    格式: results/[dataset]/[algorithm]/[params_folder]
     
     Args:
         dataset: 数据集名称
         algorithm: 算法名称
-        algorithm_params: 算法参数字典
+        algorithm_params: 算法参数字典（包含 build_params 和 query_params）
         runbook_name: runbook 名称
         output_dir: 输出根目录
     
@@ -268,16 +369,9 @@ def get_result_filename(
     # 构建目录结构: results/dataset/algorithm/
     parts = [str(output_dir), dataset, algorithm]
     
-    # 参数哈希（模仿 big-ann-benchmarks 的格式）
-    # 将参数序列化为 JSON 并去除非字母数字字符
-    params_str = json.dumps(algorithm_params, sort_keys=True)
-    params_hash = re.sub(r'\W+', '_', params_str).strip('_')
-    
-    # 限制长度（避免路径过长）
-    if len(params_hash) > 150:
-        params_hash = params_hash[-149:]
-    
-    parts.append(params_hash)
+    # 生成参数文件夹名
+    params_folder = _generate_params_folder_name(algorithm_params)
+    parts.append(params_folder)
     
     return os.path.join(*parts)
 
@@ -690,12 +784,25 @@ def main():
     if not all([args.algorithm, args.dataset, args.runbook]):
         parser.error("必须指定 --algorithm, --dataset 和 --runbook（或使用 --list-* 选项）")
     
-    # 解析算法参数
+    # 解析命令行算法参数
     try:
-        algo_params = json.loads(args.algo_params)
+        cli_algo_params = json.loads(args.algo_params)
     except json.JSONDecodeError as e:
         print(f"错误: 无法解析算法参数 JSON: {e}")
         sys.exit(1)
+    
+    # 自动注册算法
+    auto_register_algorithms()
+    
+    # 获取所有参数组合
+    if cli_algo_params:
+        # 如果命令行指定了参数，只运行这一组
+        param_combinations = [{'build_params': cli_algo_params, 'query_params': {}}]
+    else:
+        # 从配置文件获取所有参数组合
+        param_combinations = get_all_algorithm_param_combinations(args.algorithm, args.dataset)
+    
+    total_combinations = len(param_combinations)
     
     print("\n" + "=" * 80)
     print("benchmark_anns 流式索引基准测试")
@@ -704,12 +811,11 @@ def main():
     print(f"数据集: {args.dataset}")
     print(f"Runbook: {args.runbook}")
     print(f"k 值: {args.k}")
-    if algo_params:
-        print(f"算法参数: {json.dumps(algo_params, indent=2)}")
+    print(f"参数组合数: {total_combinations}")
     print("=" * 80 + "\n")
     
-    # 1. 加载数据集
-    print("[1/5] 加载数据集...")
+    # 1. 加载数据集（只加载一次）
+    print("[1/4] 加载数据集...")
     try:
         dataset = get_dataset(args.dataset)
         print(f"✓ 数据集加载成功: {dataset.short_name()}")
@@ -719,20 +825,8 @@ def main():
         print(f"✗ 数据集加载失败: {e}")
         sys.exit(1)
     
-    # 2. 初始化算法
-    print("\n[2/5] 初始化算法...")
-    try:
-        auto_register_algorithms()
-        algorithm = get_algorithm(args.algorithm, dataset=args.dataset, **algo_params)
-        print(f"✓ 算法初始化成功: {args.algorithm}")
-    except Exception as e:
-        print(f"✗ 算法初始化失败: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
-    
-    # 3. 加载 runbook
-    print("\n[3/5] 加载 Runbook...")
+    # 2. 加载 runbook（只加载一次）
+    print("\n[2/4] 加载 Runbook...")
     try:
         runbook_path = find_runbook_path(args.runbook)
         if not runbook_path:
@@ -740,11 +834,9 @@ def main():
             print("使用 --list-runbooks 查看可用的 runbooks")
             sys.exit(1)
         
-        # 如果命令行指定了数据集，使用命令行的；否则从 runbook 中提取
         dataset_arg = args.dataset if hasattr(args, 'dataset') and args.dataset else None
         runbook, dataset_name = load_runbook(runbook_path, dataset_name=dataset_arg)
         
-        # 统计操作数
         if dataset_name in runbook:
             dataset_config = runbook[dataset_name]
             op_count = sum(1 for k in dataset_config.keys() if isinstance(k, int))
@@ -757,55 +849,129 @@ def main():
             print(f"✓ Runbook 加载成功: {runbook_path}")
     except Exception as e:
         print(f"✗ Runbook 加载失败: {e}")
-        import traceback
         traceback.print_exc()
         sys.exit(1)
     
-    # 4. 执行测试
-    print("\n[4/5] 执行基准测试...")
-    try:
-        metrics, best_results, best_results_continuous, best_attrs = run_benchmark(
-            algorithm=algorithm,
-            dataset=dataset,
-            runbook=runbook,
-            dataset_name=dataset_name,
-            k=args.k,
-            run_count=args.runs,
-            output_dir=args.output,
-            enable_cache_profiling=args.enable_cache_profiling
-        )
-        print("✓ 测试执行完成")
-    except Exception as e:
-        print(f"✗ 测试执行失败: {e}")
-        traceback.print_exc()
-        sys.exit(1)
+    # 3. 遍历所有参数组合执行测试
+    print(f"\n[3/4] 测试 ({total_combinations} 组参数)...")
     
-    # 5. 保存结果
-    print("\n[5/5] 保存结果...")
-    if not args.no_save:
+    all_results = []
+    for combo_idx, param_combo in enumerate(param_combinations, 1):
+        build_params = param_combo.get('build_params', {})
+        query_params = param_combo.get('query_params', {})
+        
+        # 生成简洁的参数描述
+        param_desc = _generate_params_folder_name({'build_params': build_params, 'query_params': query_params})
+        
+        print(f"\n{'═' * 70}")
+        print(f"  参数组合 [{combo_idx}/{total_combinations}]: {param_desc}")
+        print(f"{'═' * 70}")
+        
+        # 打印关键构建参数
+        if build_params:
+            print(f"  📦 构建参数:")
+            flat_build = _extract_key_params(build_params)
+            for key, value in sorted(flat_build.items()):
+                print(f"      • {key}: {value}")
+        
+        # 打印关键查询参数  
+        if query_params:
+            print(f"  🔍 查询参数:")
+            flat_query = _extract_key_params(query_params)
+            for key, value in sorted(flat_query.items()):
+                print(f"      • {key}: {value}")
+        
+        print(f"{'─' * 70}")
+        
         try:
-            metadata = {
-                'algorithm': args.algorithm,
-                'algorithm_params': algo_params,
-                'dataset': args.dataset,
-                'runbook': args.runbook,
-                'k': args.k,
-                'run_count': args.runs,
-                'timestamp': datetime.now().isoformat(),
-            }
+            # 初始化算法（每次用不同参数）
+            # 将 build_params 包装成 index_params 传给算法构造函数
+            algo_kwargs = {'index_params': build_params} if build_params else {}
+            algorithm = get_algorithm(args.algorithm, dataset=args.dataset, **algo_kwargs)
             
-            output_dir = Path(args.output)
-            store_results(metrics, best_results, best_results_continuous, best_attrs, output_dir, metadata)
-            print("✓ 结果保存成功")
+            # 如果算法支持设置查询参数
+            if hasattr(algorithm, 'set_query_arguments') and query_params:
+                algorithm.set_query_arguments(query_params)
+            
+            # 执行测试
+            metrics, best_results, best_results_continuous, best_attrs = run_benchmark(
+                algorithm=algorithm,
+                dataset=dataset,
+                runbook=runbook,
+                dataset_name=dataset_name,
+                k=args.k,
+                run_count=args.runs,
+                output_dir=args.output,
+                enable_cache_profiling=args.enable_cache_profiling
+            )
+            print(f"✓ 参数组合 [{combo_idx}] 测试完成")
+            
+            # 保存结果
+            if not args.no_save:
+                actual_algo_params = {
+                    'build_params': build_params,
+                    'query_params': query_params
+                }
+                
+                metadata = {
+                    'algorithm': args.algorithm,
+                    'algorithm_params': actual_algo_params,
+                    'dataset': args.dataset,
+                    'runbook': args.runbook,
+                    'k': args.k,
+                    'run_count': args.runs,
+                    'timestamp': datetime.now().isoformat(),
+                    'param_combo_index': combo_idx,
+                    'total_param_combos': total_combinations,
+                }
+                
+                output_dir = Path(args.output)
+                store_results(metrics, best_results, best_results_continuous, best_attrs, output_dir, metadata)
+                print(f"✓ 参数组合 [{combo_idx}] 结果已保存")
+            
+            all_results.append({
+                'combo_idx': combo_idx,
+                'build_params': build_params,
+                'query_params': query_params,
+                'metrics': metrics,
+                'success': True
+            })
+            
+            # 打印单次结果摘要
+            print_results_summary(metrics)
+            
         except Exception as e:
-            print(f"✗ 结果保存失败: {e}")
+            print(f"✗ 参数组合 [{combo_idx}] 执行失败: {e}")
             traceback.print_exc()
-    else:
-        print("跳过结果保存（--no-save）")
+            all_results.append({
+                'combo_idx': combo_idx,
+                'build_params': build_params,
+                'query_params': query_params,
+                'error': str(e),
+                'success': False
+            })
     
-    # 打印摘要
-    print_results_summary(metrics)
+    # 4. 打印总体摘要
+    print(f"\n[4/4] 测试完成摘要")
+    print("=" * 80)
+    success_count = sum(1 for r in all_results if r['success'])
+    fail_count = len(all_results) - success_count
+    print(f"总参数组合数: {total_combinations}")
+    print(f"成功: {success_count}, 失败: {fail_count}")
     
+    if success_count > 0:
+        print("\n成功的测试结果:")
+        for result in all_results:
+            if result['success']:
+                metrics = result['metrics']
+                build_info = _generate_params_folder_name({'build_params': result['build_params'], 'query_params': result['query_params']})
+                recall = metrics.mean_recall() if hasattr(metrics, 'mean_recall') else 'N/A'
+                qps = metrics.mean_qps() if hasattr(metrics, 'mean_qps') else 'N/A'
+                print(f"  [{result['combo_idx']}] {build_info}")
+                if recall != 'N/A':
+                    print(f"      Recall: {recall:.4f}, QPS: {qps:.2f}")
+    
+    print("=" * 80)
     print("\n测试完成！")
 
 

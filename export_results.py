@@ -16,11 +16,35 @@ import sys
 import h5py
 import numpy as np
 import pandas as pd
+import yaml
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
 from datasets.registry import get_dataset, DATASETS
-from utils.runbook import load_runbook
+
+
+def load_runbook(dataset_name: str, nb: int, runbook_path: str) -> Tuple[int, Dict]:
+    """
+    加载 runbook 文件
+    
+    Args:
+        dataset_name: 数据集名称
+        nb: 数据集大小
+        runbook_path: runbook 文件路径
+        
+    Returns:
+        (max_pts, runbook) 元组
+    """
+    with open(runbook_path, 'r') as f:
+        content = yaml.safe_load(f)
+    
+    if dataset_name not in content:
+        raise ValueError(f"Dataset {dataset_name} not found in runbook: {runbook_path}")
+    
+    runbook = content[dataset_name]
+    max_pts = runbook.get('max_pts', nb)
+    
+    return max_pts, runbook
 
 
 def knn_result_read(filepath: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -200,7 +224,8 @@ def compute_batch_recalls(result_hdf5: str, groundtruth_batches: List[List[Tuple
 
 
 def export_results(dataset_name: str, algorithm: str, runbook_name: str,
-                   output_dir: str = 'results', output_file: Optional[str] = None):
+                   output_dir: str = 'results', output_file: Optional[str] = None,
+                   param_folder: Optional[str] = None):
     """
     导出带召回率的最终结果
     
@@ -210,9 +235,11 @@ def export_results(dataset_name: str, algorithm: str, runbook_name: str,
         runbook_name: Runbook名称
         output_dir: 结果目录
         output_file: 输出CSV文件名（可选）
+        param_folder: 参数文件夹名（可选，用于新的参数化目录结构）
     """
+    param_info = f" [{param_folder}]" if param_folder else ""
     print(f"\n{'='*80}")
-    print(f"导出结果: {algorithm} @ {dataset_name} / {runbook_name}")
+    print(f"导出结果: {algorithm}{param_info} @ {dataset_name} / {runbook_name}")
     print(f"{'='*80}\n")
     
     # 1. 加载数据集和runbook
@@ -230,7 +257,6 @@ def export_results(dataset_name: str, algorithm: str, runbook_name: str,
     max_pts, runbook_config = load_runbook(dataset_name, dataset.nb, runbook_path)
     
     # 将 runbook_config 转换为字典格式（用于后续处理）
-    import yaml
     with open(runbook_path) as f:
         runbook = yaml.safe_load(f)
     
@@ -240,7 +266,13 @@ def export_results(dataset_name: str, algorithm: str, runbook_name: str,
     # 2. 定位结果文件
     print("\n[2/5] 定位结果文件...")
     result_dir = Path(output_dir) / dataset_name / algorithm
-    result_base = f"{algorithm}_sift_{runbook_name}" if dataset_name == "sift" else f"{algorithm}"
+    
+    # 如果指定了参数文件夹，使用参数化目录结构
+    if param_folder:
+        result_dir = result_dir / param_folder
+        result_base = param_folder
+    else:
+        result_base = f"{algorithm}_sift_{runbook_name}" if dataset_name == "sift" else f"{algorithm}"
     
     hdf5_file = result_dir / f"{result_base}.hdf5"
     csv_file = result_dir / f"{result_base}.csv"
@@ -257,10 +289,23 @@ def export_results(dataset_name: str, algorithm: str, runbook_name: str,
         batch_query_latency_file = result_dir / f"{algorithm}_batch_query_latency.csv"
     
     if not hdf5_file.exists():
+        # 尝试在参数目录中查找任意 hdf5 文件
+        if param_folder:
+            hdf5_files = list(result_dir.glob("*.hdf5"))
+            if hdf5_files:
+                hdf5_file = hdf5_files[0]
+                base_name = hdf5_file.stem
+                csv_file = result_dir / f"{base_name}.csv"
+                batch_insert_qps_file = result_dir / f"{base_name}_batch_insert_qps.csv"
+                batch_query_qps_file = result_dir / f"{base_name}_batch_query_qps.csv"
+                batch_query_latency_file = result_dir / f"{base_name}_batch_query_latency.csv"
+    
+    if not hdf5_file.exists():
         raise FileNotFoundError(f"Result HDF5 file not found: {hdf5_file}")
     
     print(f"  ✓ HDF5: {hdf5_file}")
-    print(f"  ✓ CSV: {csv_file}")
+    if csv_file.exists():
+        print(f"  ✓ CSV: {csv_file}")
     
     # 3. 加载真值
     print("\n[3/5] 加载真值...")
@@ -306,7 +351,9 @@ def export_results(dataset_name: str, algorithm: str, runbook_name: str,
         data['query_latency_ms'] = [query_latency_dict.get(i, np.nan) for i in data['batch_idx']]
     
     # 5.5 Cache Miss 统计
-    batch_cache_miss_file = result_dir / f"{algorithm}_batch_cache_miss.csv"
+    batch_cache_miss_file = result_dir / f"{result_base}_batch_cache_miss.csv"
+    if not batch_cache_miss_file.exists():
+        batch_cache_miss_file = result_dir / f"{algorithm}_batch_cache_miss.csv"
     if batch_cache_miss_file.exists():
         cache_miss_df = pd.read_csv(batch_cache_miss_file)
         # 对齐batch_idx
@@ -318,25 +365,40 @@ def export_results(dataset_name: str, algorithm: str, runbook_name: str,
         data['cache_references'] = [cache_refs_dict.get(i, np.nan) for i in data['batch_idx']]
         data['cache_miss_rate'] = [cache_rate_dict.get(i, np.nan) for i in data['batch_idx']]
     
-    # 5.6 创建DataFrame并保存
+    # 5.6 创建DataFrame
     df = pd.DataFrame(data)
     
-    if output_file is None:
-        output_file = result_dir / f"{result_base}_final_results.csv"
-    else:
-        output_file = Path(output_file)
+    # 保存详细结果到参数目录
+    detail_output_file = result_dir / f"{result_base}_final_results.csv"
+    df.to_csv(detail_output_file, index=False)
+    print(f"  ✓ 详细结果已保存: {detail_output_file}")
     
-    df.to_csv(output_file, index=False)
-    print(f"  ✓ 最终结果已保存: {output_file}")
+    # 计算汇总统计
+    summary = {
+        'params': param_folder if param_folder else 'default',
+        'batch_count': len(mean_recalls),
+        'mean_recall': np.mean(mean_recalls),
+        'min_recall': np.min(mean_recalls),
+        'max_recall': np.max(mean_recalls),
+    }
     
-    # 5.6 打印统计信息
-    print(f"\n{'='*80}")
-    print(f"统计摘要")
-    print(f"{'='*80}")
+    if 'insert_qps' in data:
+        summary['mean_insert_qps'] = np.nanmean(data['insert_qps'])
+    if 'query_qps' in data:
+        summary['mean_query_qps'] = np.nanmean(data['query_qps'])
+    if 'query_latency_ms' in data:
+        summary['mean_query_latency_ms'] = np.nanmean(data['query_latency_ms'])
+    if 'cache_misses' in data and not all(pd.isna(data['cache_misses'])):
+        summary['mean_cache_misses'] = np.nanmean(data['cache_misses'])
+    if 'cache_miss_rate' in data and not all(pd.isna(data['cache_miss_rate'])):
+        summary['mean_cache_miss_rate'] = np.nanmean(data['cache_miss_rate'])
+    
+    # 打印统计信息
+    print(f"\n{'─'*60}")
+    print(f"统计摘要: {param_folder if param_folder else 'default'}")
+    print(f"{'─'*60}")
     print(f"批次数量: {len(mean_recalls)}")
     print(f"平均召回率: {np.mean(mean_recalls):.4f}")
-    print(f"最小召回率: {np.min(mean_recalls):.4f}")
-    print(f"最大召回率: {np.max(mean_recalls):.4f}")
     
     if 'insert_qps' in data:
         print(f"平均插入QPS: {np.nanmean(data['insert_qps']):.2f} ops/s")
@@ -346,12 +408,10 @@ def export_results(dataset_name: str, algorithm: str, runbook_name: str,
         print(f"平均查询延迟: {np.nanmean(data['query_latency_ms']):.2f} ms")
     if 'cache_misses' in data and not all(pd.isna(data['cache_misses'])):
         print(f"平均 Cache Misses: {np.nanmean(data['cache_misses']):,.0f}")
-    if 'cache_miss_rate' in data and not all(pd.isna(data['cache_miss_rate'])):
-        print(f"平均 Cache Miss 率: {np.nanmean(data['cache_miss_rate']):.2%}")
     
-    print(f"{'='*80}\n")
+    print(f"{'─'*60}\n")
     
-    return df
+    return df, summary
 
 
 def main():
@@ -363,9 +423,12 @@ def main():
     parser.add_argument('--dataset', required=True, help='Dataset name (e.g., sift)')
     parser.add_argument('--algorithm', required=True, help='Algorithm name (e.g., faiss_HNSW)')
     parser.add_argument('--runbook', required=True, help='Runbook name (e.g., general_experiment)')
+    parser.add_argument('--params', help='Parameter folder name (e.g., ef-200_M-32_prefetch-custom_efsearch-40). Use --list-params to see available options.')
     parser.add_argument('--output-dir', default='results', help='Results directory (default: results)')
     parser.add_argument('--output-file', help='Output CSV file path (optional)')
     parser.add_argument('--list-datasets', action='store_true', help='List available datasets')
+    parser.add_argument('--list-params', action='store_true', help='List available parameter folders for the specified algorithm')
+    parser.add_argument('--all-params', action='store_true', help='Export results for all parameter combinations')
     
     args = parser.parse_args()
     
@@ -375,14 +438,110 @@ def main():
             print(f"  - {name}")
         return
     
+    # 列出可用的参数组合
+    if args.list_params:
+        result_dir = Path(args.output_dir) / args.dataset / args.algorithm
+        if not result_dir.exists():
+            print(f"✗ 结果目录不存在: {result_dir}")
+            sys.exit(1)
+        
+        print(f"算法 {args.algorithm} 在数据集 {args.dataset} 上的可用参数组合:")
+        
+        # 查找所有包含 .hdf5 文件的子目录
+        param_dirs = []
+        for item in result_dir.iterdir():
+            if item.is_dir():
+                hdf5_files = list(item.glob("*.hdf5"))
+                if hdf5_files:
+                    param_dirs.append(item.name)
+        
+        # 也检查根目录是否有直接的 hdf5 文件（旧格式）
+        root_hdf5 = list(result_dir.glob("*.hdf5"))
+        if root_hdf5:
+            param_dirs.insert(0, "(root)")
+        
+        if not param_dirs:
+            print("  (没有找到结果文件)")
+        else:
+            for pd_name in sorted(param_dirs):
+                print(f"  - {pd_name}")
+        return
+
     try:
-        export_results(
-            dataset_name=args.dataset,
-            algorithm=args.algorithm,
-            runbook_name=args.runbook,
-            output_dir=args.output_dir,
-            output_file=args.output_file
-        )
+        result_dir = Path(args.output_dir) / args.dataset / args.algorithm
+        
+        # 确定要处理的参数目录列表
+        param_dirs_to_process = []
+        
+        if args.all_params:
+            # 处理所有参数组合
+            if result_dir.exists():
+                for item in result_dir.iterdir():
+                    if item.is_dir() and list(item.glob("*.hdf5")):
+                        param_dirs_to_process.append(item.name)
+                # 也检查根目录
+                if list(result_dir.glob("*.hdf5")):
+                    param_dirs_to_process.insert(0, None)
+        elif args.params:
+            # 指定的参数目录
+            param_dirs_to_process = [args.params]
+        else:
+            # 尝试自动检测
+            param_dirs_to_process = [None]  # 先尝试根目录（旧格式）
+        
+        if not param_dirs_to_process:
+            print(f"✗ 没有找到结果文件，请使用 --list-params 查看可用的参数组合")
+            sys.exit(1)
+        
+        # 收集所有参数组合的汇总统计
+        all_summaries = []
+        
+        for param_dir in param_dirs_to_process:
+            try:
+                df, summary = export_results(
+                    dataset_name=args.dataset,
+                    algorithm=args.algorithm,
+                    runbook_name=args.runbook,
+                    output_dir=args.output_dir,
+                    output_file=None,  # 详细结果由 export_results 内部保存
+                    param_folder=param_dir
+                )
+                if summary is not None:
+                    all_summaries.append(summary)
+            except FileNotFoundError as e:
+                if len(param_dirs_to_process) == 1 and param_dir is None:
+                    # 如果只有一个（根目录）且找不到，提示使用 --list-params
+                    print(f"\n✗ 错误: {e}")
+                    print(f"\n提示: 可能需要指定参数目录，使用以下命令查看可用的参数组合:")
+                    print(f"  python export_results.py --dataset {args.dataset} --algorithm {args.algorithm} --runbook {args.runbook} --list-params")
+                    sys.exit(1)
+                else:
+                    print(f"  ⚠ 跳过 {param_dir}: {e}")
+        
+        # 生成汇总表（每个参数组合一行）
+        if all_summaries:
+            summary_df = pd.DataFrame(all_summaries)
+            
+            # 确定输出文件路径
+            if args.output_file:
+                summary_file = Path(args.output_file)
+            else:
+                summary_file = result_dir / f"{args.algorithm}_summary.csv"
+            
+            summary_df.to_csv(summary_file, index=False)
+            
+            print(f"\n{'='*80}")
+            print(f"汇总结果")
+            print(f"{'='*80}")
+            print(f"✓ 共处理 {len(all_summaries)} 个参数组合")
+            print(f"✓ 每个参数目录下已保存详细结果 (*_final_results.csv)")
+            print(f"✓ 汇总表已保存: {summary_file}")
+            
+            # 打印汇总表
+            print(f"\n汇总表 (每个参数组合一行):")
+            print(summary_df.to_string(index=False))
+            print(f"{'='*80}\n")
+                    
     except Exception as e:
         print(f"\n✗ 错误: {e}")
         import traceback

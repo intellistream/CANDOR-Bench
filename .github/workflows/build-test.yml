@@ -1,0 +1,145 @@
+name: Build and Test All Modules
+
+on:
+  push:
+    branches: [ main, main-dev, test ]
+  pull_request:
+    branches: [ main, main-dev, test ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build-all:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    
+    - name: Cache pip packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-torch-numpy
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Cache CMake build
+      uses: actions/cache@v4
+      with:
+        path: |
+          algorithms_impl/build
+          algorithms_impl/vsag/build-release
+          algorithms_impl/gti/GTI/build
+          algorithms_impl/ipdiskann/build
+          algorithms_impl/plsh/build
+        key: ${{ runner.os }}-cmake-all-${{ hashFiles('algorithms_impl/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-cmake-all-
+        
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          git \
+          pkg-config \
+          libunwind-dev \
+          libgflags-dev \
+          libgoogle-glog-dev \
+          libfmt-dev \
+          libboost-all-dev \
+          libomp-dev \
+          libnuma-dev \
+          libaio-dev \
+          libeigen3-dev \
+          libspdlog-dev
+          
+    - name: Install Intel MKL
+      run: |
+        wget -qO - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | sudo apt-key add -
+        echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        sudo apt-get update
+        sudo apt-get install -y intel-oneapi-mkl-devel || echo "MKL installation warning (non-fatal)"
+          
+    - name: Run deployment script
+      run: |
+        chmod +x deploy.sh
+        ./deploy.sh --skip-system-deps
+      timeout-minutes: 60
+      
+    - name: Verify PyCANDYAlgo import
+      run: |
+        source sage-db-bench/bin/activate
+        echo "=== Test PyCANDYAlgo Import ==="
+        python3 -c "import PyCANDYAlgo; print('PyCANDYAlgo:', PyCANDYAlgo.__version__)"
+        
+    - name: Verify VSAG (pyvsag) import
+      run: |
+        source sage-db-bench/bin/activate
+        echo "=== Test pyvsag Import ==="
+        python3 -c "import pyvsag; print('pyvsag:', pyvsag.__version__)" || echo "pyvsag: SKIPPED (optional)"
+        
+    - name: Verify GTI (gti_wrapper) import
+      run: |
+        source sage-db-bench/bin/activate
+        echo "=== Test gti_wrapper Import ==="
+        python3 -c "import gti_wrapper; print('gti_wrapper: OK')" || echo "gti_wrapper: SKIPPED (optional)"
+        
+    - name: Verify IP-DiskANN (ipdiskann) import
+      run: |
+        source sage-db-bench/bin/activate
+        echo "=== Test ipdiskann Import ==="
+        python3 -c "import ipdiskann; print('ipdiskann: OK')" || echo "ipdiskann: SKIPPED (optional)"
+        
+    - name: Verify PLSH (plsh_python) import
+      run: |
+        source sage-db-bench/bin/activate
+        echo "=== Test plsh_python Import ==="
+        python3 -c "import plsh_python; print('plsh_python: OK')" || echo "plsh_python: SKIPPED (optional)"
+        
+    - name: Test core dependencies
+      run: |
+        source sage-db-bench/bin/activate
+        python3 -c "import numpy; import torch; print('numpy:', numpy.__version__); print('torch:', torch.__version__)"
+
+    - name: Upload build logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs
+        path: |
+          algorithms_impl/build/cmake_config.log
+          algorithms_impl/build/CMakeFiles/CMakeError.log
+          algorithms_impl/build/CMakeFiles/CMakeOutput.log
+          algorithms_impl/vsag/build-release/CMakeFiles/CMakeError.log
+          algorithms_impl/gti/GTI/build/CMakeFiles/CMakeError.log
+          algorithms_impl/ipdiskann/build/CMakeFiles/CMakeError.log
+          algorithms_impl/plsh/build/CMakeFiles/CMakeError.log
+        retention-days: 7
+
+  lint:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        
+    - name: Install linting tools
+      run: pip install flake8
+        
+    - name: Run flake8 (syntax errors only)
+      run: |
+        flake8 bench/ datasets/ --count --select=E9,F63,F7,F82 --show-source --statistics || true

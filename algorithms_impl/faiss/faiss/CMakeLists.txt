@@ -20,6 +20,7 @@ set(FAISS_SRC
   IndexFlat.cpp
   IndexFlatCodes.cpp
   IndexHNSW.cpp
+  IndexHNSWOptimized.cpp
   IndexNSW.cpp
   IndexMNRU.cpp
   IndexIDMap.cpp
@@ -59,6 +60,7 @@ set(FAISS_SRC
   impl/IDSelector.cpp
   impl/FaissException.cpp
   impl/HNSW.cpp
+  impl/HNSWGorder.cpp
   impl/NSW.cpp
   impl/NSG.cpp
   impl/PolysemousTraining.cpp

@@ -49,6 +49,41 @@ commit_info
 commit.sh
 data/
 raw_data/
-DiskANN/
+/DiskANN/
+!algorithms_impl/DiskANN/
 results/
 algorithms_impl/build
+
+# Python 虚拟环境
+.venv/
+sage-db-bench/
+venv/
+env/
+ENV/
+
+# Python 缓存和构建产物
+*.pyc
+*.pyo
+*.egg-info/
+__pycache__/
+.pytest_cache/
+
+# 算法构建产物
+algorithms_impl/build/
+algorithms_impl/build-release/
+algorithms_impl/vsag/build/
+algorithms_impl/vsag/build-release/
+algorithms_impl/vsag/wheelhouse/
+algorithms_impl/vsag/.venv/
+algorithms_impl/gti/GTI/build/
+algorithms_impl/ipdiskann/build/
+algorithms_impl/plsh/build/
+algorithms_impl/*.so
+algorithms_impl/*.log
+
+# 测试和日志
+*.log
+test_report_*.txt
+.coverage
+htmlcov/SAGE-DB-Bench/
+temp/
