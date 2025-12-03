@@ -860,28 +860,11 @@ def main():
         build_params = param_combo.get('build_params', {})
         query_params = param_combo.get('query_params', {})
         
-        # 生成简洁的参数描述
-        param_desc = _generate_params_folder_name({'build_params': build_params, 'query_params': query_params})
-        
-        print(f"\n{'═' * 70}")
-        print(f"  参数组合 [{combo_idx}/{total_combinations}]: {param_desc}")
-        print(f"{'═' * 70}")
-        
-        # 打印关键构建参数
-        if build_params:
-            print(f"  📦 构建参数:")
-            flat_build = _extract_key_params(build_params)
-            for key, value in sorted(flat_build.items()):
-                print(f"      • {key}: {value}")
-        
-        # 打印关键查询参数  
-        if query_params:
-            print(f"  🔍 查询参数:")
-            flat_query = _extract_key_params(query_params)
-            for key, value in sorted(flat_query.items()):
-                print(f"      • {key}: {value}")
-        
-        print(f"{'─' * 70}")
+        print(f"\n{'─' * 60}")
+        print(f"参数组合 [{combo_idx}/{total_combinations}]")
+        print(f"  构建参数: {json.dumps(build_params, ensure_ascii=False)}")
+        print(f"  查询参数: {json.dumps(query_params, ensure_ascii=False)}")
+        print(f"{'─' * 60}")
         
         try:
             # 初始化算法（每次用不同参数）
