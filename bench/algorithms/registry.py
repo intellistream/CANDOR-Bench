@@ -168,11 +168,19 @@ def get_all_algorithm_param_combinations(algo_name: str, dataset: str = 'random-
                     if isinstance(args_str, str):
                         args_str = args_str.strip()
                         try:
-                            args_list = ast.literal_eval(args_str)
+                            # 优先使用 json.loads（支持 true/false）
+                            import json
+                            args_list = json.loads(args_str)
                             if args_list and isinstance(args_list, list):
                                 build_params_list = args_list
-                        except:
-                            pass
+                        except json.JSONDecodeError:
+                            # 回退到 ast.literal_eval（支持 Python 语法）
+                            try:
+                                args_list = ast.literal_eval(args_str)
+                                if args_list and isinstance(args_list, list):
+                                    build_params_list = args_list
+                            except:
+                                pass
                 
                 # 解析 query-args（查询参数列表）
                 if 'query-args' in base_group:
@@ -180,11 +188,19 @@ def get_all_algorithm_param_combinations(algo_name: str, dataset: str = 'random-
                     if isinstance(query_args_str, str):
                         query_args_str = query_args_str.strip()
                         try:
-                            query_args_list = ast.literal_eval(query_args_str)
+                            # 优先使用 json.loads（支持 true/false）
+                            import json
+                            query_args_list = json.loads(query_args_str)
                             if query_args_list and isinstance(query_args_list, list):
                                 query_params_list = query_args_list
-                        except:
-                            pass
+                        except json.JSONDecodeError:
+                            # 回退到 ast.literal_eval（支持 Python 语法）
+                            try:
+                                query_args_list = ast.literal_eval(query_args_str)
+                                if query_args_list and isinstance(query_args_list, list):
+                                    query_params_list = query_args_list
+                            except:
+                                pass
         
         # 生成笛卡尔积
         combinations = []
