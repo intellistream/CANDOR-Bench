@@ -42,7 +42,6 @@ class FaissOnlinepq(BaseStreamingANN):
         self.trained = False
         
     def insert(self, X, ids):
-        X = X.astype(np.float32)
         mask = self.my_inverse_index[ids] == -1
         new_ids = ids[mask]
         new_data = X[mask]
@@ -75,7 +74,6 @@ class FaissOnlinepq(BaseStreamingANN):
                         self.my_index[internal_id] = -1
         
     def query(self, X, k):
-        X = X.astype(np.float32)
         query_size = X.shape[0]
         results = np.array(self.index.search(query_size, X.flatten(), k, self.ef))
         ids = self.my_index[results]

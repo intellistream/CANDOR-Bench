@@ -488,9 +488,45 @@ else
 fi
 
 # ============================================================================
-# 步骤 8: 安装 PyCANDYAlgo
+# 步骤 8: 构建根目录 DiskANN（compute_groundtruth）
 # ============================================================================
-print_header "步骤 8/9: 安装 PyCANDYAlgo"
+print_header "步骤 8/9: 构建 DiskANN compute_groundtruth"
+
+DISKANN_ROOT="$SCRIPT_DIR/DiskANN"
+DISKANN_BUILD="$DISKANN_ROOT/build"
+DISKANN_GT_BIN="$DISKANN_BUILD/apps/utils/compute_groundtruth"
+
+if [ -d "$DISKANN_ROOT" ]; then
+    print_step "检测到 DiskANN 目录: $DISKANN_ROOT"
+
+    mkdir -p "$DISKANN_BUILD"
+    cd "$DISKANN_BUILD"
+
+    if [ ! -f "CMakeCache.txt" ]; then
+        print_step "运行 DiskANN CMake 配置..."
+        cmake .. 2>&1 | tail -20 || print_warning "DiskANN CMake 配置可能失败，请手动检查"
+    else
+        print_info "DiskANN 已存在 CMake 配置，执行增量构建"
+    fi
+
+    print_step "编译 DiskANN（compute_groundtruth 等工具）..."
+    make -j"${JOBS:-4}" 2>&1 | tail -20 || print_warning "DiskANN 编译出现错误，请手动检查"
+
+    if [ -x "$DISKANN_GT_BIN" ]; then
+        print_success "找到 DiskANN compute_groundtruth: $DISKANN_GT_BIN"
+    else
+        print_warning "未找到 DiskANN compute_groundtruth: $DISKANN_GT_BIN"
+    fi
+
+    cd "$SCRIPT_DIR"
+else
+    print_warning "未检测到 DiskANN 目录($DISKANN_ROOT)，跳过 DiskANN 构建"
+fi
+
+# ============================================================================
+# 步骤 9: 安装 PyCANDYAlgo
+# ============================================================================
+print_header "步骤 9/10: 安装 PyCANDYAlgo"
 
 cd "$SCRIPT_DIR/algorithms_impl"
 
@@ -520,9 +556,9 @@ fi
 cd "$SCRIPT_DIR"
 
 # ============================================================================
-# 步骤 9: 验证所有模块导入
+# 步骤 10: 验证所有模块导入
 # ============================================================================
-print_header "步骤 9/9: 验证所有模块导入"
+print_header "步骤 10/10: 验证所有模块导入"
 
 # 确保 MKL 环境变量已配置（用于 VSAG）
 if [ -d "/opt/intel/oneapi/mkl/latest/lib/intel64" ]; then
