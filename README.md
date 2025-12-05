@@ -2,7 +2,7 @@
 
 # 🚀 SAGE-DB-Bench
 
-**Streaming Approximate Graph-based Engine for Database Benchmarking**
+**Benchmarking In-Memory Continuous ANNS under Dynamic Open-World Streams**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg)](https://www.python.org/)
