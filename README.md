@@ -5,11 +5,11 @@
 **Streaming Approximate Graph-based Engine for Database Benchmarking**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.·11111111118%2B-brightgreen.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/Platform-Linux-orange.svg)](https://www.linux.org/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-*一个用于评估流式向量索引性能的综合基准测试框架*
+*一个用于评估开放世界场景下流式向量索引性能的综合基准测试框架*
 
 [📖 文档](#3-目录结构) • [🚀 快速开始](#2-安装与环境) • [💡 功能特性](#1-功能概览) • [🤝 贡献指南](#9-常见问题)
 
@@ -391,9 +391,8 @@ sudo apt install cmake g++ libomp-dev libgflags-dev libboost-all-dev
 <details>
 <summary><b>🔴 性能测试偏差较大</b></summary>
 
-**关于性能结果的说明：**
 
-不同硬件环境（CPU 型号、内存带宽、缓存大小、磁盘类型等）会影响绝对性能数值，但**算法之间的相对性能趋势通常保持一致**。因此：
+关于性能结果的说明：不同硬件环境（CPU 型号、内存带宽、缓存大小、磁盘类型等）会影响绝对性能数值，但**算法之间的相对性能趋势通常保持一致**。因此：
 
 - ✅ 可以在同一环境下进行算法对比，关注相对差异和趋势
 - ✅ 可以用于验证优化效果、参数调优
