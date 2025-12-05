@@ -46,7 +46,7 @@ class FaissHnsw(BaseStreamingANN):
         self.trained = False
         
     def insert(self, X, ids):
-        X = X.astype(np.float32)
+        X = np.ascontiguousarray(X, dtype=np.float32)
         
         # 过滤已存在的 ID（避免重复插入）
         mask = self.my_inverse_index[ids] == -1
@@ -57,6 +57,9 @@ class FaissHnsw(BaseStreamingANN):
             print("Not Inserting Same Data!")
             return
         
+        # 注意：C++ 层的 IndexHNSW.cpp 也会打印 "adding N vectors"
+        # print(f"adding {new_data.shape[0]} vectors")  # Python 层打印（已注释，避免重复）
+        
         # 训练索引（首次插入时）
         if not self.trained:
             self.index.train(new_data.shape[0], new_data.flatten())
@@ -65,13 +68,14 @@ class FaissHnsw(BaseStreamingANN):
         # 添加向量到索引
         self.index.add(new_data.shape[0], new_data.flatten())
         
+        # 注意：C++ 层的 IndexHNSW.cpp 也会打印 "adding N vectors finishes"
+        # print(f"adding {new_data.shape[0]} vectors finishes")  # Python 层打印（已注释，避免重复）
+        
         # 更新 ID 映射
         indices = np.arange(self.ntotal, self.ntotal + new_data.shape[0])
         self.my_index[indices] = new_ids
         self.my_inverse_index[new_ids] = indices
         self.ntotal += new_data.shape[0]
-        
-        print(f"Faiss indices {indices[0]}:{indices[-1]} to Global {new_ids[0]}:{new_ids[-1]}")
         
     def delete(self, ids):
         # faiss HNSW 不支持删除，仅从映射表中移除
@@ -85,19 +89,16 @@ class FaissHnsw(BaseStreamingANN):
                         self.my_index[internal_id] = -1
         
     def query(self, X, k):
-        X = X.astype(np.float32)
+        X = np.ascontiguousarray(X, dtype=np.float32)
         query_size = X.shape[0]
         
         # 调用 PyCANDYAlgo 的 search 接口
-        # search(nq, queries.flatten(), k, ef) -> 返回 [nq * k] 的 1D 数组
         results = np.array(self.index.search(query_size, X.flatten(), k, self.ef))
         
         # 将 faiss 内部 ID 映射回外部 ID
         ids = self.my_index[results]
-        res = ids.reshape(X.shape[0], k)
-        
-        self.res = res
-        return res, None  # 返回 (ids, distances)，distances 暂时为 None
+        self.res = ids.reshape(X.shape[0], k)
+        return self.res, None  # 返回 (ids, distances)，distances 暂时为 None
         
     def set_query_arguments(self, query_args):
         self.ef = query_args.get('ef', 16)
