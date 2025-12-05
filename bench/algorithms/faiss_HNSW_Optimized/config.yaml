@@ -19,17 +19,17 @@ sift:
       base:
         args: |
           [
-          # {"efConstruction": 40, "indexkey": "HNSWOptimized16", "gorder_window": 5, "apply_gorder": true},
-          # # {"efConstruction": 40, "indexkey": "HNSWOptimized32", "gorder_window": 5, "apply_gorder": true}, 
-          # # {"efConstruction": 40, "indexkey": "HNSWOptimized64", "gorder_window": 5, "apply_gorder": true}, 
-          # # {"efConstruction": 40, "indexkey": "HNSWOptimized32", "gorder_window": 3, "apply_gorder": true}, 
-          # # {"efConstruction": 40, "indexkey": "HNSWOptimized32", "gorder_window": 7, "apply_gorder": true}, 
-          {"efConstruction": 120, "indexkey": "HNSWOptimized16", "apply_gorder": false}
+          {"efConstruction": 120, "indexkey": "HNSWOptimized16", "gorder_window": 5, "apply_gorder": true}
+          # # {"efConstruction": 40, "indexkey": "HNSWOptimized32", "gorder_window": 5, "apply_gorder": true},
+          # # {"efConstruction": 40, "indexkey": "HNSWOptimized64", "gorder_window": 5, "apply_gorder": true},
+          # # {"efConstruction": 40, "indexkey": "HNSWOptimized32", "gorder_window": 3, "apply_gorder": true},
+          # # {"efConstruction": 40, "indexkey": "HNSWOptimized32", "gorder_window": 7, "apply_gorder": true},
+          # {"efConstruction": 120, "indexkey": "HNSWOptimized16", "apply_gorder": false}
           ]
         query-args: |
           [
           {"ef": 40}
-          # {"ef": 32}, 
+          # {"ef": 32},
           # {"ef": 64},
           # {"ef": 128}
           ]

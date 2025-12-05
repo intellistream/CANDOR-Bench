@@ -147,6 +147,7 @@ class FaissHnswOptimized(BaseStreamingANN):
         Returns:
             (ids, distances): 最近邻 ID 和距离
         """
+        self.offline_build()  # 确保在查询前应用 Gorder 优化
         X = X.astype(np.float32)
         query_size = X.shape[0]
 
