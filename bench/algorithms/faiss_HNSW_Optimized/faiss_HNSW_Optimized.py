@@ -148,25 +148,16 @@ class FaissHnswOptimized(BaseStreamingANN):
         Returns:
             (ids, distances): 最近邻 ID 和距离
         """
-        X = np.ascontiguousarray(X, dtype=np.float32)
-        nq = X.shape[0]
+        X = X.astype(np.float32)
+        query_size = X.shape[0]
         
-        # 调用 IndexHNSWFlatOptimized.search(n, x, k, ef_search)
-        # 返回 list[int]，长度为 nq * k
-        results = self.index.search(nq, X.flatten(), k, self.ef)
-        
-        # 转换为 numpy array 并 reshape
-        results_np = np.array(results, dtype=np.int64)
+        # 调用 PyCANDYAlgo 的 search 接口
+        results = np.array(self.index.search(query_size, X.flatten(), k, self.ef))
         
         # 将 faiss 内部 ID 映射回外部 ID
-        # 处理无效结果（-1）
-        valid_mask = (results_np >= 0) & (results_np < len(self.my_index))
-        ids = np.full_like(results_np, -1)
-        ids[valid_mask] = self.my_index[results_np[valid_mask]]
-        
-        res = ids.reshape(nq, k)
-        self.res = res
-        return res, None  # 返回 (ids, distances)，distances 暂时为 None
+        ids = self.my_index[results]
+        self.res = ids.reshape(X.shape[0], k)
+        return self.res, None  # 返回 (ids, distances)，distances 暂时为 None
         
     def set_query_arguments(self, query_args):
         """设置查询参数"""
