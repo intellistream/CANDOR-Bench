@@ -75,7 +75,7 @@ def perform_controlled_rebuild(
         intervals: 要重建的区间列表 [(start, end), ...]
         
     Returns:
-        维护延迟（微秒）
+        维护延迟（毫秒）
     """
     rebuild_start = time.time()
     was_running = getattr(algo, "_hpc_active", False)
@@ -119,7 +119,7 @@ def perform_controlled_rebuild(
         if was_running and hasattr(algo, '_hpc_active') and not algo._hpc_active and hasattr(algo, 'startHPC'):
             algo.startHPC()
     
-    return (time.time() - rebuild_start) * 1e6
+    return (time.time() - rebuild_start) * 1e6  # 微秒
 
 
 @dataclass
@@ -349,7 +349,7 @@ class BenchmarkRunner:
         return self.metrics
     
     def _execute_initial(self, op: Dict):
-        """执行初始数据加载"""
+        """执行初始数据加载（同步方式，确保数据完全载入后再继续）"""
         # 支持两种参数格式：
         # 1. data_size: 直接指定数据量
         # 2. start, end: 指定数据范围
@@ -367,17 +367,27 @@ class BenchmarkRunner:
         # 使用辅助方法加载数据
         X = self._load_data_range(start_idx, end_idx)
         
-        # 对于流式索引使用 insert 方法，而不是 fit
-        # 流式算法应该通过 insert 一条条添加数据
+        # 使用 initial_load 方法进行同步加载
+        # 这是与 insert 的关键区别：initial_load 是同步的，确保数据完全载入索引后才返回
+        # insert 是异步的，数据只是放入队列，可能还没真正插入索引
         ids = np.arange(start_idx, end_idx, dtype=np.uint32)
         
         start_time = time.time()
-        self.algo.insert(X, ids)
+        
+        # 使用 initial_load（同步）而不是 insert（异步）
+        if self.use_worker and self.worker and hasattr(self.worker, 'initial_load'):
+            self.worker.initial_load(X, ids)
+        elif hasattr(self.algo, 'initial_load'):
+            self.algo.initial_load(X, ids)
+        else:
+            # 回退：直接调用底层算法的 insert
+            self.base_algo.insert(X, ids)
+        
         elapsed = time.time() - start_time
         self.counts['initial'] = data_size
         self.maintenance_state.live_points = data_size
         
-        print(f"  ✓ 初始加载完成: {data_size:,} 条数据")
+        print(f"  ✓ 初始加载完成: {data_size:,} 条数据, 耗时: {elapsed:.2f}s")
     
     def _load_data_range(self, start_idx: int, end_idx: int) -> np.ndarray:
         """
@@ -536,10 +546,10 @@ class BenchmarkRunner:
         if continuous_query_interval > 0:
             queries = self.dataset.get_queries()
         
-        # 生成事件时间戳（根据 eventRate 生成理想到达时间）
-        event_timestamps = generate_timestamps(count, event_rate) if event_rate > 0 else np.zeros(count)
-        arrival_timestamps = np.zeros(count, dtype=np.float64)
-        processed_timestamps = np.zeros(count, dtype=np.float64)
+        # 生成事件时间戳（根据 eventRate 生成理想到达时间，微秒）
+        event_timestamps = generate_timestamps(count, event_rate) if event_rate > 0 else np.zeros(count, dtype=np.int64)
+        arrival_timestamps = np.zeros(count, dtype=np.int64)
+        processed_timestamps = np.zeros(count, dtype=np.int64)
         
         batch_latencies = []
         continuous_query_latencies = []
@@ -549,15 +559,14 @@ class BenchmarkRunner:
         # 记录初始丢弃计数
         initial_drop_count = self.worker.drop_count_total if self.use_worker and self.worker else 0
         
-        # 设置 worker 的基准开始时间（用于计算相对时间戳）
+        # 按批次插入
+        num_batches = (count + batch_size - 1) // batch_size
+        
+        # 设置 worker 的基准开始时间（在开始插入前设置，确保所有批次都能正确记录）
         start_time = time.time()
         if self.use_worker and self.worker:
             self.worker.benchmark_start_time = start_time
             self.worker.batch_timestamps = []  # 清空之前的记录
-        
-        # 按批次插入
-        num_batches = (count + batch_size - 1) // batch_size
-        start_time = time.time()
         
         # Cache profiling 统计
         batch_cache_stats = []  # 存储每个批次的 cache miss 统计
@@ -571,27 +580,28 @@ class BenchmarkRunner:
             batch_data = self._load_data_range(start_idx + batch_start, start_idx + batch_end)
             batch_ids = np.arange(start_idx + batch_start, start_idx + batch_end, dtype=np.uint32)
             
-            # 限速：使用 busy waiting 等待批次到达时间（精确到微秒）
+            # 限速：使用 busy waiting 等待批次到达时间（微秒）
             if event_rate > 0:
-                tNow = (time.time() - start_time) * 1e6
-                tExpectedArrival = event_timestamps[batch_end - 1]  # 批次最后一个元素的期望到达时间
+                tNow = (time.time() - start_time) * 1e6  # 微秒
+                tExpectedArrival = event_timestamps[batch_end - 1]  # 批次最后一个元素的期望到达时间（微秒）
                 while tNow < tExpectedArrival:
                     # busy waiting for a batch to arrive
-                    tNow = (time.time() - start_time) * 1e6
-                # 记录到达时间戳（整个批次使用相同的到达时间）
+                    tNow = (time.time() - start_time) * 1e6  # 微秒
+                # 记录到达时间戳（整个批次使用相同的到达时间，微秒）
+                arrival_timestamps[batch_start:batch_end] = tExpectedArrival
+            else:
+                # 不限速时，使用当前时间作为到达时间（微秒）
+                tExpectedArrival = (time.time() - start_time) * 1e6  # 微秒
                 arrival_timestamps[batch_start:batch_end] = tExpectedArrival
             
             # 执行批量插入（通过 worker 队列）
             # 注意：这里只是将数据放入队列，真实的处理延迟由 worker 记录
-            # 传递到达时间戳给 worker 用于延迟追踪
+            # 传递到达时间戳给 worker 用于延迟追踪（微秒）
             # Cache profiling 现在在 worker 层执行，更精确地测量索引操作
-            if event_rate > 0:
-                self.algo.insert(batch_data, batch_ids, arrival_time=tExpectedArrival)
-            else:
-                self.algo.insert(batch_data, batch_ids)
+            self.algo.insert(batch_data, batch_ids, arrival_time=tExpectedArrival)
             
-            # 记录处理完成时间戳
-            batch_processed_time = (time.time() - start_time) * 1e6
+            # 记录处理完成时间戳（微秒）
+            batch_processed_time = (time.time() - start_time) * 1e6  # 微秒
             processed_timestamps[batch_start:batch_end] = batch_processed_time
             
             inserted_count += batch_len
@@ -604,10 +614,6 @@ class BenchmarkRunner:
             
             # 连续查询（每插入总数据量的 1/100 执行一次）
             if continuous_query_interval > 0 and inserted_count % continuous_query_interval < batch_size:
-                # 等待 worker 处理完队列中的数据（确保索引状态最新）
-                # if self.use_worker and self.worker:
-                #     self.worker.waitPendingOperations()
-                
                 # 输出进度信息（类似 big-ann-benchmarks 风格）
                 current_range_start = start_idx + batch_start
                 current_range_end = start_idx + batch_end
@@ -615,9 +621,8 @@ class BenchmarkRunner:
                 print(f"    [{batch_idx}] {current_range_start}~{current_range_end} querying all {len(queries)} queries (进度: {progress_pct:.1f}%)")
                 
                 # 执行全量查询：一次性传入所有查询向量
-                # Cache profiling 在 worker.query() 中进行
-                cq_start = time.time()
-                
+                # 时间测量在 worker.query() 内部进行，避免引入锁等待时间
+                # 查询延迟从 worker.query_timestamps 获取
                 try:
                     results = self.algo.query(queries, self.k)
                     
@@ -625,18 +630,12 @@ class BenchmarkRunner:
                     if isinstance(results, tuple):
                         results = results[0]  # (neighbors, distances) -> neighbors
                     
-                    cq_latency = time.time() - cq_start
-                    continuous_query_latencies.append(cq_latency)
-                    
                     # 保存查询结果的邻居 ID（不计算召回率，与 big-ann-benchmarks 一致）
-                    # 处理 None 或空结果的情况
                     if results is not None and len(results) > 0:
-                        # results shape: (nq, k) - 每个查询的k个邻居
                         for i in range(len(results)):
                             self.all_results_continuous.append(results[i])
                             continuous_query_results.append(results[i])
                     else:
-                        # 索引为空或查询失败，记录空结果
                         print(f"       ⚠️  查询返回空结果")
                         for i in range(len(queries)):
                             empty_result = np.full(self.k, -1, dtype=np.int32)
@@ -644,20 +643,11 @@ class BenchmarkRunner:
                             continuous_query_results.append(empty_result)
                     
                 except Exception as e:
-                    # 发生异常时仍然记录延迟（即使查询失败）
-                    cq_latency = time.time() - cq_start
-                    continuous_query_latencies.append(cq_latency)
-                    
                     print(f"       ❌ 查询异常: {type(e).__name__}: {str(e)}")
-                    # 发生异常时记录空结果
                     for i in range(len(queries)):
                         empty_result = np.full(self.k, -1, dtype=np.int32)
                         self.all_results_continuous.append(empty_result)
                         continuous_query_results.append(empty_result)
-                
-                # 输出这一轮查询的统计信息
-                # avg_latency_per_query = (cq_latency * 1000) / len(queries)  # 毫秒
-                # print(f"       全量查询完成: 总耗时={cq_latency*1000:.2f}ms, 平均每query={avg_latency_per_query:.4f}ms")
         
         elapsed = time.time() - start_time
         throughput = count / elapsed
@@ -675,9 +665,10 @@ class BenchmarkRunner:
         
         if self.use_worker and self.worker and hasattr(self.worker, 'batch_timestamps'):
             for ts in self.worker.batch_timestamps:
-                batch_latencies.append(ts['end_to_end_latency'])  # 端到端延迟
-                insert_latencies.append(ts['insert_latency'])      # 纯索引延迟
-                queue_wait_times.append(ts['queue_wait_time'])     # 队列等待时间
+                # batch_latencies 使用 insert_latency（纯索引操作时间，微秒），用于计算 QPS
+                batch_latencies.append(ts['insert_latency'])       # 批次处理耗时（微秒）
+                insert_latencies.append(ts['insert_latency'])      # 纯索引延迟（微秒）
+                queue_wait_times.append(ts['queue_wait_time'])     # 队列等待时间（微秒）
                 
                 # 计算吞吐量：batch_size / insert_latency（秒）
                 # insert_latency 是微秒，需要转换为秒
@@ -687,20 +678,31 @@ class BenchmarkRunner:
                     batch_insert_throughputs.append(batch_throughput)
             
             if batch_latencies:
-                avg_e2e = np.mean(batch_latencies) / 1000  # 转换为毫秒
-                p99_e2e = np.percentile(batch_latencies, 99) / 1000
-                avg_insert = np.mean(insert_latencies) / 1000
-                avg_queue = np.mean(queue_wait_times) / 1000
+                avg_batch = np.mean(batch_latencies) / 1000  # 转毫秒显示
+                p99_batch = np.percentile(batch_latencies, 99) / 1000  # 转毫秒显示
+                avg_queue = np.mean(queue_wait_times) / 1000  # 转毫秒显示
                 
                 print(f"    批次延迟统计:")
-                print(f"      端到端: 平均={avg_e2e:.2f}ms, P99={p99_e2e:.2f}ms")
-                print(f"      索引插入: 平均={avg_insert:.2f}ms")
+                print(f"      批次处理: 平均={avg_batch:.2f}ms, P99={p99_batch:.2f}ms")
                 print(f"      队列等待: 平均={avg_queue:.2f}ms")
+        
+        # 从 worker 获取真实的查询延迟（纯查询时间，不含锁等待）
+        if self.use_worker and self.worker and hasattr(self.worker, 'query_timestamps'):
+            # 获取本次 batch_insert 期间新增的查询时间戳
+            query_ts_count = len(self.worker.query_timestamps)
+            last_query_ts_count = getattr(self, '_last_query_ts_count', 0)
+            new_query_timestamps = self.worker.query_timestamps[last_query_ts_count:]
+            self._last_query_ts_count = query_ts_count
+            
+            # 提取纯查询时间（微秒转秒）
+            for ts in new_query_timestamps:
+                cq_latency = ts['query_time'] / 1e6  # 转换为秒
+                continuous_query_latencies.append(cq_latency)
         
         # 更新状态
         self.counts['batch_insert'] += count
         self.maintenance_state.live_points += count
-        # 保存真实的批次延迟（微秒）
+        # 保存真实的批次延迟（毫秒）
         if batch_latencies:
             self.attrs['batchLatency'].extend(batch_latencies)
         self.attrs['continuousQueryLatencies'].extend(continuous_query_latencies)
@@ -779,7 +781,11 @@ class BenchmarkRunner:
             )
     
     def _execute_insert(self, op: Dict):
-        """执行简单插入操作"""
+        """
+        执行简单插入操作
+        
+        注意：时间测量在 worker 层进行，避免包含锁等待时间
+        """
         count = op.get('count', 100)
         print(f"  插入: {count:,} 条数据")
         
@@ -787,25 +793,41 @@ class BenchmarkRunner:
         end_idx = start_idx + count
         X_insert = self._load_data_range(start_idx, end_idx)
         
-        start_time = time.time()
-        insert_latencies = []
+        # 记录插入前的时间戳数量（用于从 worker 获取新增的时间戳）
+        insert_ts_count_before = 0
+        if self.use_worker and self.worker and hasattr(self.worker, 'batch_timestamps'):
+            insert_ts_count_before = len(self.worker.batch_timestamps)
+            # 设置基准时间
+            if self.worker.benchmark_start_time is None:
+                self.worker.benchmark_start_time = time.time()
         
+        start_time = time.time()
+        
+        # 使用 worker 的 insert 方法，传递到达时间戳
         for i in range(count):
             point = X_insert[i:i+1]
-            point_id = start_idx + i
-            
-            insert_start = time.time()
-            if hasattr(self.algo, 'batch_add'):
-                self.algo.batch_add(point, [point_id])
-            else:
-                self.algo.add(point[0], point_id)
-            insert_latencies.append(time.time() - insert_start)
+            point_id = np.array([start_idx + i], dtype=np.uint32)
+            arrival_time = (time.time() - start_time) * 1e6  # 微秒
+            self.algo.insert(point, point_id, arrival_time=arrival_time)
+        
+        # 等待 worker 处理完成
+        if self.use_worker and self.worker:
+            self.worker.waitPendingOperations()
         
         elapsed = time.time() - start_time
-        throughput = count / elapsed
+        
+        # 从 worker 获取真实的插入延迟（微秒）
+        insert_latencies = []
+        if self.use_worker and self.worker and hasattr(self.worker, 'batch_timestamps'):
+            insert_ts_count_after = len(self.worker.batch_timestamps)
+            for ts in self.worker.batch_timestamps[insert_ts_count_before:insert_ts_count_after]:
+                insert_latencies.append(ts['insert_latency'])  # 已经是微秒
+        
+        throughput = count / elapsed if elapsed > 0 else 0
         
         self.counts['insert'] += count
         self.maintenance_state.live_points += count
+        # 存储插入延迟（微秒）
         self.attrs['latencyInsert'].extend(insert_latencies)
         
         print(f"  ✓ 插入完成: {elapsed:.2f}s, {throughput:.0f} ops/s")
@@ -824,23 +846,37 @@ class BenchmarkRunner:
         # 随机选择要删除的 ID
         delete_ids = np.random.choice(total_points, size=count, replace=False)
         
-        start_time = time.time()
-        delete_latencies = []
+        # 记录删除前的时间戳数量（用于从 worker 获取新增的时间戳）
+        delete_ts_count_before = 0
+        if self.use_worker and self.worker and hasattr(self.worker, 'delete_timestamps'):
+            delete_ts_count_before = len(self.worker.delete_timestamps)
         
+        start_time = time.time()
+        
+        # 使用 worker 的 delete 方法，传递到达时间戳
         for del_id in delete_ids:
-            del_start = time.time()
-            if hasattr(self.algo, 'batch_delete'):
-                self.algo.batch_delete([int(del_id)])
-            elif hasattr(self.algo, 'delete'):
-                self.algo.delete(int(del_id))
-            delete_latencies.append(time.time() - del_start)
+            arrival_time = (time.time() - start_time) * 1e6  # 微秒
+            self.algo.delete(np.array([int(del_id)]), arrival_time=arrival_time)
+        
+        # 等待 worker 处理完成
+        if self.use_worker and self.worker:
+            self.worker.waitPendingOperations()
         
         elapsed = time.time() - start_time
-        throughput = count / elapsed
+        
+        # 从 worker 获取真实的删除延迟（微秒）
+        delete_latencies = []
+        if self.use_worker and self.worker and hasattr(self.worker, 'delete_timestamps'):
+            delete_ts_count_after = len(self.worker.delete_timestamps)
+            for ts in self.worker.delete_timestamps[delete_ts_count_before:delete_ts_count_after]:
+                delete_latencies.append(ts['delete_latency'])  # 已经是微秒
+        
+        throughput = count / elapsed if elapsed > 0 else 0
         
         self.counts['delete'] += count
         self.maintenance_state.deleted_points += count
         self.maintenance_state.live_points -= count
+        # 存储删除延迟（微秒）
         self.attrs['latencyDelete'].extend(delete_latencies)
         
         # 检查是否需要触发维护
@@ -874,10 +910,13 @@ class BenchmarkRunner:
         
         print(f"  执行查询: {count:,} 次（批量）")
         
-        start_time = time.time()
+        # 记录查询前的时间戳数量（用于从 worker 获取新增的时间戳）
+        query_ts_count_before = 0
+        if self.use_worker and self.worker and hasattr(self.worker, 'query_timestamps'):
+            query_ts_count_before = len(self.worker.query_timestamps)
         
         # 一次性批量查询所有向量
-        # Cache profiling 在 worker.query() 中进行
+        # 时间测量在 worker.query() 内部进行，避免引入锁等待时间
         try:
             results = self.algo.query(queries, self.k)
             
@@ -886,8 +925,6 @@ class BenchmarkRunner:
                 results, distances = results[0], results[1]
             else:
                 distances = None
-            
-            query_latency = time.time() - start_time
             
             # 存储结果用于后处理
             if results is not None and len(results) > 0:
@@ -904,17 +941,26 @@ class BenchmarkRunner:
         
         except Exception as e:
             print(f"    ❌ 查询异常: {type(e).__name__}: {str(e)}")
-            query_latency = time.time() - start_time
             # 发生异常时记录空结果
             for i in range(count):
                 empty_result = np.full(self.k, -1, dtype=np.int32)
                 self.all_results.append(empty_result)
                 self.result_map[i] = self.counts['search']
         
+        # 从 worker 获取真实的查询延迟（纯查询时间，不含锁等待）
+        query_latency = 0.0
+        if self.use_worker and self.worker and hasattr(self.worker, 'query_timestamps'):
+            query_ts_count_after = len(self.worker.query_timestamps)
+            if query_ts_count_after > query_ts_count_before:
+                # 获取本次查询的时间戳
+                latest_ts = self.worker.query_timestamps[-1]
+                query_latency = latest_ts['query_time'] / 1e6  # 微秒转秒
+        
+        # 如果没有从 worker 获取到延迟（可能未使用 worker），使用 0
         throughput = count / query_latency if query_latency > 0 else 0
         
         self.counts['search'] += count
-        # 记录一次批量查询的总延迟（秒）
+        # 记录一次批量查询的总延迟（秒）- 从 worker 获取的纯查询时间
         self.attrs['latencyQuery'].append(query_latency)
         
         # 收集查询的cache统计（如果有worker且启用了cache profiling）
@@ -953,7 +999,7 @@ class BenchmarkRunner:
         
         budget_us = op.get('budget_us', self.maintenance_policy.budget_us)
         if budget_us:
-            print(f"    维护预算: {budget_us/1e6:.2f}s")
+            print(f"    维护预算: {budget_us/1000:.2f}s")
         
         rebuild_start = time.time()
         
@@ -976,11 +1022,11 @@ class BenchmarkRunner:
             self.counts['maintenance_rebuild'] += 1
             self.attrs['maintenanceLatency'] = rebuild_elapsed
             self.attrs['maintenanceRebuilds'] += 1
-            self.attrs['maintenanceBudgetUsed'] += rebuild_elapsed * 1e6
+            self.attrs['maintenanceBudgetUsed'] += rebuild_elapsed * 1000  # 毫秒
             
             event = {
                 'time': time.time(),
-                'duration_us': rebuild_elapsed * 1e6,
+                'duration_ms': rebuild_elapsed * 1000,  # 毫秒
                 'deletion_ratio': self.maintenance_state.get_deletion_ratio(),
                 'live_points': self.maintenance_state.live_points,
             }
@@ -1033,10 +1079,10 @@ class BenchmarkRunner:
         self.metrics.query_argument_groups = []
         self.metrics.run_count = 1
         
-        # 填充 latency_query 列表（转换为微秒）
+        # 填充 latency_query 列表（转换为毫秒）
         # 注意：latencyQuery 现在存储的是批量查询的总延迟（秒）
         if self.attrs['latencyQuery']:
-            self.metrics.latency_query = [lat * 1e6 for lat in self.attrs['latencyQuery']]
+            self.metrics.latency_query = [lat * 1000 for lat in self.attrs['latencyQuery']]
         
         # 填充 continuous_query_latencies（周期性查询延迟，秒）
         # 用于计算 P50/P95/P99 延迟
@@ -1045,9 +1091,15 @@ class BenchmarkRunner:
             # 设置每次批量查询的查询数量（用于计算单个查询的延迟）
             self.metrics.queries_per_continuous_query = self.dataset.nq
         
-        # 填充 latency_insert 列表（转换为微秒）
+        # 填充 latency_insert 列表
+        # 注意：latencyInsert 现在已经存储的是毫秒，无需转换
         if self.attrs['latencyInsert']:
-            self.metrics.latency_insert = [lat * 1e6 for lat in self.attrs['latencyInsert']]
+            self.metrics.latency_insert = self.attrs['latencyInsert']
+        
+        # 填充 latency_delete 列表
+        # 注意：latencyDelete 现在已经存储的是毫秒，无需转换
+        if self.attrs['latencyDelete']:
+            self.metrics.latency_delete = self.attrs['latencyDelete']
         
         # 填充 insert_throughput（优先使用 batchinsertThroughtput）
         if 'batchinsertThroughtput' in self.attrs and self.attrs['batchinsertThroughtput']:
@@ -1055,7 +1107,7 @@ class BenchmarkRunner:
         elif 'insertThroughput' in self.attrs and self.attrs['insertThroughput']:
             self.metrics.insert_throughput = self.attrs['insertThroughput']
         
-        # 填充 total_time（微秒）
+        # 填充 total_time（毫秒）
         self.metrics.total_time = self.attrs['totalTime']
         
         # 填充 num_searches

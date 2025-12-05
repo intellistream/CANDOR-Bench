@@ -18,7 +18,8 @@ def save_run_results(
     output_dir: str,
     algorithm_name: str,
     dataset_name: str,
-    runbook_name: Optional[str] = None
+    runbook_name: Optional[str] = None,
+    query_timestamps: Optional[List[Dict]] = None
 ):
     """
     保存测评结果到 HDF5 和 CSV 文件
@@ -30,6 +31,7 @@ def save_run_results(
         algorithm_name: 算法名称
         dataset_name: 数据集名称
         runbook_name: Runbook名称（可选）
+        query_timestamps: 查询时间戳列表，包含 total_time, lock_wait_time, query_time
     
     生成的文件:
         - {algorithm}_{dataset}_{runbook}.hdf5: HDF5文件，包含查询结果
@@ -37,6 +39,7 @@ def save_run_results(
         - {algorithm}_batch_insert_qps.csv: 每批次插入QPS
         - {algorithm}_batch_query_qps.csv: 每批次查询QPS
         - {algorithm}_batch_query_latency.csv: 每批次查询延迟
+        - {algorithm}_query_timing_breakdown.csv: 查询时间拆分（锁等待/纯查询）
         - {algorithm}_insert_cache_miss.csv: 插入操作的 cache miss 统计
         - {algorithm}_query_cache_miss.csv: 查询操作的 cache miss 统计（包含连续查询和search）
     """
@@ -72,7 +75,30 @@ def save_run_results(
         print(f"  ✓ Batch insert QPS saved to: {insert_qps_file}")
     
     # 3.2 查询QPS和延迟
-    if hasattr(metrics, 'continuous_query_latencies') and metrics.continuous_query_latencies:
+    # 优先使用 query_timestamps 中的纯查询时间（排除锁等待），更准确地反映真实查询性能
+    if query_timestamps and len(query_timestamps) > 0:
+        # 从 worker 的 query_timestamps 中提取纯查询时间（微秒）
+        pure_query_times_us = [ts['query_time'] for ts in query_timestamps]
+        # 转换为秒
+        pure_query_times_sec = [t / 1e6 for t in pure_query_times_us]
+        
+        # 计算查询QPS（使用纯查询时间）
+        queries_per_batch = getattr(metrics, 'queries_per_continuous_query', 10000)
+        query_qps = [queries_per_batch / lat if lat > 0 else 0 for lat in pure_query_times_sec]
+        
+        # 保存查询QPS（基于纯查询时间）
+        query_qps_file = output_path / f"{algorithm_name}_batch_query_qps.csv"
+        save_batch_metric_csv(query_qps_file, query_qps, 'query_qps')
+        print(f"  ✓ Batch query QPS saved to: {query_qps_file} (using pure query time, excluding lock wait)")
+        
+        # 保存查询延迟（纯查询时间，微秒转毫秒）
+        pure_query_times_ms = [t / 1000 for t in pure_query_times_us]
+        query_latency_file = output_path / f"{algorithm_name}_batch_query_latency.csv"
+        save_batch_metric_csv(query_latency_file, pure_query_times_ms, 'query_latency_ms')
+        print(f"  ✓ Batch query latency saved to: {query_latency_file} (pure query time)")
+        
+    elif hasattr(metrics, 'continuous_query_latencies') and metrics.continuous_query_latencies:
+        # 回退：使用 runner 层面的端到端延迟（包含锁等待）
         # 提取第一个元素（因为是嵌套列表）
         query_latencies = metrics.continuous_query_latencies[0] if metrics.continuous_query_latencies else []
         
@@ -84,13 +110,13 @@ def save_run_results(
             # 保存查询QPS
             query_qps_file = output_path / f"{algorithm_name}_batch_query_qps.csv"
             save_batch_metric_csv(query_qps_file, query_qps, 'query_qps')
-            print(f"  ✓ Batch query QPS saved to: {query_qps_file}")
+            print(f"  ✓ Batch query QPS saved to: {query_qps_file} (end-to-end, includes lock wait)")
             
             # 保存查询延迟（转换为毫秒）
             query_latency_ms = [lat * 1000 for lat in query_latencies]
             query_latency_file = output_path / f"{algorithm_name}_batch_query_latency.csv"
             save_batch_metric_csv(query_latency_file, query_latency_ms, 'query_latency_ms')
-            print(f"  ✓ Batch query latency saved to: {query_latency_file}")
+            print(f"  ✓ Batch query latency saved to: {query_latency_file} (end-to-end)")
     
     # 3.3 Cache Miss 统计
     # 保存插入的cache miss统计
@@ -114,6 +140,12 @@ def save_run_results(
             metrics.query_cache_miss_rate_per_batch
         )
         print(f"  ✓ Query cache miss saved to: {query_cache_miss_file}")
+    
+    # 3.4 查询时间拆分（锁等待时间 vs 纯查询时间）
+    if query_timestamps and len(query_timestamps) > 0:
+        timing_breakdown_file = output_path / f"{algorithm_name}_query_timing_breakdown.csv"
+        save_query_timing_breakdown_csv(timing_breakdown_file, query_timestamps)
+        print(f"  ✓ Query timing breakdown saved to: {timing_breakdown_file}")
 
 
 def save_hdf5_results(hdf5_file: Path, all_results_continuous: List[np.ndarray]):
@@ -217,5 +249,57 @@ def save_cache_miss_csv(
         'cache_misses': cache_miss,
         'cache_references': cache_refs,
         'cache_miss_rate': cache_rate
+    })
+    df.to_csv(csv_file, index=False)
+
+
+def save_query_timing_breakdown_csv(
+    csv_file: Path,
+    query_timestamps: List[Dict]
+):
+    """
+    保存查询时间拆分数据到 CSV 文件
+    
+    用于诊断锁争用问题：
+    - total_time: 总查询时间（包括锁等待）
+    - lock_wait_time: 锁等待时间
+    - query_time: 纯查询执行时间
+    - lock_wait_ratio: 锁等待时间占比
+    
+    Args:
+        csv_file: CSV文件路径
+        query_timestamps: 查询时间戳列表，每个元素包含 total_time, lock_wait_time, query_time
+    """
+    if not query_timestamps:
+        return
+    
+    batch_indices = []
+    total_times = []
+    lock_wait_times = []
+    query_times = []
+    lock_wait_ratios = []
+    
+    for idx, ts in enumerate(query_timestamps):
+        batch_indices.append(idx)
+        total_time = ts.get('total_time', 0) / 1000  # 微秒转毫秒
+        lock_wait = ts.get('lock_wait_time', 0) / 1000  # 微秒转毫秒
+        query_time = ts.get('query_time', 0) / 1000  # 微秒转毫秒
+        
+        total_times.append(total_time)
+        lock_wait_times.append(lock_wait)
+        query_times.append(query_time)
+        
+        # 计算锁等待时间占比
+        if total_time > 0:
+            lock_wait_ratios.append(lock_wait / total_time)
+        else:
+            lock_wait_ratios.append(0.0)
+    
+    df = pd.DataFrame({
+        'batch_idx': batch_indices,
+        'total_time_ms': total_times,
+        'lock_wait_time_ms': lock_wait_times,
+        'query_time_ms': query_times,
+        'lock_wait_ratio': lock_wait_ratios
     })
     df.to_csv(csv_file, index=False)

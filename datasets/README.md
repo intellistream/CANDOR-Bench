@@ -1,98 +1,92 @@
 # Datasets Module
 
-数据集管理模块，参考 big-ann-benchmarks 设计，提供统一的数据集下载、预处理和访问接口。
+Dataset management module inspired by big-ann-benchmarks, providing unified dataset download, preprocessing, and access interfaces.
 
-## 核心特性
+## Key Features
 
-- **自动下载**: 支持从 Google Drive 自动下载数据集
-- **统一接口**: 所有数据集提供一致的访问方法
-- **内存优化**: 大数据集使用迭代器避免内存溢出
-- **标准格式**: 统一的目录结构和文件格式
+- **Automatic Download**: Supports automatic dataset download from Google Drive
+- **Unified Interface**: Consistent access methods across all datasets
+- **Memory Optimization**: Uses iterators for large datasets to avoid memory overflow
+- **Standard Format**: Unified directory structure and file formats
 
-## 快速开始
+## Quick Start
 
-### 安装依赖
+### Install Dependencies
 ```bash
 pip install numpy gdown
 ```
 
-### 基本使用
+### Basic Usage
 ```python
 from benchmark_anns.datasets import DATASETS
 
-# 获取数据集实例
+# Get dataset instance
 dataset = DATASETS['sift']()
 
-# 自动下载和准备（首次使用）
+# Auto-download and prepare (first time)
 dataset.prepare()
 
-# 访问数据
+# Access data
 queries = dataset.get_queries()
 groundtruth = dataset.get_groundtruth(k=10)
 
-# 大数据集使用迭代器
+# Use iterator for large datasets
 for batch in dataset.get_dataset_iterator(bs=10000):
-    # 处理批次
+    # Process batch
     pass
 ```
 
 
-## 目录结构
+## Directory Structure
 
 ```
 raw_data/
 ├── sift-small/           # SIFT Small (10K vectors, 128d)
 ├── sift/                 # SIFT 1M (1M vectors, 128d)
-├── sift-100m/            # SIFT 100M (100M vectors, 128d)
-├── openimages/           # OpenImages (1M vectors, 512d)
+├── openimages/           # OpenImages (9M vectors, 512d)
 ├── sun/                  # SUN Scene (79K vectors, 512d)
 ├── msong/                # Million Song (992K vectors, 420d)
-├── coco/                 # COCO (100K vectors, 768d)
+├── coco/                 # COCO (117K vectors, 768d)
 ├── glove/                # GloVe (1.19M vectors, 100d)
-├── msturing-100m/        # MS Turing 100M (100M vectors, 100d)
-├── wte-*/                # Word Translation Embeddings (各种 drift 参数)
-└── random-*/             # 随机测试数据集
+└── random-*/             # Random test datasets
 ```
 
-每个数据集目录包含：
-- `base.{format}` - 基础向量数据
-- `query.{format}` - 查询向量
-- `gt.{format}` - Ground truth 结果
+Each dataset directory contains:
+- `base.{format}` - Base vector data
+- `query.{format}` - Query vectors
+- `groundtruth.{format}` - Ground truth results
 
-## 支持的数据集
+## Supported Datasets
 
-### SIFT 系列
-- **sift-small**: 10K vectors, 128d - 测试用小数据集
-- **sift**: 1M vectors, 128d - 标准 SIFT 数据集
-- **sift-100m**: 100M vectors, 128d - 大规模数据集
+### SIFT Series
+- **sift-small**: 10K vectors, 128d - Small dataset for testing
+- **sift**: 1M vectors, 128d - Standard SIFT dataset
 
-### 图像特征数据集
-- **openimages**: 1M vectors, 512d
+### Image Feature Datasets
+- **openimages**: 9M vectors, 512d
 - **sun**: 79K vectors, 512d
-- **coco**: 100K vectors, 768d
+- **coco**: 117K vectors, 768d
 
-### 文本/词向量数据集
-- **glove**: 1.19M vectors, 100d - GloVe 词向量
+### Text/Embedding Datasets
+- **glove**: 1.19M vectors, 100d - GloVe word embeddings
 - **msong**: 992K vectors, 420d - Million Song Dataset
-- **msturing-100m**: 100M vectors, 100d - MS Turing 大规模数据集
 
-### 其他数据集
-- **wte-***: Word Translation Embeddings (drift 参数: -0.05, -0.1, -0.2, -0.4, -0.6, -0.8)
-- **random-xs/s/m**: 随机生成的测试数据集
+### Other Datasets
+- **random-xs/s/m**: Randomly generated test datasets
 
-## 数据集下载
+## Dataset Download
 
-### 自动下载（推荐）
+### Automatic Download (Recommended)
 ```python
-# 数据集会自动从 Google Drive 下载
+# Datasets auto-download from Google Drive
 dataset = DATASETS['sift']()
 dataset.prepare()
 ```
 
-### 下载链接
+### Download Links
 
-| 数据集 | 大小 | 下载链接 |
-|--------|------|----------|
+| Dataset | Size | Download Link |
+|---------|------|---------------|
 | SIFT-Small | ~50MB | [Google Drive](https://drive.google.com/drive/folders/1XbvrSjlP-oUZ5cixVpfSTn0zE-Cim0NK) |
 | SIFT | ~500MB | [Google Drive](https://drive.google.com/drive/folders/1PngXRH9jnN86T8RNiU-QyGqOillfQE_p) |
 | OpenImages | ~2GB | [Google Drive](https://drive.google.com/drive/folders/1ZkWOrja-0A6C9yh3ysFoCP6w5u7oWjQx) |
@@ -101,114 +95,108 @@ dataset.prepare()
 | Glove | ~500MB | [Google Drive](https://drive.google.com/drive/folders/1m06VVmXmklHr7QZzdz6w8EtYmuRGIl9s) |
 | Msong | ~1.6GB | [Google Drive](https://drive.google.com/drive/folders/1TnLNJNVqyFrEzKGfQVdvUC8Al-tmjVg0) |
 
-**注意**: 
-- SIFT-100M 和 MSTuring-100M 是超大数据集（各约 50GB），需手动下载
-- 下载可能需要较长时间，Google Drive 可能有配额限制
+**Note**: 
+- Downloads may take time; Google Drive may have quota limits
+- Ensure stable network connection
 
 
-## API 参考
+## API Reference
 
-### 数据集注册表
+### Dataset Registry
 
-所有数据集通过 `DATASETS` 字典访问：
+All datasets accessed via `DATASETS` dictionary:
 
 ```python
 from benchmark_anns.datasets import DATASETS
 
-# 获取可用数据集列表
+# Get available datasets
 print(DATASETS.keys())
 
-# 创建数据集实例
+# Create dataset instance
 dataset = DATASETS['sift']()
 ```
 
-### Dataset 基类方法
+### Dataset Base Methods
 
-每个数据集都提供以下方法：
+Each dataset provides these methods:
 
 ```python
-# 准备数据集（下载、创建目录）
+# Prepare dataset (download, create directories)
 dataset.prepare()
 
-# 获取数据（小数据集）
+# Get data (small datasets)
 base_vectors = dataset.get_dataset()
 
-# 获取数据迭代器（大数据集推荐）
+# Get data iterator (recommended for large datasets)
 for batch in dataset.get_dataset_iterator(bs=10000):
     process(batch)
 
-# 获取查询向量
+# Get query vectors
 queries = dataset.get_queries()
 
-# 获取 ground truth
+# Get ground truth
 gt = dataset.get_groundtruth(k=10)
 
-# 获取数据集属性
-dataset.nb           # 基础向量数量
-dataset.nq           # 查询向量数量
-dataset.d            # 向量维度
-dataset.distance()   # 距离度量 ('euclidean', 'cosine', etc.)
-dataset.short_name() # 数据集短名称
+# Get dataset attributes
+dataset.nb           # Number of base vectors
+dataset.nq           # Number of query vectors
+dataset.d            # Vector dimension
+dataset.distance()   # Distance metric ('euclidean', 'angular', etc.)
+dataset.short_name() # Dataset short name
 ```
 
-## 文件格式
+## File Formats
 
-### `.fvecs` / `.ivecs` 格式（SIFT-Small）
-传统 SIFT 格式，每个向量：`[dim: int32][data: float32/int32 × dim]`
+### `.fvecs` / `.ivecs` Format
+Traditional SIFT format, each vector: `[dim: int32][data: float32/int32 × dim]`
 
-### `.bin` / `.u8bin` / `.fbin` 格式（Big-ANN）
-- 文件头: `[n: uint32][d: uint32]`
-- 数据: `[vectors: dtype × n × d]`
+### `.bin` / `.u8bin` / `.fbin` Format (Big-ANN)
+- Header: `[n: uint32][d: uint32]`
+- Data: `[vectors: dtype × n × d]`
 
-### Ground Truth 格式
-二进制整数索引，包含最近邻索引和距离
+### Ground Truth Format
+Binary integer indices containing nearest neighbor indices and distances
 
-## 添加新数据集
+## Adding New Datasets
 
-1. 在 `registry.py` 中创建数据集类：
+1. Create dataset class in `registry.py`:
 
 ```python
 class MyDataset(Dataset):
     def __init__(self):
         super().__init__()
-        self.nb = 10000      # 基础向量数
-        self.nq = 100        # 查询向量数
-        self.d = 64          # 向量维度
-        self.basedir = os.path.join(BASEDIR, "mydataset")
-        self.ds_fn = "base.fbin"
-        self.qs_fn = "query.fbin"
-        self.gt_fn = "gt.bin"
+        self.nb = 10000      # Number of base vectors
+        self.nq = 100        # Number of queries
+        self.d = 64          # Vector dimension
+        self.basedir = "raw_data/mydataset"
     
     def prepare(self, skip_data=False):
         os.makedirs(self.basedir, exist_ok=True)
-        if any(os.listdir(self.basedir)):
-            print("✓ Dataset already installed!")
-            return
-        download_dataset('mydataset', self.basedir)
+        if not skip_data:
+            download_dataset('mydataset', self.basedir)
     
-    def short_name(self):
-        return "mydataset"
+    def get_dataset(self):
+        return load_fvecs(os.path.join(self.basedir, "base.fvecs"))
     
     def distance(self):
         return "euclidean"
 ```
 
-2. 注册数据集：
+2. Register dataset:
 
 ```python
-DATASETS['mydataset'] = lambda: MyDataset()
+DATASETS['mydataset'] = MyDataset
 ```
 
-3. 在 `download_utils.py` 中添加下载链接（如需自动下载）
+3. Add download link in `download_utils.py` (if auto-download needed)
 
-## 注意事项
+## Notes
 
-- 大数据集（sift-100m, msturing-100m）需要大量存储空间（各约 50GB）
-- 使用迭代器而非直接加载来处理大数据集
-- Random 数据集在内存中动态生成，不需要下载
-- 首次使用数据集时会自动下载，请确保网络连接稳定
+- Use iterators instead of direct loading for large datasets
+- Random datasets are generated dynamically in memory, no download needed
+- Datasets auto-download on first use, ensure stable network connection
 
-## 参考
+## References
 
 - [big-ann-benchmarks](https://github.com/harsha-simhadri/big-ann-benchmarks)
 - [Google Drive Python API (gdown)](https://github.com/wkentaro/gdown)

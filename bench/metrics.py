@@ -247,7 +247,7 @@ def generate_timestamps(rows: int, event_rate: float = 4000.0) -> np.ndarray:
     Returns:
         事件时间戳数组 (微秒)
     """
-    interval_micros = int(1e6 / event_rate)
+    interval_micros = int(1e6 / event_rate)  # 微秒
     event_timestamps = np.arange(0, rows * interval_micros, interval_micros, dtype=np.int64)
     return event_timestamps
 

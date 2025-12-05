@@ -1,10 +1,10 @@
 """
-数据集下载配置
+Dataset Download Utilities
 
-存储所有数据集的下载链接和参数
+Configuration and functions for downloading datasets.
 """
 
-# Google Drive 文件夹 URL 配置
+# Google Drive folder URLs for each dataset
 DATASET_URLS = {
     'sift-small': 'https://drive.google.com/drive/folders/1XbvrSjlP-oUZ5cixVpfSTn0zE-Cim0NK?usp=sharing',
     'sift': 'https://drive.google.com/drive/folders/1PngXRH9jnN86T8RNiU-QyGqOillfQE_p?usp=sharing',
@@ -18,14 +18,14 @@ DATASET_URLS = {
 
 def download_dataset(dataset_name: str, basedir: str) -> bool:
     """
-    下载数据集
+    Download dataset from Google Drive.
     
     Args:
-        dataset_name: 数据集名称
-        basedir: 目标目录
+        dataset_name: Dataset name (key in DATASET_URLS)
+        basedir: Target directory
     
     Returns:
-        是否下载成功
+        True if download succeeded
     """
     if dataset_name not in DATASET_URLS:
         print(f"✗ No download URL configured for '{dataset_name}'")

@@ -324,6 +324,9 @@ def run_benchmark(
                 best_results = runner.all_results
                 best_results_continuous = runner.all_results_continuous
                 best_attrs = runner.attrs
+                # 保存 query_timestamps 用于诊断锁争用
+                if runner.worker and hasattr(runner.worker, 'query_timestamps'):
+                    best_attrs['query_timestamps'] = runner.worker.query_timestamps
             
             if run_count > 1:
                 print(f"\n第 {run_idx + 1} 次运行完成，总时间: {total_time:.2f} 秒")
@@ -430,13 +433,13 @@ def store_results(
             if results and len(results) > 0:
                 all_neighbors = np.vstack(results) if isinstance(results[0], np.ndarray) else np.array(results)
                 f.create_dataset('neighbors', data=all_neighbors, compression='gzip')
-                print(f"✓ HDF5 正式查询结果: {hdf5_file} (shape: {all_neighbors.shape})")
+                # print(f"✓ HDF5 正式查询结果: {hdf5_file} (shape: {all_neighbors.shape})")  # 调试信息已禁用
             
             # 1.2 存储周期性查询结果 (batch_insert continuous queries)
             if results_continuous and len(results_continuous) > 0:
                 all_continuous = np.vstack(results_continuous) if isinstance(results_continuous[0], np.ndarray) else np.array(results_continuous)
                 f.create_dataset('neighbors_continuous', data=all_continuous, compression='gzip')
-                print(f"✓ HDF5 周期性查询结果: (shape: {all_continuous.shape})")
+                # print(f"✓ HDF5 周期性查询结果: (shape: {all_continuous.shape})")  # 调试信息已禁用
             
             if not results and not results_continuous:
                 print(f"⚠ 无查询结果，创建空 HDF5 文件: {hdf5_file}")
@@ -476,17 +479,17 @@ def store_results(
     # 保存为单行 CSV
     df = pd.DataFrame([summary_attrs])
     df.to_csv(csv_file, index=False)
-    print(f"✓ CSV 指标已保存: {csv_file}")
+    # print(f"✓ CSV 指标已保存: {csv_file}")  # 调试信息已禁用
     
     # ========== 3. 批次级延迟 CSV ==========
     if hasattr(metrics, 'latencies') and len(metrics.latencies) > 0:
         latency_file = result_dir / f"{base_name}_batchLatency.csv"
         latency_df = pd.DataFrame({
             'batch_idx': range(len(metrics.latencies)),
-            'latency_us': metrics.latencies
+            'latency_ms': metrics.latencies
         })
         latency_df.to_csv(latency_file, index=False)
-        print(f"✓ 批次延迟已保存: {latency_file}")
+        # print(f"✓ 批次延迟已保存: {latency_file}")  # 调试信息已禁用
     
     # ========== 4. 批次级吞吐量 CSV ==========
     if hasattr(metrics, 'throughputs') and len(metrics.throughputs) > 0:
@@ -496,7 +499,7 @@ def store_results(
             'throughput': metrics.throughputs
         })
         throughput_df.to_csv(throughput_file, index=False)
-        print(f"✓ 批次吞吐量已保存: {throughput_file}")
+        # print(f"✓ 批次吞吐量已保存: {throughput_file}")  # 调试信息已禁用
     
     # ========== 5. 周期性查询延迟 CSV ==========
     # 注意：已合并到 batch_query_latency.csv 中，此处不再单独保存
@@ -513,13 +516,38 @@ def store_results(
             'insert_qps': attrs['batchinsertThroughtput']
         })
         insert_qps_df.to_csv(insert_qps_file, index=False)
-        print(f"✓ 批次插入QPS已保存: {insert_qps_file}")
+        # print(f"✓ 批次插入QPS已保存: {insert_qps_file}")  # 调试信息已禁用
     
     # ========== 8. 批次级查询QPS CSV ==========
-    # 查询QPS = 查询数量 / 查询延迟（秒）
-    if 'continuousQueryLatencies' in attrs and len(attrs['continuousQueryLatencies']) > 0:
+    # 优先使用 query_timestamps 中的纯查询时间（排除锁等待），更准确地反映真实查询性能
+    if 'query_timestamps' in attrs and len(attrs['query_timestamps']) > 0:
         query_qps_file = result_dir / f"{base_name}_batch_query_qps.csv"
-        # 获取每批次的查询数量（默认使用 dataset 的查询集大小）
+        # 获取每批次的查询数量
+        queries_per_batch = attrs.get('querySize', 100)
+        # print(f"[DEBUG] querySize = {queries_per_batch} (from attrs, default=100)")  # 调试信息已禁用
+        query_qps_list = []
+        batch_indices = []
+        
+        for idx, ts in enumerate(attrs['query_timestamps']):
+            # 使用纯查询时间（微秒），排除锁等待时间
+            pure_query_time_us = ts.get('query_time', 0)
+            if pure_query_time_us > 0:
+                pure_query_time_sec = pure_query_time_us / 1e6
+                qps = queries_per_batch / pure_query_time_sec
+                query_qps_list.append(qps)
+                batch_indices.append(idx)
+        
+        if query_qps_list:
+            query_qps_df = pd.DataFrame({
+                'batch_idx': batch_indices,
+                'query_qps': query_qps_list
+            })
+            query_qps_df.to_csv(query_qps_file, index=False)
+            # print(f"✓ 批次查询QPS已保存: {query_qps_file} ({len(query_qps_list)} 个批次, 使用纯查询时间)")  # 调试信息已禁用
+    
+    elif 'continuousQueryLatencies' in attrs and len(attrs['continuousQueryLatencies']) > 0:
+        # 回退：使用端到端延迟（包含锁等待）
+        query_qps_file = result_dir / f"{base_name}_batch_query_qps.csv"
         queries_per_batch = attrs.get('querySize', 100)
         query_qps_list = []
         batch_indices = []
@@ -540,7 +568,7 @@ def store_results(
                 'query_qps': query_qps_list
             })
             query_qps_df.to_csv(query_qps_file, index=False)
-            print(f"✓ 批次查询QPS已保存: {query_qps_file} ({len(query_qps_list)} 个有效批次)")
+            # print(f"✓ 批次查询QPS已保存: {query_qps_file} ({len(query_qps_list)} 个批次, 端到端延迟)")  # 调试信息已禁用
     
     # ========== 9. Cache Miss CSV ==========
     # 保存插入的cache miss统计
@@ -568,19 +596,39 @@ def store_results(
         print(f"✓ 查询 Cache Miss 已保存: {query_cache_miss_file}")
     
     # ========== 10. 批次级查询延迟 CSV (毫秒) ==========
-    if 'continuousQueryLatencies' in attrs and len(attrs['continuousQueryLatencies']) > 0:
+    # 优先使用 query_timestamps 中的纯查询时间
+    if 'query_timestamps' in attrs and len(attrs['query_timestamps']) > 0:
         query_latency_file = result_dir / f"{base_name}_batch_query_latency.csv"
-        # 转换为毫秒，并过滤异常值
+        query_latency_ms = []
+        batch_indices = []
+        
+        for idx, ts in enumerate(attrs['query_timestamps']):
+            # 使用纯查询时间（微秒 -> 毫秒）
+            pure_query_time_us = ts.get('query_time', 0)
+            if pure_query_time_us > 0:
+                query_latency_ms.append(pure_query_time_us / 1000)  # 微秒 -> 毫秒
+                batch_indices.append(idx)
+        
+        if query_latency_ms:
+            query_latency_df = pd.DataFrame({
+                'batch_idx': batch_indices,
+                'query_latency_ms': query_latency_ms
+            })
+            query_latency_df.to_csv(query_latency_file, index=False)
+            # print(f"✓ 批次查询延迟已保存: {query_latency_file} ({len(query_latency_ms)} 个批次, 纯查询时间)")  # 调试信息已禁用
+    
+    elif 'continuousQueryLatencies' in attrs and len(attrs['continuousQueryLatencies']) > 0:
+        # 回退：使用端到端延迟
+        query_latency_file = result_dir / f"{base_name}_batch_query_latency.csv"
         query_latency_ms = []
         batch_indices = []
         
         for idx, lat_seconds in enumerate(attrs['continuousQueryLatencies']):
-            # 过滤异常值：只保留正常的延迟（>0且合理范围）
-            if lat_seconds > 0 and lat_seconds < 3600:  # 最多1小时
-                query_latency_ms.append(lat_seconds * 1000)  # 转换为毫秒
+            # 过滤异常值
+            if lat_seconds > 0 and lat_seconds < 3600:
+                query_latency_ms.append(lat_seconds * 1000)
                 batch_indices.append(idx)
             else:
-                # 异常延迟，跳过
                 print(f"  ⚠️  跳过异常查询延迟: batch_idx={idx}, latency={lat_seconds:.2f}s")
         
         if query_latency_ms:
@@ -589,9 +637,41 @@ def store_results(
                 'query_latency_ms': query_latency_ms
             })
             query_latency_df.to_csv(query_latency_file, index=False)
-            print(f"✓ 批次查询延迟已保存: {query_latency_file} ({len(query_latency_ms)} 个有效批次)")
+            # print(f"✓ 批次查询延迟已保存: {query_latency_file} ({len(query_latency_ms)} 个批次, 端到端延迟)")  # 调试信息已禁用
     
-    # ========== 11. 生成人类可读的摘要 ==========
+    # ========== 11. 查询时间拆分 CSV（用于诊断锁争用）==========
+    if 'query_timestamps' in attrs and len(attrs['query_timestamps']) > 0:
+        timing_file = result_dir / f"{base_name}_query_timing_breakdown.csv"
+        timing_data = {
+            'batch_idx': [],
+            'total_time_ms': [],
+            'lock_wait_time_ms': [],
+            'query_time_ms': [],
+            'lock_wait_ratio': []
+        }
+        
+        for idx, ts in enumerate(attrs['query_timestamps']):
+            timing_data['batch_idx'].append(idx)
+            total_time = ts.get('total_time', 0) / 1000  # 微秒 -> 毫秒
+            lock_wait = ts.get('lock_wait_time', 0) / 1000  # 微秒 -> 毫秒
+            query_time = ts.get('query_time', 0) / 1000  # 微秒 -> 毫秒
+            
+            timing_data['total_time_ms'].append(total_time)
+            timing_data['lock_wait_time_ms'].append(lock_wait)
+            timing_data['query_time_ms'].append(query_time)
+            timing_data['lock_wait_ratio'].append(lock_wait / total_time if total_time > 0 else 0)
+        
+        timing_df = pd.DataFrame(timing_data)
+        timing_df.to_csv(timing_file, index=False)
+        # print(f"✓ 查询时间拆分已保存: {timing_file}")  # 调试信息已禁用
+        
+        # 打印锁争用诊断信息
+        avg_lock_wait = np.mean(timing_data['lock_wait_time_ms'])
+        max_lock_wait = np.max(timing_data['lock_wait_time_ms'])
+        avg_lock_ratio = np.mean(timing_data['lock_wait_ratio'])
+        # print(f"  锁等待统计: 平均={avg_lock_wait:.2f}ms, 最大={max_lock_wait:.2f}ms, 平均占比={avg_lock_ratio*100:.1f}%")  # 调试信息已禁用
+    
+    # ========== 12. 生成人类可读的摘要 ==========
     summary_file = result_dir / f"{base_name}_summary.txt"
     with open(summary_file, 'w', encoding='utf-8') as f:
         f.write("=" * 80 + "\n")
@@ -661,7 +741,7 @@ def store_results(
         
         f.write("\n" + "=" * 80 + "\n")
     
-    print(f"✓ 测试摘要已保存: {summary_file}")
+    # print(f"✓ 测试摘要已保存: {summary_file}")  # 调试信息已禁用
     print(f"\n结果目录: {result_dir}")
 
 
@@ -676,10 +756,8 @@ def print_results_summary(metrics):
     
     # 计算总时间（支持不同的格式）
     total_time = float(metrics.total_time) if hasattr(metrics, 'total_time') else 0
-    if total_time < 1000:  # 如果小于 1000，可能是秒
-        print(f"总时间: {total_time:.2f} 秒")
-    else:
-        print(f"总时间: {total_time/1e6:.2f} 秒")
+    # total_time 现在是微秒
+    print(f"总时间: {total_time/1e6:.2f} 秒")
     
     print(f"查询次数: {metrics.num_searches}")
     print(f"\n性能指标:")
@@ -887,7 +965,7 @@ def main():
                 output_dir=args.output,
                 enable_cache_profiling=args.enable_cache_profiling
             )
-            print(f"✓ 参数组合 [{combo_idx}] 测试完成")
+            # print(f"✓ 参数组合 [{combo_idx}] 测试完成")  # 调试信息已禁用
             
             # 保存结果
             if not args.no_save:
@@ -910,7 +988,7 @@ def main():
                 
                 output_dir = Path(args.output)
                 store_results(metrics, best_results, best_results_continuous, best_attrs, output_dir, metadata)
-                print(f"✓ 参数组合 [{combo_idx}] 结果已保存")
+                # print(f"✓ 参数组合 [{combo_idx}] 结果已保存")  # 调试信息已禁用
             
             all_results.append({
                 'combo_idx': combo_idx,
@@ -942,17 +1020,22 @@ def main():
     print(f"总参数组合数: {total_combinations}")
     print(f"成功: {success_count}, 失败: {fail_count}")
     
-    if success_count > 0:
-        print("\n成功的测试结果:")
-        for result in all_results:
-            if result['success']:
-                metrics = result['metrics']
-                build_info = _generate_params_folder_name({'build_params': result['build_params'], 'query_params': result['query_params']})
-                recall = metrics.mean_recall() if hasattr(metrics, 'mean_recall') else 'N/A'
-                qps = metrics.mean_qps() if hasattr(metrics, 'mean_qps') else 'N/A'
-                print(f"  [{result['combo_idx']}] {build_info}")
-                if recall != 'N/A':
-                    print(f"      Recall: {recall:.4f}, QPS: {qps:.2f}")
+    # 成功的测试结果详情已禁用
+    # if success_count > 0:
+    #     print("\n成功的测试结果:")
+    #     for result in all_results:
+    #         if result['success']:
+    #             metrics = result['metrics']
+    #             build_info = _generate_params_folder_name({'build_params': result['build_params'], 'query_params': result['query_params']})
+    #             recall = metrics.mean_recall() if hasattr(metrics, 'mean_recall') else None
+    #             qps = metrics.mean_qps() if hasattr(metrics, 'mean_qps') else None
+    #             print(f"  [{result['combo_idx']}] {build_info}")
+    #             if recall is not None and qps is not None:
+    #                 print(f"      Recall: {recall:.4f}, QPS: {qps:.2f}")
+    #             elif recall is not None:
+    #                 print(f"      Recall: {recall:.4f}")
+    #             elif qps is not None:
+    #                 print(f"      QPS: {qps:.2f}")
     
     print("=" * 80)
     print("\n测试完成！")
