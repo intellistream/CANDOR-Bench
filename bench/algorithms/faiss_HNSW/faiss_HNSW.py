@@ -39,15 +39,13 @@ class FaissHnsw(BaseStreamingANN):
             self.index = PyCANDYAlgo.index_factory_ip(ndim, self.indexkey)
         
         # 初始化 ID 映射表
-        self.my_index = -1 * np.ones(max_pts, dtype=np.int64)
-        self.my_inverse_index = -1 * np.ones(max_pts, dtype=np.int64)
+        self.my_index = -1 * np.ones(max_pts, dtype=int)
+        self.my_inverse_index = -1 * np.ones(max_pts, dtype=int)
         
         self.ntotal = 0
         self.trained = False
         
     def insert(self, X, ids):
-        X = np.ascontiguousarray(X, dtype=np.float32)
-        
         # 过滤已存在的 ID（避免重复插入）
         mask = self.my_inverse_index[ids] == -1 
         new_ids = ids[mask]
@@ -89,7 +87,6 @@ class FaissHnsw(BaseStreamingANN):
                         self.my_index[internal_id] = -1
         
     def query(self, X, k):
-        X = X.astype(np.float32)
         query_size = X.shape[0]
         
         # 调用 PyCANDYAlgo 的 search 接口

@@ -70,6 +70,7 @@ class CandyLshapg(BaseStreamingANN):
         results = np.array(self.index.searchIndex(queryTensor, k))
         ids = self.my_index[results]
         self.res = ids.reshape(X.shape[0], k)
+        return self.res, None
         
     def set_query_arguments(self, query_args):
         self.ef = query_args.get('ef', 16)

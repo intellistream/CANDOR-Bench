@@ -45,8 +45,6 @@ class FaissIvfpq(BaseStreamingANN):
         self.trained = False
         
     def insert(self, X, ids):
-        X = X.astype(np.float32)
-        
         # 过滤已存在的 ID（避免重复插入）
         mask = self.my_inverse_index[ids] == -1
         new_ids = ids[mask]
@@ -84,19 +82,15 @@ class FaissIvfpq(BaseStreamingANN):
                         self.my_index[internal_id] = -1
         
     def query(self, X, k):
-        X = X.astype(np.float32)
         query_size = X.shape[0]
         
         # 调用 PyCANDYAlgo 的 search 接口
-        # search(nq, queries.flatten(), k, ef) -> 返回 [nq * k] 的 1D 数组
         results = np.array(self.index.search(query_size, X.flatten(), k, self.ef))
         
         # 将 faiss 内部 ID 映射回外部 ID
         ids = self.my_index[results]
-        res = ids.reshape(X.shape[0], k)
-        
-        self.res = res
-        return res, None  # 返回 (ids, distances)，distances 暂时为 None
+        self.res = ids.reshape(X.shape[0], k)
+        return self.res, None  # 返回 (ids, distances)，distances 暂时为 None
         
     def set_query_arguments(self, query_args):
         # IVFPQ 支持 nprobe 参数，但通过 ef 来设置
