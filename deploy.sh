@@ -131,13 +131,13 @@ echo ""
 # ============================================================================
 if [ "$SKIP_SYSTEM_DEPS" = false ]; then
     print_header "步骤 1/8: 安装系统依赖"
-    
+
     if [ -f /etc/os-release ]; then
         . /etc/os-release
         OS=$ID
         print_info "操作系统: $PRETTY_NAME"
     fi
-    
+
     if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]]; then
         print_step "安装构建依赖..."
         sudo apt-get update -qq || true
@@ -148,7 +148,7 @@ if [ "$SKIP_SYSTEM_DEPS" = false ]; then
             libeigen3-dev libspdlog-dev libgoogle-perftools-dev \
             python3.10 python3.10-venv python3.10-dev python3-pip \
             || print_warning "部分包可能未安装"
-        
+
         # 安装 Intel MKL
         print_step "安装 Intel MKL..."
         if [ ! -d "/opt/intel/oneapi/mkl" ]; then
@@ -159,7 +159,7 @@ if [ "$SKIP_SYSTEM_DEPS" = false ]; then
         else
             print_info "Intel MKL 已安装"
         fi
-        
+
         print_success "系统依赖安装完成"
     else
         print_warning "非 Ubuntu/Debian 系统，请手动安装依赖"
@@ -244,9 +244,9 @@ fi
 # ============================================================================
 if [ "$SKIP_BUILD" = false ]; then
     print_header "步骤 5/8: 构建 PyCANDYAlgo"
-    
+
     cd "$SCRIPT_DIR/algorithms_impl"
-    
+
     # 设置 MKL 环境
     if [ -f "/opt/intel/oneapi/setvars.sh" ]; then
         source /opt/intel/oneapi/setvars.sh --force 2>/dev/null || true
@@ -256,7 +256,7 @@ if [ "$SKIP_BUILD" = false ]; then
         export LD_LIBRARY_PATH="$MKLROOT/lib/intel64:$LD_LIBRARY_PATH"
         export CPATH="$MKLROOT/include:$CPATH"
     fi
-    
+
     # 运行构建脚本
     if [ -f "build.sh" ]; then
         print_step "运行 build.sh..."
@@ -270,7 +270,7 @@ if [ "$SKIP_BUILD" = false ]; then
         print_error "build.sh 不存在"
         exit 1
     fi
-    
+
     cd "$SCRIPT_DIR"
 else
     print_header "步骤 5/8: 跳过构建"
@@ -281,7 +281,7 @@ fi
 # ============================================================================
 if [ "$SKIP_BUILD" = false ]; then
     print_header "步骤 6/9: 构建 VSAG (pyvsag)"
-    
+
     # 设置 MKL 环境变量（VSAG 依赖 Intel MKL）
     if [ -f "/opt/intel/oneapi/setvars.sh" ]; then
         print_step "加载 Intel oneAPI 环境..."
@@ -304,15 +304,15 @@ if [ "$SKIP_BUILD" = false ]; then
         print_warning "MKL 未找到 - VSAG 可能无法运行（需要 libmkl_intel_lp64.so.2）"
         print_info "可选方案: 安装 OpenBLAS 替代 MKL"
     fi
-    
+
     VSAG_DIR="$SCRIPT_DIR/algorithms_impl/vsag"
     if [ -d "$VSAG_DIR" ]; then
         cd "$VSAG_DIR"
-        
+
         # 配置 CMake (如果需要)
         if [ ! -f "build-release/CMakeCache.txt" ]; then
             print_step "配置 VSAG CMake..."
-            
+
             # 构建 CMake 参数数组
             CMAKE_ARGS=(
                 -DCMAKE_BUILD_TYPE=Release
@@ -324,7 +324,7 @@ if [ "$SKIP_BUILD" = false ]; then
                 -B build-release
                 -S .
             )
-            
+
             # 如果找到 MKL，添加 MKL 路径
             if [ -n "$MKLROOT" ]; then
                 CMAKE_ARGS+=(
@@ -332,19 +332,19 @@ if [ "$SKIP_BUILD" = false ]; then
                     -DCMAKE_PREFIX_PATH="$MKLROOT"
                 )
             fi
-            
+
             cmake "${CMAKE_ARGS[@]}" 2>&1 | tail -10
         fi
-        
+
         # 增量编译
         print_step "编译 VSAG..."
         cmake --build build-release --parallel $JOBS 2>&1 | tail -10
-        
+
         # 复制 .so 文件
         PYVSAG_SO=$(find build-release -name "_pyvsag*.so" 2>/dev/null | head -n 1)
         if [ -n "$PYVSAG_SO" ]; then
             cp "$PYVSAG_SO" python/pyvsag/
-            
+
             # 创建 _version.py 文件（如果不存在）
             if [ ! -f "python/pyvsag/_version.py" ]; then
                 cat > python/pyvsag/_version.py << 'EOF'
@@ -353,18 +353,18 @@ __version__ = "0.0.1+dev"
 __version_tuple__ = (0, 0, 1, "dev")
 EOF
             fi
-            
+
             # 安装到虚拟环境
             print_step "安装 pyvsag..."
             cd python
             pip install -e . --force-reinstall --no-build-isolation -q
             cd ..
-            
+
             print_success "VSAG (pyvsag) 构建完成"
         else
             print_warning "_pyvsag.so 未找到"
         fi
-        
+
         cd "$SCRIPT_DIR"
     else
         print_warning "VSAG 目录不存在: $VSAG_DIR"
@@ -378,13 +378,13 @@ fi
 # ============================================================================
 if [ "$SKIP_BUILD" = false ]; then
     print_header "步骤 7/9: 构建 GTI、IP-DiskANN、PLSH"
-    
+
     SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])")
-    
+
     # 计算并行编译数
     NPROC=$(nproc 2>/dev/null || echo 4)
     JOBS=$((NPROC > 8 ? 8 : NPROC))
-    
+
     # 获取 pybind11 cmake 路径
     PYBIND11_CMAKE_DIR=$(python3 -c "import pybind11; print(pybind11.get_cmake_dir())" 2>/dev/null || echo "")
     if [ -n "$PYBIND11_CMAKE_DIR" ]; then
@@ -394,40 +394,40 @@ if [ "$SKIP_BUILD" = false ]; then
         print_warning "pybind11 cmake 路径未找到"
         PYBIND11_CMAKE_ARG=""
     fi
-    
+
     # --- 构建 GTI ---
     print_step "构建 GTI (gti_wrapper)..."
     GTI_DIR="$SCRIPT_DIR/algorithms_impl/gti/GTI"
     if [ -d "$GTI_DIR" ]; then
         cd "$GTI_DIR"
-        
+
         # 先构建 n2 库 (使用 Makefile)
         N2_DIR="$GTI_DIR/extern_libraries/n2"
         if [ -d "$N2_DIR" ]; then
             print_info "构建 n2 库..."
             cd "$N2_DIR"
-            
+
             # 修复 spdlog 头文件包含问题（构建时临时修复）
             if ! grep -q "stdout_color_sinks.h" include/n2/hnsw_build.h 2>/dev/null; then
                 print_info "应用 spdlog 兼容性修复..."
                 sed -i '/#include "spdlog\/spdlog.h"/a #include "spdlog/sinks/stdout_color_sinks.h"' include/n2/hnsw_build.h
             fi
-            
+
             # n2 使用 Makefile 而不是 CMake，使用旧 ABI 以匹配 GTI
             make clean 2>/dev/null || true
             CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0" make shared_lib -j${JOBS} 2>&1 | tail -10 || print_warning "n2 编译失败"
         fi
-        
+
         # 构建 GTI（只构建 Python bindings，不构建主可执行文件）
         print_info "构建 GTI 和 Python bindings..."
         cd "$GTI_DIR"
         rm -rf build bin 2>/dev/null || true
         mkdir -p bin build && cd build
         cmake .. -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=$(which python3) $PYBIND11_CMAKE_ARG 2>&1 | tail -5 || print_warning "GTI cmake 失败"
-        
+
         # 只构建 gti_wrapper（Python bindings），不构建主可执行文件（需要 tcmalloc）
         make gti_wrapper -j${JOBS} 2>&1 | tail -10 || print_warning "GTI 编译失败"
-        
+
         # 查找并复制 .so 文件（在 build/bindings 目录）
         SO_FILE=$(find . -name "gti_wrapper*.so" 2>/dev/null | head -1)
         if [ -n "$SO_FILE" ]; then
@@ -439,7 +439,7 @@ if [ "$SKIP_BUILD" = false ]; then
     else
         print_warning "GTI 目录不存在: $GTI_DIR"
     fi
-    
+
     # --- 构建 IP-DiskANN ---
     print_step "构建 IP-DiskANN (ipdiskann)..."
     IPDISKANN_DIR="$SCRIPT_DIR/algorithms_impl/ipdiskann"
@@ -460,7 +460,7 @@ if [ "$SKIP_BUILD" = false ]; then
     else
         print_warning "IP-DiskANN 目录不存在: $IPDISKANN_DIR"
     fi
-    
+
     # --- 构建 PLSH ---
     print_step "构建 PLSH (plsh_python)..."
     PLSH_DIR="$SCRIPT_DIR/algorithms_impl/plsh"
@@ -481,7 +481,7 @@ if [ "$SKIP_BUILD" = false ]; then
     else
         print_warning "PLSH 目录不存在: $PLSH_DIR"
     fi
-    
+
     cd "$SCRIPT_DIR"
 else
     print_header "步骤 7/9: 跳过构建"
@@ -542,7 +542,7 @@ fi
 SO_FILE=$(ls PyCANDYAlgo*.so 2>/dev/null | head -1)
 if [ -n "$SO_FILE" ]; then
     print_info "找到: $SO_FILE"
-    
+
     # 直接复制 .so 文件到 site-packages，不使用 pip install
     SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])")
     print_step "复制到 $SITE_PACKAGES..."
