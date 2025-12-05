@@ -24,9 +24,9 @@ sift:
         # - auto: 使用ELP优化器自动调优预取参数（类似HGraph）
         args: |
           [
-            {"index_name": "hnsw", "index_config": {"dtype": "float32", "hnsw": {"max_degree": 32, "ef_construction": 200, "prefetch_mode": "disabled"}}},
-            {"index_name": "hnsw", "index_config": {"dtype": "float32", "hnsw": {"max_degree": 32, "ef_construction": 200, "prefetch_mode": "hardcoded"}}},
-            {"index_name": "hnsw", "index_config": {"dtype": "float32", "hnsw": {"max_degree": 32, "ef_construction": 200, "prefetch_mode": "custom", "prefetch_stride_codes": 3, "prefetch_depth_codes": 2}}},
+            # {"index_name": "hnsw", "index_config": {"dtype": "float32", "hnsw": {"max_degree": 32, "ef_construction": 200, "prefetch_mode": "disabled"}}},
+            # {"index_name": "hnsw", "index_config": {"dtype": "float32", "hnsw": {"max_degree": 32, "ef_construction": 200, "prefetch_mode": "hardcoded"}}},
+            # {"index_name": "hnsw", "index_config": {"dtype": "float32", "hnsw": {"max_degree": 32, "ef_construction": 200, "prefetch_mode": "custom", "prefetch_stride_codes": 3, "prefetch_depth_codes": 2}}},
             {"index_name": "hnsw", "index_config": {"dtype": "float32", "hnsw": {"max_degree": 32, "ef_construction": 200, "prefetch_mode": "auto", "use_elp_optimizer": true}}}
           ]
         # 查询参数

@@ -1,0 +1,51 @@
+# 简单测试 Runbook（无连续查询）
+# 用于对比测试，验证连续查询对 cache 的影响
+
+sift:
+  max_pts: 1000000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 50000
+  3:
+    operation: "enableScenario"
+    useBackpressureLogic: true  # 使用背压逻辑，避免过度丢弃
+  4:
+    operation: "batch_insert"
+    start: 50000
+    end: 100000
+    batchSize: 2500
+    eventRate: 0  # 不限速，尽快插入
+    continuousQuery: false  # 禁用连续查询
+  5:
+    operation: "waitPending"
+  6:
+    operation: "search"
+  7:
+    operation: "endHPC"
+  gt_url: "none"
+
+random-xs:
+  max_pts: 10000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 5000
+  3:
+    operation: "batch_insert"
+    start: 5000
+    end: 10000
+    batchSize: 1000
+    eventRate: 5000
+    continuousQuery: false  # 禁用连续查询
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"

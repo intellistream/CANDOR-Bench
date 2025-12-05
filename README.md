@@ -157,7 +157,7 @@ __all__ = ['MyAlgorithm']
 ### 4.1 计算 Ground Truth
 
 ```bash
-python compute_gt.py \
+python3 compute_gt.py \
     --dataset sift \
     --runbook_file runbooks/simple.yaml \
     --gt_cmdline_tool ./DiskANN/build/apps/utils/compute_groundtruth
@@ -169,13 +169,13 @@ python compute_gt.py \
 
 ```bash
 # 基本用法
-python run_benchmark.py \
+python3 run_benchmark.py \
     --algorithm faiss_HNSW_Optimized \
     --dataset sift \
     --runbook runbooks/simple.yaml
 
 # 启用 Cache Miss 测量
-python run_benchmark.py \
+python3 run_benchmark.py \
     --algorithm faiss_HNSW_Optimized \
     --dataset sift \
     --runbook runbooks/simple.yaml \
@@ -185,7 +185,7 @@ python run_benchmark.py \
 ### 4.3 导出结果
 
 ```bash
-python export_results.py \
+python3 export_results.py \
     --dataset sift \
     --algorithm faiss_HNSW_Optimized \
     --runbook simple

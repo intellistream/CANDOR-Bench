@@ -334,7 +334,14 @@ def export_results(dataset_name: str, algorithm: str, runbook_name: str,
         if len(insert_qps_df) == len(mean_recalls):
             data['insert_qps'] = insert_qps_df['insert_qps'].values
         else:
-            print(f"  ⚠️  插入QPS数量不匹配: {len(insert_qps_df)} vs {len(mean_recalls)}")
+            # 插入QPS数量可能少于查询次数（正常现象）：
+            # - 随机丢弃：某些批次被 random_drop 丢弃
+            # - 拥塞丢弃：队列满时批次被丢弃
+            # - 未处理完：某些批次还在队列中
+            print(f"  ℹ️  插入QPS记录({len(insert_qps_df)}) ≠ 查询批次({len(mean_recalls)}) - 可能有批次被丢弃或未处理完")
+            # 用已有数据填充，不足的用 NaN
+            insert_qps_values = list(insert_qps_df['insert_qps'].values)
+            data['insert_qps'] = insert_qps_values + [np.nan] * (len(mean_recalls) - len(insert_qps_values))
     
     # 5.3 查询QPS和延迟
     if batch_query_qps_file.exists():
@@ -487,7 +494,18 @@ def main():
             param_dirs_to_process = [args.params]
         else:
             # 尝试自动检测
-            param_dirs_to_process = [None]  # 先尝试根目录（旧格式）
+            # 首先检查根目录（旧格式）
+            if result_dir.exists() and list(result_dir.glob("*.hdf5")):
+                param_dirs_to_process = [None]
+            else:
+                # 如果根目录没有，查找参数文件夹
+                if result_dir.exists():
+                    for item in result_dir.iterdir():
+                        if item.is_dir() and list(item.glob("*.hdf5")):
+                            param_dirs_to_process.append(item.name)
+                # 如果没有找到任何结果，尝试根目录（将触发错误提示）
+                if not param_dirs_to_process:
+                    param_dirs_to_process = [None]
         
         if not param_dirs_to_process:
             print(f"✗ 没有找到结果文件，请使用 --list-params 查看可用的参数组合")

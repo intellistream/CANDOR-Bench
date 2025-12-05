@@ -7,9 +7,33 @@ Algorithm Registry
 import os
 import importlib
 import yaml
+import re
 from pathlib import Path
 from typing import Dict, Callable, Any, List
 from .base import BaseANN, BaseStreamingANN, DummyStreamingANN
+
+
+def _strip_json_comments(json_str: str) -> str:
+    """
+    移除 JSON 字符串中的注释行（以 # 开头的行）
+    
+    Args:
+        json_str: 可能包含注释的 JSON 字符串
+        
+    Returns:
+        移除注释后的 JSON 字符串
+    """
+    lines = json_str.split('\n')
+    cleaned_lines = []
+    for line in lines:
+        stripped = line.strip()
+        # 跳过以 # 开头的注释行
+        if stripped.startswith('#'):
+            continue
+        # 移除行尾注释（但要注意不要误删字符串中的 #）
+        # 简单处理：只处理行首注释，保留其他
+        cleaned_lines.append(line)
+    return '\n'.join(cleaned_lines)
 
 
 # 算法注册表
@@ -78,27 +102,44 @@ def get_algorithm_params_from_config(algo_name: str, dataset: str = 'random-xs')
                 if 'args' in base_group:
                     args_str = base_group['args']
                     if isinstance(args_str, str):
-                        args_str = args_str.strip()
-                        import ast
+                        args_str = _strip_json_comments(args_str.strip())
+                        # 优先使用 json.loads（支持 true/false）
+                        import json
                         try:
-                            args_list = ast.literal_eval(args_str)
+                            args_list = json.loads(args_str)
                             if args_list and isinstance(args_list, list):
                                 result['build_params'] = args_list[0]
-                        except:
-                            pass
+                        except json.JSONDecodeError:
+                            # 回退到 ast.literal_eval（支持 Python 语法）
+                            import ast
+                            try:
+                                args_list = ast.literal_eval(args_str)
+                                if args_list and isinstance(args_list, list):
+                                    result['build_params'] = args_list[0]
+                            except:
+                                pass
                 
                 # 解析 query-args（查询参数）
                 if 'query-args' in base_group:
                     query_args_str = base_group['query-args']
                     if isinstance(query_args_str, str):
-                        query_args_str = query_args_str.strip()
-                        import ast
+                        query_args_str = _strip_json_comments(query_args_str.strip())
+                        # 优先使用 json.loads（支持 true/false）
+                        import json
                         try:
-                            query_args_list = ast.literal_eval(query_args_str)
+                            query_args_list = json.loads(query_args_str)
                             if query_args_list and isinstance(query_args_list, list):
                                 result['query_params'] = query_args_list[0]
-                        except:
-                            pass
+                        except json.JSONDecodeError:
+                            # 回退到 ast.literal_eval（支持 Python 语法）
+                            import ast
+                            try:
+                                query_args_list = ast.literal_eval(query_args_str)
+                                if query_args_list and isinstance(query_args_list, list):
+                                    result['query_params'] = query_args_list[0]
+                            except:
+                                pass
+                                pass
         
         return result
     except Exception as e:
@@ -166,7 +207,7 @@ def get_all_algorithm_param_combinations(algo_name: str, dataset: str = 'random-
                 if 'args' in base_group:
                     args_str = base_group['args']
                     if isinstance(args_str, str):
-                        args_str = args_str.strip()
+                        args_str = _strip_json_comments(args_str.strip())
                         try:
                             # 优先使用 json.loads（支持 true/false）
                             import json
@@ -186,7 +227,7 @@ def get_all_algorithm_param_combinations(algo_name: str, dataset: str = 'random-
                 if 'query-args' in base_group:
                     query_args_str = base_group['query-args']
                     if isinstance(query_args_str, str):
-                        query_args_str = query_args_str.strip()
+                        query_args_str = _strip_json_comments(query_args_str.strip())
                         try:
                             # 优先使用 json.loads（支持 true/false）
                             import json
@@ -319,33 +360,52 @@ def _load_algorithm_config(algo_name: str, dataset: str = 'random-xs') -> Dict[s
                     if 'args' in base_group:
                         args_str = base_group['args']
                         if isinstance(args_str, str):
-                            # 去除 YAML 中的多行字符串标记
-                            args_str = args_str.strip()
-                            # 解析为 Python 字面量
-                            import ast
+                            # 去除 YAML 中的多行字符串标记和注释
+                            args_str = _strip_json_comments(args_str.strip())
+                            # 优先使用 json.loads（支持 true/false）
+                            import json
                             try:
-                                args_list = ast.literal_eval(args_str)
+                                args_list = json.loads(args_str)
                                 if args_list and isinstance(args_list, list):
                                     params['index_params'] = args_list[0]
-                            except:
-                                pass
+                            except json.JSONDecodeError:
+                                # 回退到 ast.literal_eval（支持 Python 语法）
+                                import ast
+                                try:
+                                    args_list = ast.literal_eval(args_str)
+                                    if args_list and isinstance(args_list, list):
+                                        params['index_params'] = args_list[0]
+                                except:
+                                    pass
                     
                     # 解析 query-args（查询参数）
                     if 'query-args' in base_group:
                         query_args_str = base_group['query-args']
                         if isinstance(query_args_str, str):
-                            query_args_str = query_args_str.strip()
-                            import ast
+                            query_args_str = _strip_json_comments(query_args_str.strip())
+                            # 优先使用 json.loads（支持 true/false）
+                            import json
                             try:
-                                query_args_list = ast.literal_eval(query_args_str)
+                                query_args_list = json.loads(query_args_str)
                                 if query_args_list and isinstance(query_args_list, list):
                                     # 使用第一个查询参数作为默认值
                                     if params.get('index_params'):
                                         params['index_params'].update(query_args_list[0])
                                     else:
                                         params['index_params'] = query_args_list[0]
-                            except:
-                                pass
+                            except json.JSONDecodeError:
+                                # 回退到 ast.literal_eval（支持 Python 语法）
+                                import ast
+                                try:
+                                    query_args_list = ast.literal_eval(query_args_str)
+                                    if query_args_list and isinstance(query_args_list, list):
+                                        # 使用第一个查询参数作为默认值
+                                        if params.get('index_params'):
+                                            params['index_params'].update(query_args_list[0])
+                                        else:
+                                            params['index_params'] = query_args_list[0]
+                                except:
+                                    pass
             
             return params
     except Exception as e:
@@ -421,7 +481,7 @@ def auto_register_algorithms():
                 def make_factory(cls):
                     return lambda **kwargs: cls(**kwargs)
                 ALGORITHMS[algo_name] = make_factory(algo_class)
-                print(f"✓ Registered algorithm: {algo_name}")
+                # print(f"✓ Registered algorithm: {algo_name}")  # 调试信息已禁用
             else:
                 print(f"⚠ Algorithm class not found in {module_path}")
         except Exception as e:

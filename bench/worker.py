@@ -151,12 +151,13 @@ class CongestionDropWorker(AbstractThread):
         self.drop_count_total = 0
         
         # 时间戳追踪（用于计算真实处理延迟）
-        self.batch_timestamps = []  # 存储 (batch_id, arrival_time, processed_time)
+        self.batch_timestamps = []  # 存储插入时间：[{batch_id, arrival_time, insert_latency, ...}, ...]
         self.query_timestamps = []  # 存储查询时间：[{total_time, lock_wait_time, query_time}, ...]
+        self.delete_timestamps = []  # 存储删除时间：[{delete_latency}, ...]
         self.benchmark_start_time = None  # 基准开始时间
-        self.pair_timestamps = {}  # 字典：pair 内存地址 -> (arrival_time, batch_id)
-        
-        # 队列容量
+        # 使用 FIFO 队列顺序：按插入队列的顺序存储时间戳
+        self.pending_pair_timestamps = []  # 队列：[(arrival_time, batch_id), ...]，按入队顺序
+        self.pending_delete_timestamps = []  # 队列：[arrival_time, ...]，按入队顺序        # 队列容量
         self.insert_queue_capacity = self.insert_queue.capacity()
         self.initial_load_queue_capacity = self.initial_load_queue.capacity()
         self.delete_queue_capacity = self.delete_queue.capacity()
@@ -210,6 +211,7 @@ class CongestionDropWorker(AbstractThread):
             if len(initial_vectors) > 0:
                 initial_vectors = np.vstack(initial_vectors)
                 initial_ids = np.vstack(initial_ids)
+                print(f"[DEBUG] inline_main initial_load_queue: 插入 {initial_vectors.shape[0]} 条")
                 self.my_index_algo.insert(initial_vectors, initial_ids)
             
             # 初始化完成后释放锁
@@ -223,31 +225,30 @@ class CongestionDropWorker(AbstractThread):
                 pair = self.insert_queue.front()
                 self.insert_queue.pop()
                 
-                # 使用字典查找时间戳信息
-                pair_id = id(pair)
-                timestamp_info = self.pair_timestamps.pop(pair_id, None)
-                
-                if timestamp_info:
-                    arrival_time, batch_id = timestamp_info
+                # 从 FIFO 队列按顺序获取时间戳信息（队列保证顺序一致）
+                if self.pending_pair_timestamps:
+                    arrival_time, batch_id = self.pending_pair_timestamps.pop(0)
                 else:
                     arrival_time = None
                     batch_id = None
                 
-                # 记录索引插入开始时间（用于测量纯索引操作时间）
-                insert_start_time = None
-                if arrival_time is not None and self.benchmark_start_time is not None:
-                    insert_start_time = time.time()
-                
-                # 启动 cache profiling（如果启用）
+                # 启动 cache profiling（如果启用且有时间戳追踪）
+                # 注意：只有在有 arrival_time 时才记录 cache stats，保持与 batch_timestamps 一致
                 cache_profiler_started = False
-                if self.cache_profiler:
+                if self.cache_profiler and arrival_time is not None:
                     cache_profiler_started = self.cache_profiler.start()
                 
-                # 执行真正的索引插入
-                self.my_index_algo.insert(pair.vectors, np.array(pair.idx))
-                self.ingested_vectors += pair.vectors.shape[0]
+                # 记录索引插入开始时间（用于测量纯索引操作时间）
+                insert_start_time = time.time()
                 
-                # 停止 cache profiling 并记录统计数据
+                # 执行真正的索引插入
+                # print(f"[DEBUG] inline_main insert_queue: 插入 {pair.vectors.shape[0]} 条")  # 调试信息已禁用
+                self.my_index_algo.insert(pair.vectors, np.array(pair.idx))
+                
+                # 记录插入结束时间（只调用一次 time.time()）
+                insert_end_time = time.time()
+                
+                # 停止 cache profiling - 在时间测量之后
                 if cache_profiler_started:
                     cache_stats = self.cache_profiler.stop()
                     if cache_stats:
@@ -257,25 +258,49 @@ class CongestionDropWorker(AbstractThread):
                         from .cache_profiler import CacheMissStats
                         self.cache_stats_list.append(CacheMissStats())
                 
+                # 更新累计插入数量（在 profiling 之外）
+                self.ingested_vectors += pair.vectors.shape[0]
+                
                 # 记录处理完成时间（如果有到达时间戳）
                 if arrival_time is not None and self.benchmark_start_time is not None:
-                    processed_time = (time.time() - self.benchmark_start_time) * 1e6  # 微秒
-                    insert_duration = (time.time() - insert_start_time) * 1e6  # 纯索引插入时间（微秒）
+                    insert_duration = (insert_end_time - insert_start_time) * 1e6  # 纯索引插入时间（微秒）
+                    processed_time = (insert_end_time - self.benchmark_start_time) * 1e6  # 微秒
                     
                     self.batch_timestamps.append({
                         'batch_id': batch_id,
-                        'arrival_time': arrival_time,
-                        'processed_time': processed_time,
-                        'end_to_end_latency': processed_time - arrival_time,  # 端到端延迟（含队列等待）
-                        'insert_latency': insert_duration,  # 纯索引操作延迟
-                        'queue_wait_time': (processed_time - arrival_time) - insert_duration  # 队列等待时间
+                        'arrival_time': arrival_time,  # 微秒
+                        'processed_time': processed_time,  # 微秒
+                        'end_to_end_latency': processed_time - arrival_time,  # 端到端延迟（含队列等待，微秒）
+                        'insert_latency': insert_duration,  # 纯索引操作延迟（微秒）
+                        'queue_wait_time': (processed_time - arrival_time) - insert_duration  # 队列等待时间（微秒）
                     })
             
             # 3. 删除阶段（继续持有锁）
             while not self.delete_queue.empty():
                 pair = self.delete_queue.front()
                 self.delete_queue.pop()
+                
+                # 从 FIFO 队列按顺序获取到达时间戳
+                if self.pending_delete_timestamps:
+                    arrival_time = self.pending_delete_timestamps.pop(0)
+                else:
+                    arrival_time = None
+                
+                # 记录删除开始时间
+                delete_start_time = time.time()
+                
+                # 执行真正的索引删除
                 self.my_index_algo.delete(np.array(pair.idx))
+                
+                # 记录删除结束时间
+                delete_end_time = time.time()
+                delete_duration = (delete_end_time - delete_start_time) * 1e6  # 微秒
+                
+                # 记录删除时间统计
+                self.delete_timestamps.append({
+                    'delete_latency': delete_duration,  # 纯索引删除时间（微秒）
+                    'ids_count': len(pair.idx) if hasattr(pair.idx, '__len__') else 1
+                })
             
             # 删除完成后释放锁
             self.m_mut.release()
@@ -341,6 +366,7 @@ class CongestionDropWorker(AbstractThread):
             # 单 worker 优化：直接加载
             while not self.m_mut.acquire(blocking=False):
                 pass
+            print(f"[DEBUG] initial_load 直接调用: 插入 {X.shape[0]} 条")
             self.my_index_algo.insert(X, ids)
             self.m_mut.release()
     
@@ -352,7 +378,7 @@ class CongestionDropWorker(AbstractThread):
         Args:
             X: 向量数据
             ids: 向量 ID
-            arrival_time: 到达时间（微秒），用于时间戳追踪
+            arrival_time: 到达时间（毫秒），用于时间戳追踪
         
         注意：arrival_time 会被存储到 pair 中，在 worker 线程处理时记录 processed_time
         """
@@ -396,32 +422,39 @@ class CongestionDropWorker(AbstractThread):
             X = X[order]
             ids = ids[order]
         
-        # 5. 创建 pair 并插入队列，使用字典存储时间戳信息
+        # 5. 创建 pair 并插入队列，将时间戳信息按 FIFO 顺序存储到列表
         pair = NumpyIdxPair(X, ids)
         if arrival_time is not None:
             batch_id = f"{ids[0]}-{ids[-1]}"
-            # 使用 pair 的内存地址作为键存储时间戳
-            self.pair_timestamps[id(pair)] = (arrival_time, batch_id)
+            # 按入队顺序存储时间戳（出队时也是相同顺序，FIFO 保证对应）
+            self.pending_pair_timestamps.append((arrival_time, batch_id))
         self.insert_queue.push(pair)
     
-    def delete(self, ids: np.ndarray):
+    def delete(self, ids: np.ndarray, arrival_time: Optional[float] = None):
         """
         删除数据
         
         Args:
             ids: 要删除的向量 ID
+            arrival_time: 到达时间（毫秒），用于时间戳追踪
         """
+        pair = NumpyIdxPair(np.array([0.0]), ids)
+        
+        # 将到达时间戳按 FIFO 顺序存储到列表
+        if arrival_time is not None:
+            self.pending_delete_timestamps.append(arrival_time)
+        
         if self.use_backpressure_logic:
             queue_full = self.delete_queue.size() >= self.delete_queue_capacity
             if self.congestion_drop and queue_full:
                 print("Failed to process deletion! (queue full)")
                 return
-            self.delete_queue.push(NumpyIdxPair(np.array([0.0]), ids))
+            self.delete_queue.push(pair)
             return
         
         else:
             if self.delete_queue.empty() or (not self.congestion_drop):
-                self.delete_queue.push(NumpyIdxPair(np.array([0.0]), ids))
+                self.delete_queue.push(pair)
             else:
                 print("Failed to process deletion!")
             return
@@ -470,12 +503,12 @@ class CongestionDropWorker(AbstractThread):
             
             self.res = self.my_index_algo.res
             
-            # 记录查询时间统计
+            # 记录查询时间统计（所有时间单位为微秒）
             total_time = (time.time() - query_start) * 1e6  # 微秒
             self.query_timestamps.append({
-                'total_time': total_time,           # 总时间（包括锁等待）
-                'lock_wait_time': lock_wait_time,   # 锁等待时间
-                'query_time': query_exec_time       # 纯查询时间
+                'total_time': total_time,           # 总时间（包括锁等待，微秒）
+                'lock_wait_time': lock_wait_time,   # 锁等待时间（微秒）
+                'query_time': query_exec_time       # 纯查询时间（微秒）
             })
             
             return result  # 返回查询结果

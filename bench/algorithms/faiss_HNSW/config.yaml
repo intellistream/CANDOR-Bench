@@ -18,6 +18,6 @@ sift:
     run-groups:
       base:
         args: |
-          [{"efConstruction": 40, "indexkey": "HNSW32"}]
+          [{"efConstruction": 120, "indexkey": "HNSW16"}]
         query-args: |
           [{"ef": 40}]
