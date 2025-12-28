@@ -5,18 +5,22 @@
 ```
 benchmark_db/
 ├── algorithms_impl/           # 第三方算法实现（作为依赖）
-│   ├── diskann-ms/           # Microsoft DiskANN 改版
-│   ├── ipdiskann/            # IntelliStream IP-DiskANN (submodule)
-│   ├── faiss/                # Facebook FAISS
-│   ├── vsag/                 # Vector Search Algorithm Gateway (submodule)
-│   ├── gti/                  # Graph-based Tree Index (submodule)
-│   ├── plsh/                 # PLSH (submodule)
+│   ├── diskann-ms/            # Microsoft DiskANN 改版
+│   ├── ipdiskann/             # IntelliStream IP-DiskANN (submodule)
+│   ├── faiss/                 # Facebook FAISS
+│   ├── vsag/                  # Vector Search Algorithm Gateway (submodule)
+│   ├── gti/                   # Graph-based Tree Index (submodule)
+│   ├── plsh/                  # PLSH (submodule)
 │   └── ...
-├── bench/                    # SAGE 的 benchmark 代码
-├── datasets/                 # 数据集管理
-├── tests/                    # SAGE-DB-Bench 自己的测试
-├── conftest.py               # pytest 配置（自动跳过第三方测试）
-└── pytest.ini                # pytest 配置文件
+├── bench/                     # SAGE 的 benchmark 代码
+├── datasets/                  # 数据集管理
+├── runbooks/                  # 实验配置
+├── tests/                     # SAGE-DB-Bench 自己的测试
+├── docs/                      # 文档（README、INSTALL、STRUCTURE 等）
+├── scripts/                   # 部署/安装/激活/本地测试脚本
+├── docker/                    # Dockerfile 与 docker-compose
+├── config/                    # pytest.ini、pre-commit、setup.cfg
+└── pyproject.toml / requirements.txt
 ```
 
 ## ⚠️ 重要说明
@@ -68,7 +72,7 @@ benchmark_db/
 
 - **默认行为**: `pytest` 只运行 `tests/` 目录下的测试
 - **自动跳过**: `algorithms_impl/` 下的所有测试会被自动标记为 `skip`
-- **配置文件**: `conftest.py` 和 `pytest.ini` 负责此行为
+- **配置文件位置**: pytest 配置位于 [config/pytest.ini](../config/pytest.ini)，`conftest.py` 位于 tests/ 自动发现；推荐命令：`pytest -c config/pytest.ini`
 
 ## 开发建议
 
