@@ -21,10 +21,13 @@ def pytest_ignore_collect(collection_path, path, config):
     
     This runs before pytest tries to import the test files, preventing
     ImportError from missing dependencies like diskannpy, faiss.contrib, etc.
+    
+    Note: algorithms_impl/ has been moved to sage-libs/anns/implementations/
     """
     path_str = str(collection_path)
     
-    # Ignore all test files under algorithms_impl/
+    # Note: algorithms_impl/ no longer exists in benchmark_db (moved to sage-libs/anns/implementations/)
+    # Keeping this check for backwards compatibility
     if "algorithms_impl" in path_str and collection_path.name.startswith("test_"):
         return True
     
