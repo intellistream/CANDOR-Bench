@@ -1,7 +1,3 @@
-[submodule "DiskANN"]
-	path = DiskANN
-	url = https://github.com/microsoft/DiskANN.git
-	branch = main
 [submodule "algorithms_impl/gti"]
 	path = algorithms_impl/gti
 	url = https://github.com/MingqiWang-coder/GTI-Graph-based-Tree-Index.git
