@@ -14,8 +14,11 @@
 
 - 基准框架与算法接口：bench/
 - 数据集管理：datasets/
-- 第三方/子模块算法实现：algorithms_impl/
+- ANNS 算法实现：已迁移至 `sage-libs/src/sage/libs/anns/implementations/`
 - 实验配置：runbooks/
 - 结果导出与工具：compute_gt.py、run_benchmark.py、export_results.py
 
+**注意**: 所有 ANNS 算法的具体实现（包括 DiskANN, FAISS, VSAG, GTI, IP-DiskANN, PLSH 等）已迁移到 SAGE 主仓库的 `sage-libs` 包中。本仓库仅包含基准测试框架和算法接口。
+
 运行 pytest 或 pre-commit 请参考 docs/STRUCTURE.md 中的最新路径与命令。
+

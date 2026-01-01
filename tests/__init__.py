@@ -1,7 +1,10 @@
 """
-benchmark_anns 测试套件
+SAGE-DB-Bench 测试套件
 
-本目录包含 benchmark_anns 项目的所有测试文件。
+本目录包含 SAGE-DB-Bench 项目的所有测试文件。
+
+注意：所有 ANNS 算法的具体实现已迁移到 sage-libs/src/sage/libs/anns/implementations/
+     本测试套件仅测试基准测试框架和算法接口。
 
 测试文件列表：
 - test_streaming.py: 流式基准测试功能测试
@@ -13,30 +16,28 @@ benchmark_anns 测试套件
 - test_runner_integration.py: BenchmarkRunner 集成测试
 - test_verify_project.sh: 项目结构验证脚本
 - test_compute_gt.sh: 真值计算测试脚本
-- test_faiss_sift.sh: FAISS HNSW 算法测试脚本
 
 运行测试的方式：
 
 方式 1 (推荐): 从项目根目录运行
-    cd benchmark_anns
+    cd benchmark_db
     python tests/test_streaming.py
     python tests/test_datasets.py
     python tests/test_congestion.py
     python tests/test_algorithm_structure.py
 
 方式 2: 运行 Shell 脚本
-    cd benchmark_anns
+    cd benchmark_db
     bash tests/test_verify_project.sh
     bash tests/test_compute_gt.sh
-    bash tests/test_faiss_sift.sh
 
 方式 3: 使用 pytest (如果安装)
-    cd benchmark_anns
+    cd benchmark_db
     pytest tests/
 
 注意：
 - 所有测试文件都使用相对路径，不依赖外部目录
-- benchmark_anns 是一个独立项目，所有导入都是相对于项目根目录的
+- benchmark_db 是一个独立项目，所有导入都是相对于项目根目录的
 """
 
 __all__ = [

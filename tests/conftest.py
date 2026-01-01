@@ -19,18 +19,18 @@ def pytest_ignore_collect(collection_path, path, config):
     """Ignore third-party algorithm test files during collection.
     
     This runs before pytest tries to import the test files, preventing
-    ImportError from missing dependencies like diskannpy, faiss.contrib, etc.
+    ImportError from missing dependencies.
     
-    Note: algorithms_impl/ has been moved to sage-libs/anns/implementations/
+    Note: All ANNS algorithm implementations have been moved to sage-libs/src/sage/libs/anns/implementations/
+          This function is kept for backward compatibility.
     """
     path_str = str(collection_path)
     
-    # Note: algorithms_impl/ no longer exists in benchmark_db (moved to sage-libs/anns/implementations/)
-    # Keeping this check for backwards compatibility
+    # Legacy check (algorithms_impl/ no longer exists in benchmark_db)
     if "algorithms_impl" in path_str and collection_path.name.startswith("test_"):
         return True
     
-    # Ignore specific algorithm directories
+    # Ignore specific algorithm directories (legacy, these no longer exist here)
     ignore_patterns = [
         "/diskann-ms/",
         "/DiskANN/",
@@ -47,14 +47,15 @@ def pytest_ignore_collect(collection_path, path, config):
     for pattern in ignore_patterns:
         if pattern in path_str and collection_path.suffix == ".py":
             return True
-    
-    return False
 
 
 def pytest_collection_modifyitems(config, items):
     """Mark any remaining third-party tests that slipped through.
     
     This is a backup in case pytest_ignore_collect doesn't catch everything.
+    
+    Note: All ANNS algorithm implementations have been moved to sage-libs.
+          This function is kept for backward compatibility.
     """
     skip_third_party = pytest.mark.skip(
         reason="Third-party algorithm test - requires external dependencies"
@@ -63,12 +64,12 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         item_path = str(item.fspath)
         
-        # Skip all tests under algorithms_impl/
+        # Legacy: Skip all tests under algorithms_impl/ (no longer exists)
         if "algorithms_impl" in item_path:
             item.add_marker(skip_third_party)
             continue
         
-        # Also skip if path contains specific algorithm names
+        # Also skip if path contains specific algorithm names (legacy)
         third_party_patterns = [
             "/DiskANN/",
             "/diskann-ms/",

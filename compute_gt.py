@@ -12,12 +12,16 @@ compute_groundtruth tool. It supports:
 - Multiple search checkpoints
 - Replace operations
 
+Note: DiskANN implementation has been moved to sage-libs/src/sage/libs/anns/implementations/diskann-ms/
+      This script still uses DiskANN's compute_groundtruth utility which should be built separately.
+
 Usage:
     python compute_gt.py --dataset sift --runbook_file runbooks/general_experiment.yaml \\
-        --gt_cmdline_tool /path/to/DiskANN/build/apps/utils/compute_groundtruth
+        --gt_cmdline_tool /path/to/compute_groundtruth
 
-    Or let it auto-detect the tool:
-    python compute_gt.py --dataset sift --runbook_file runbooks/general_experiment.yaml
+    Or specify path to DiskANN installation:
+    python compute_gt.py --dataset sift --runbook_file runbooks/general_experiment.yaml \\
+        --gt_cmdline_tool /path/to/diskann-ms/build/apps/utils/compute_groundtruth
 """
 
 import argparse
@@ -59,16 +63,19 @@ def find_compute_groundtruth_tool():
     """
     Automatically find the compute_groundtruth binary.
     
-    Searches in the following locations (relative to benchmark_anns):
-    - ./DiskANN/build/apps/utils/compute_groundtruth
-    - ../DiskANN/build/apps/utils/compute_groundtruth
+    Note: DiskANN implementation has been moved to sage-libs. This function is kept
+    for backward compatibility but may not find the tool automatically.
+    
+    Users should specify --gt_cmdline_tool explicitly pointing to:
+    - A standalone DiskANN installation
+    - The sage-libs diskann-ms build directory
     
     Returns:
         Path to compute_groundtruth binary, or None if not found
     """
     script_dir = Path(__file__).parent.resolve()
     
-    # Possible relative paths to search
+    # Legacy search paths (kept for backward compatibility)
     search_paths = [
         script_dir / 'DiskANN' / 'build' / 'apps' / 'utils' / 'compute_groundtruth',
         script_dir.parent / 'DiskANN' / 'build' / 'apps' / 'utils' / 'compute_groundtruth',
@@ -370,7 +377,7 @@ def main():
     parser.add_argument(
         '--gt_cmdline_tool',
         required=True,
-        help='Path to DiskANN compute_groundtruth binary'
+        help='Path to compute_groundtruth binary (from DiskANN or sage-libs diskann-ms)'
     )
     parser.add_argument(
         '--download',
