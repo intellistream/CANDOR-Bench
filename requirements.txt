@@ -11,6 +11,9 @@ matplotlib>=3.4.0
 pyyaml>=5.4.0
 scipy>=1.7.0
 
+# ANNS 算法实现（从 SAGE 项目安装）
+isage-libs>=0.2.0
+
 # 数据处理与存储
 h5py>=3.0.0
 

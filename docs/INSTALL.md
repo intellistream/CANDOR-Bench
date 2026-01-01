@@ -18,7 +18,59 @@
 
 ---
 
-## 🚀 快速开始（仅Python算法）
+## 🚀 快速开始（PyPI 安装，推荐）
+
+从 SAGE 0.2.0 开始，所有 ANNS 算法实现已迁移到 `isage-libs` PyPI 包中。推荐使用以下方式安装：
+
+```bash
+# 1. 克隆仓库
+git clone https://github.com/intellistream/SAGE-DB-Bench.git
+cd SAGE-DB-Bench
+
+# 2. 安装Python依赖（包含 isage-libs>=0.2.0）
+pip install -r requirements.txt
+
+# 3. 运行测试
+python -m pytest tests/ -v
+```
+
+**优点**: 
+- ✅ 快速安装，无需编译 C++ 代码
+- ✅ 自动获取最新的 ANNS 算法实现（从 SAGE 项目）
+- ✅ 适合开发和快速测试
+
+**说明**: `isage-libs` 包含以下 ANNS 算法实现：
+- faiss_HNSW, vsag_hnsw, diskann
+- candy_* 系列算法
+- cufe, gti, puck 等
+
+---
+
+## 🔧 本地开发（从 SAGE 源码）
+
+如果需要同时开发 benchmark_anns 和 ANNS 算法：
+
+```bash
+# 1. 克隆 SAGE 主仓库
+git clone https://github.com/intellistream/SAGE.git
+cd SAGE
+
+# 2. 安装开发环境
+./quickstart.sh --dev --yes
+
+# 3. benchmark_anns 会作为子模块自动可用
+cd packages/sage-benchmark/src/sage/benchmark/benchmark_anns
+python -m pytest tests/ -v
+```
+
+**优点**: 可以同时修改算法和 benchmark 框架  
+**缺点**: 需要完整的 SAGE 开发环境
+
+---
+
+## 🏗️ 完整安装（旧方式，已弃用）
+
+**⚠️ 注意**: 以下方式已被 PyPI 安装取代，仅用于参考。
 
 如果只需要运行Python实现的算法或测试框架本身：
 

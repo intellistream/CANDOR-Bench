@@ -77,6 +77,7 @@ dependencies = [
     "pyyaml>=5.4.0",
     "scipy>=1.7.0",
     "h5py>=3.0.0",
+    "isage-libs>=0.2.0",  # ANNS 算法实现
 ]
 
 [project.optional-dependencies]
