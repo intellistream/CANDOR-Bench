@@ -1,21 +1,13 @@
-# SAGE-DB-Bench 目录结构说明
+# SAGE-ANNS-Bench 目录结构说明
 
 ## 目录结构
 
 ```
-benchmark_db/
-├── algorithms_impl/           # 第三方算法实现（作为依赖）
-│   ├── diskann-ms/            # Microsoft DiskANN 改版
-│   ├── ipdiskann/             # IntelliStream IP-DiskANN (submodule)
-│   ├── faiss/                 # Facebook FAISS
-│   ├── vsag/                  # Vector Search Algorithm Gateway (submodule)
-│   ├── gti/                   # Graph-based Tree Index (submodule)
-│   ├── plsh/                  # PLSH (submodule)
-│   └── ...
+benchmark_anns/
 ├── bench/                     # SAGE 的 benchmark 代码
 ├── datasets/                  # 数据集管理
 ├── runbooks/                  # 实验配置
-├── tests/                     # SAGE-DB-Bench 自己的测试
+├── tests/                     # SAGE-ANNS-Bench 自己的测试
 ├── docs/                      # 文档（README、INSTALL、STRUCTURE 等）
 ├── scripts/                   # 部署/安装/激活/本地测试脚本
 ├── docker/                    # Dockerfile 与 docker-compose

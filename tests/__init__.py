@@ -20,24 +20,24 @@ SAGE-DB-Bench 测试套件
 运行测试的方式：
 
 方式 1 (推荐): 从项目根目录运行
-    cd benchmark_db
+    cd benchmark_anns
     python tests/test_streaming.py
     python tests/test_datasets.py
     python tests/test_congestion.py
     python tests/test_algorithm_structure.py
 
 方式 2: 运行 Shell 脚本
-    cd benchmark_db
+    cd benchmark_anns
     bash tests/test_verify_project.sh
     bash tests/test_compute_gt.sh
 
 方式 3: 使用 pytest (如果安装)
-    cd benchmark_db
+    cd benchmark_anns
     pytest tests/
 
 注意：
 - 所有测试文件都使用相对路径，不依赖外部目录
-- benchmark_db 是一个独立项目，所有导入都是相对于项目根目录的
+- benchmark_anns 是一个独立项目，所有导入都是相对于项目根目录的
 """
 
 __all__ = [

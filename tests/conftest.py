@@ -26,7 +26,7 @@ def pytest_ignore_collect(collection_path, path, config):
     """
     path_str = str(collection_path)
     
-    # Legacy check (algorithms_impl/ no longer exists in benchmark_db)
+    # Legacy check (algorithms_impl/ no longer exists in benchmark_anns)
     if "algorithms_impl" in path_str and collection_path.name.startswith("test_"):
         return True
     
