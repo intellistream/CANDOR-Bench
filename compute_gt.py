@@ -27,11 +27,11 @@ Usage:
 import argparse
 import os
 import sys
-import numpy as np
-import yaml
 from pathlib import Path
 from typing import Dict, Tuple
 
+import numpy as np
+import yaml
 from datasets.registry import DATASETS
 
 

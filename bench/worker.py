@@ -5,15 +5,16 @@ Worker Thread for Congestion Drop Logic
 基于 big-ann-benchmarks/neurips23/congestion/base.py 的设计
 """
 
-import numpy as np
 import random
 import time
-from threading import Thread, Lock
-from typing import Optional, List
+from threading import Lock, Thread
+from typing import List, Optional
+
+import numpy as np
 
 # 尝试导入 PyCANDY 的工具类，如果失败则使用备用实现
 try:
-    from PyCANDYAlgo.utils import NumpyIdxPair, NumpyIdxQueue, IdxQueue  # type: ignore
+    from PyCANDYAlgo.utils import IdxQueue, NumpyIdxPair, NumpyIdxQueue  # type: ignore
     PYCANDY_AVAILABLE = True
 except (ModuleNotFoundError, ImportError):
     PYCANDY_AVAILABLE = False

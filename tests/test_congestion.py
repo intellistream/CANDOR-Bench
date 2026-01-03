@@ -13,15 +13,16 @@
     python run_benchmark.py --algorithm faiss_HNSW --dataset sift --runbook test_congestion_drop
 """
 
-import sys
 import os
+import sys
 
 # 添加父目录到路径，以便导入 benchmark_anns 模块
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from bench.runner import BenchmarkRunner
-from bench.algorithms.base import DummyStreamingANN
 import numpy as np
+from bench.algorithms.base import DummyStreamingANN
+from bench.runner import BenchmarkRunner
+
 
 # 创建一个简单的测试数据集
 class SimpleDataset:

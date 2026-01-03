@@ -13,14 +13,14 @@ Export Results with Recall Calculation
 import argparse
 import os
 import sys
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
 import h5py
 import numpy as np
 import pandas as pd
 import yaml
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional
-
-from datasets.registry import get_dataset, DATASETS
+from datasets.registry import DATASETS, get_dataset
 
 
 def load_runbook(dataset_name: str, nb: int, runbook_path: str) -> Tuple[int, Dict]:

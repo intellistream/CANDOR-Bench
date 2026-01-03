@@ -3,14 +3,15 @@ Main entry point for running benchmarks
 """
 
 import argparse
-import yaml
 import sys
 from pathlib import Path
 
+import yaml
+from bench import BenchmarkRunner, StressTestConfig, get_algorithm
+from bench.visualize import plot_results
+
 # benchmark_anns 是独立项目，使用相对导入
 from datasets import load_dataset, prepare_dataset
-from bench import get_algorithm, BenchmarkRunner, StressTestConfig
-from bench.visualize import plot_results
 
 
 def load_config(config_path: str) -> dict:

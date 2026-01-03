@@ -16,6 +16,7 @@ def prepare_with_download(self, skip_data=False):
     3. 预处理数据（采样、转换格式等）
     """
     import os
+
     from .download_utils import download_dataset
     from .registry import load_data, sample_vectors, save_data
     

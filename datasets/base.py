@@ -4,8 +4,9 @@ Base Dataset Class
 提供数据集的基础抽象接口
 """
 
+from typing import Iterator, Optional, Tuple
+
 import numpy as np
-from typing import Optional, Tuple, Iterator
 
 
 class Dataset:

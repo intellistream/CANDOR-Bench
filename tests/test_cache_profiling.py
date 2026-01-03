@@ -6,9 +6,10 @@
     python test_cache_profiling.py
 """
 
-import numpy as np
-import sys
 import os
+import sys
+
+import numpy as np
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

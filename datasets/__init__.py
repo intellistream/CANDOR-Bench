@@ -6,33 +6,33 @@ This module provides dataset management functionality.
 
 from .base import Dataset
 from .loaders import (
-    load_dataset, 
-    prepare_dataset,
-    xbin_mmap,
+    knn_result_read,
+    load_dataset,
     load_fvecs,
     load_ivecs,
-    knn_result_read,
+    prepare_dataset,
     sanitize,
+    xbin_mmap,
 )
 from .registry import (
-    DATASETS, 
-    register_dataset,
-    get_dataset,
-    # SIFT 系列
-    SIFTSmall,
+    COCO,
+    DATASETS,
     SIFT,
     SIFT100M,
-    # 图像数据集
-    OpenImagesStreaming,
-    Sun,
-    COCO,
+    WTE,
     # 文本/词向量数据集
     Glove,
     Msong,
     MSTuring,
-    WTE,
+    # 图像数据集
+    OpenImagesStreaming,
     # 测试数据集
     RandomDataset,
+    # SIFT 系列
+    SIFTSmall,
+    Sun,
+    get_dataset,
+    register_dataset,
 )
 
 __all__ = [

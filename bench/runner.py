@@ -5,24 +5,21 @@ Benchmark Runner
 基于 big-ann-benchmarks/neurips23/congestion/run.py 的设计
 """
 
+import os
+import random
+import time
+import tracemalloc
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 import pandas as pd
-import time
-import random
-import tracemalloc
-import os
-from typing import List, Dict, Any, Optional, Tuple
-from dataclasses import dataclass
 
-from .metrics import (
-    BenchmarkMetrics, 
-    generate_timestamps, 
-    get_latency_percentile
-)
-from .maintenance import MaintenanceState, MaintenancePolicy
-from .worker import CongestionDropWorker
-from .io_utils import save_run_results
 from .cache_profiler import CacheProfiler
+from .io_utils import save_run_results
+from .maintenance import MaintenancePolicy, MaintenanceState
+from .metrics import BenchmarkMetrics, generate_timestamps, get_latency_percentile
+from .worker import CongestionDropWorker
 
 
 def store_timestamps_to_csv(

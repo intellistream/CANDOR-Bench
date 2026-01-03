@@ -100,7 +100,7 @@ def test_algorithm_instantiation():
     print("=" * 60 + "\n")
     
     try:
-        from bench.algorithms.registry import get_algorithm, ALGORITHMS
+        from bench.algorithms.registry import ALGORITHMS, get_algorithm
         
         success_count = 0
         fail_count = 0

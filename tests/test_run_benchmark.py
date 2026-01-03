@@ -8,10 +8,10 @@
 3. 验证结果保存和指标计算
 """
 
-import sys
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 

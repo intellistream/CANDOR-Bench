@@ -3,8 +3,8 @@
 快速测试脚本 - 验证流式测评功能
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # 添加项目根目录到 sys.path
@@ -13,9 +13,9 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 import numpy as np
-from bench.runner import BenchmarkRunner
 from bench.algorithms.base import DummyStreamingANN
 from bench.maintenance import MaintenancePolicy
+from bench.runner import BenchmarkRunner
 from datasets.base import Dataset
 
 
@@ -163,7 +163,7 @@ def test_maintenance():
     print("测试 3: 维护功能")
     print("="*60)
     
-    from bench.maintenance import MaintenanceState, MaintenancePolicy
+    from bench.maintenance import MaintenancePolicy, MaintenanceState
     
     state = MaintenanceState()
     policy = MaintenancePolicy({'default': 0.2})

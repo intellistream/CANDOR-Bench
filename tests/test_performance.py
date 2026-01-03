@@ -3,9 +3,10 @@
 用于CI/CD中的性能回归检测
 """
 
-import pytest
-import numpy as np
 import time
+
+import numpy as np
+import pytest
 from bench.metrics import BenchmarkMetrics
 
 

@@ -14,8 +14,9 @@ project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from datasets.registry import DATASETS
 from datasets import load_dataset
+from datasets.registry import DATASETS
+
 
 def test_dataset_registry():
     """测试数据集注册表"""

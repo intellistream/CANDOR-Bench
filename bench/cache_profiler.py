@@ -19,12 +19,12 @@ Usage:
 """
 
 import os
-import subprocess
 import re
-import time
+import subprocess
 import tempfile
-from typing import Dict, Optional, Tuple
+import time
 from dataclasses import dataclass
+from typing import Dict, Optional, Tuple
 
 
 @dataclass

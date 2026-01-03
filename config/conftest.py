@@ -2,8 +2,9 @@
 
 This configuration ensures third-party algorithm tests are skipped.
 """
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 def pytest_configure(config):

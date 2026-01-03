@@ -16,12 +16,13 @@ Dataset Registry
 """
 
 import os
-import numpy as np
-from typing import Dict, Callable, Optional
-from .base import Dataset
-from .loaders import xbin_mmap, load_fvecs, load_ivecs, knn_result_read, sanitize
-from .download_utils import download_dataset
+from typing import Callable, Dict, Optional
 
+import numpy as np
+
+from .base import Dataset
+from .download_utils import download_dataset
+from .loaders import knn_result_read, load_fvecs, load_ivecs, sanitize, xbin_mmap
 
 # 数据集根目录 - 所有数据集都存储在这里的子目录中
 BASEDIR = "raw_data/"

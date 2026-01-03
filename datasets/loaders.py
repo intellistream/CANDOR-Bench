@@ -5,9 +5,11 @@ Dataset Loaders
 """
 
 import os
-import numpy as np
 from pathlib import Path
 from typing import Optional, Tuple
+
+import numpy as np
+
 from .base import Dataset
 
 
@@ -159,8 +161,8 @@ def download(url: str, output_path: str) -> None:
     """
     下载文件
     """
-    import urllib.request
     import shutil
+    import urllib.request
     
     print(f"Downloading {url} to {output_path}")
     

@@ -6,17 +6,18 @@
 """
 
 import sys
-import yaml
-import numpy as np
 from pathlib import Path
+
+import numpy as np
+import yaml
 
 # 添加项目根目录到路径
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from bench.runner import BenchmarkRunner
-from datasets.registry import DATASETS
 from datasets import load_dataset
+from datasets.registry import DATASETS
 
 
 def create_mock_algorithm():

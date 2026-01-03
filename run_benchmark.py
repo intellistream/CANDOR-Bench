@@ -25,26 +25,33 @@ benchmark_anns Main Runner
     python run_benchmark.py --list-runbooks
 """
 
-import os
-import sys
 import argparse
 import json
-import yaml
+import os
+import re
+import sys
 import time
 import traceback
-import re
-import h5py
-import pandas as pd
-import numpy as np
-from pathlib import Path
-from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import h5py
+import numpy as np
+import pandas as pd
+import yaml
 
 # benchmark_anns 是独立项目，使用相对导入
-from bench.algorithms.registry import get_algorithm, auto_register_algorithms, ALGORITHMS, get_algorithm_params_from_config, get_all_algorithm_param_combinations
-from datasets.registry import get_dataset, DATASETS
-from bench.runner import BenchmarkRunner
+from bench.algorithms.registry import (
+    ALGORITHMS,
+    auto_register_algorithms,
+    get_algorithm,
+    get_algorithm_params_from_config,
+    get_all_algorithm_param_combinations,
+)
 from bench.metrics import BenchmarkMetrics
+from bench.runner import BenchmarkRunner
+from datasets.registry import DATASETS, get_dataset
 
 
 def _extract_key_params(params: Dict[str, Any], max_depth: int = 4) -> Dict[str, Any]:

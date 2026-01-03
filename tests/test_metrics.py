@@ -2,8 +2,8 @@
 测试指标计算
 """
 
-import pytest
 import numpy as np
+import pytest
 from bench.metrics import BenchmarkMetrics
 
 
