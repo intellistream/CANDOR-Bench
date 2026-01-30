@@ -315,38 +315,62 @@ class CacheProfiler:
             CacheMissStats 对象
         """
         stats = CacheMissStats(duration_seconds=duration)
-        
-        # 正则表达式匹配 perf 输出行
-        # 示例行:
-        #     1,234,567      cache-misses              #   12.34% of all cache refs
-        #    12,345,678      cache-references
-        
+
+        # 更鲁棒的数字解析：支持 1,234,567 或 1 234 567（空格或不间断空格），以及带 K/M/G 后缀的简写
+        def _parse_number(s: str) -> int:
+            if s is None:
+                return 0
+            # 去掉逗号、空格、不间断空格
+            s_clean = s.replace(',', '').replace(' ', '').replace('\u00A0', '')
+            # 支持像 1.23M 或 123K 这样的后缀
+            try:
+                if s_clean.endswith(('K', 'k')):
+                    return int(float(s_clean[:-1]) * 1e3)
+                if s_clean.endswith(('M', 'm')):
+                    return int(float(s_clean[:-1]) * 1e6)
+                if s_clean.endswith(('G', 'g')):
+                    return int(float(s_clean[:-1]) * 1e9)
+                # 可能是浮点数表示
+                if '.' in s_clean:
+                    return int(float(s_clean))
+                return int(s_clean)
+            except Exception:
+                return 0
+
+        # 正则表达式匹配 perf 输出行，允许数字中出现逗号、空格、不间断空格或小写/大写后缀
+        # 匹配任意前缀（例如 cpu_core/cache-misses/），因此在事件名之前允许任意非换行字符
         patterns = {
-            'cache_misses': r'([\d,]+)\s+cache-misses',
-            'cache_references': r'([\d,]+)\s+cache-references',
-            'l1_dcache_loads': r'([\d,]+)\s+L1-dcache-loads',
-            'l1_dcache_load_misses': r'([\d,]+)\s+L1-dcache-load-misses',
-            'llc_loads': r'([\d,]+)\s+LLC-loads',
-            'llc_load_misses': r'([\d,]+)\s+LLC-load-misses',
-            'instructions': r'([\d,]+)\s+instructions',
-            'cycles': r'([\d,]+)\s+cycles',
+            'cache_misses': r'([\d,\.\s\u00A0KMGTkmgt]+)\s+[^\n]*cache-misses',
+            'cache_references': r'([\d,\.\s\u00A0KMGTkmgt]+)\s+[^\n]*cache-references',
+            'l1_dcache_loads': r'([\d,\.\s\u00A0KMGTkmgt]+)\s+[^\n]*L1-dcache-loads',
+            'l1_dcache_load_misses': r'([\d,\.\s\u00A0KMGTkmgt]+)\s+[^\n]*L1-dcache-load-misses',
+            'llc_loads': r'([\d,\.\s\u00A0KMGTkmgt]+)\s+[^\n]*LLC-loads',
+            'llc_load_misses': r'([\d,\.\s\u00A0KMGTkmgt]+)\s+[^\n]*LLC-load-misses',
+            'instructions': r'([\d,\.\s\u00A0KMGTkmgt]+)\s+[^\n]*instructions',
+            'cycles': r'([\d,\.\s\u00A0KMGTkmgt]+)\s+[^\n]*cycles',
         }
-        
+
+        found_any = False
         for field, pattern in patterns.items():
             match = re.search(pattern, output)
             if match:
-                # 移除逗号并转换为整数
-                value_str = match.group(1).replace(',', '')
-                try:
-                    value = int(value_str)
-                    setattr(stats, field, value)
-                except ValueError:
-                    pass
-        
+                value_raw = match.group(1)
+                value = _parse_number(value_raw)
+                setattr(stats, field, value)
+                found_any = True
+
+        # 如果没有解析到任何统计，打印 perf 原始输出供调试（但不要阻塞）
+        if not found_any:
+            try:
+                print('  ⚠️  debug: 未从 perf 输出解析到统计，原始输出（前1k字符）如下:')
+                print(output[:1000])
+            except Exception:
+                pass
+
         # 计算 cache miss 率
         if stats.cache_references > 0:
             stats.cache_miss_rate = stats.cache_misses / stats.cache_references
-        
+
         return stats
     
     def _cleanup(self):

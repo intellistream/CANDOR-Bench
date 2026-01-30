@@ -1,0 +1,338 @@
+glove:
+  max_pts: 1192514
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 50000
+  3:
+    operation: "batch_insert"
+    start: 50000
+    end: 1192514
+    batchSize: 2500
+    eventRate: 10000
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"
+
+msong:
+  max_pts: 992272
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 50000
+  3:
+    operation: "batch_insert"
+    start: 50000
+    end: 992272
+    batchSize: 2500
+    eventRate: 10000
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"
+
+sift:
+  max_pts: 1000000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 10000
+    #applyOptimizedTechOnceAfterInitial: true
+    #optimizedTechParams:
+    #technique: offline_build
+    #force: false
+  3:
+    operation: "batch_insert"
+    start: 10000
+    end: 200000
+    batchSize: 2500
+    eventRate: 10000
+    applyOptimizedTechBeforeQuery: true          # 开启在连续查询前调用优化
+    optimizedTechParams:                         # 可选的参数字典
+      technique: "offline_build"                # 默认就是 offline_build，可换成算法支持的其它名字
+      force: true                               # 是否强制执行
+      once: false                                # 只执行一次；设成 false 则每次连续查询前都会调用
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"
+
+sift100M:
+  max_pts: 100000000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 500000
+  3:
+    operation: "batch_insert"
+    start: 500000
+    end: 10000000
+    batchSize: 2500
+    eventRate: 10000
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"
+
+msturing-10M-clustered:
+  max_pts: 10000000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 50000
+  3:
+    operation: "batch_insert"
+    start: 50000
+    end: 10000000
+    batchSize: 2500
+    eventRate: 10000
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"
+
+sun:
+  max_pts: 79106
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 50000
+  3:
+    operation: "batch_insert"
+    start: 50000
+    end: 79100
+    batchSize: 2500
+    eventRate: 10000
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"
+
+G:
+  max_pts: 100000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 5000
+  3:
+    operation: "batch_insert"
+    start: 5000
+    end: 100000
+    batchSize: 2500
+    eventRate: 10000
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"
+
+A1:
+  max_pts: 100000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 5000
+  3:
+    operation: "batch_insert"
+    start: 5000
+    end: 100000
+    batchSize: 2500
+    eventRate: 10000
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"
+
+A2:
+  max_pts: 100000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 5000
+  3:
+    operation: "batch_insert"
+    start: 5000
+    end: 100000
+    batchSize: 2500
+    eventRate: 10000
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"
+
+B1:
+  max_pts: 100000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 5000
+  3:
+    operation: "batch_insert"
+    start: 5000
+    end: 100000
+    batchSize: 2500
+    eventRate: 10000
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"
+
+B2:
+  max_pts: 100000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 5000
+  3:
+    operation: "batch_insert"
+    start: 5000
+    end: 100000
+    batchSize: 2500
+    eventRate: 10000
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"
+
+B3:
+  max_pts: 100000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 5000
+  3:
+    operation: "batch_insert"
+    start: 5000
+    end: 100000
+    batchSize: 2500
+    eventRate: 10000
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"
+
+B4:
+  max_pts: 100000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 5000
+  3:
+    operation: "batch_insert"
+    start: 5000
+    end: 100000
+    batchSize: 2500
+    eventRate: 10000
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"
+
+C1:
+  max_pts: 100000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 5000
+  3:
+    operation: "batch_insert"
+    start: 5000
+    end: 100000
+    batchSize: 2500
+    eventRate: 10000
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"
+
+C2:
+  max_pts: 100000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 5000
+  3:
+    operation: "batch_insert"
+    start: 5000
+    end: 100000
+    batchSize: 2500
+    eventRate: 10000
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"

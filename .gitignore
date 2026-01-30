@@ -54,6 +54,12 @@ raw_data/
 results/
 algorithms_impl/build
 
+# Third-party repos cloned into this workspace root
+/GTI/
+/IP-DiskANN/
+/PLSH/
+/big-ann-benchmarks/
+
 # Python 虚拟环境
 .venv/
 sage-db-bench/

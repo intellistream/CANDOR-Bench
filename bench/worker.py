@@ -130,7 +130,7 @@ class CongestionDropWorker(AbstractThread):
         # Worker 标识和配置
         self.my_id = 0
         self.vec_dim = 0
-        self.congestion_drop = True
+        self.congestion_drop = True  # 启用拥塞丢弃逻辑
         self.ingested_vectors = 0
         self.single_worker_opt = True
         
@@ -512,6 +512,26 @@ class CongestionDropWorker(AbstractThread):
             })
             
             return result  # 返回查询结果
+        finally:
+            self.m_mut.release()
+
+    def apply_optimized_tech(self, technique: str = "offline_build", force: bool = False):
+        """触发底层索引的优化技术并返回耗时（秒）"""
+        while not self.m_mut.acquire(blocking=False):
+            pass
+        try:
+            target = getattr(self.my_index_algo, 'apply_optimized_tech', None)
+            if callable(target):
+                return target(technique=technique, force=force)
+
+            fallback = getattr(self.my_index_algo, 'offline_build', None)
+            if callable(fallback):
+                try:
+                    return fallback(force=force)
+                except TypeError:
+                    return fallback()
+
+            raise AttributeError("Underlying algorithm does not expose an optimization entrypoint")
         finally:
             self.m_mut.release()
     
