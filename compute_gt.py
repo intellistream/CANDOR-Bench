@@ -31,6 +31,84 @@ from typing import Dict, Tuple
 from datasets.registry import DATASETS
 
 
+def _dtype_str_to_numpy(dtype: str):
+    if dtype == 'float32':
+        return np.float32
+    if dtype == 'int8':
+        return np.int8
+    if dtype == 'uint8':
+        return np.uint8
+    raise RuntimeError(f'Invalid datatype: {dtype}')
+
+
+def ensure_query_file(ds, runbook_path: str, private_query: bool = False) -> str:
+    """Return a query file path suitable for DiskANN compute_groundtruth.
+
+    This repo's Dataset classes generally expose `get_queries()` (returns ndarray/mmap),
+    but may not expose a `qs_fn` attribute like big-ann-benchmarks.
+
+    Resolution strategy:
+    1) If dataset exposes a query filename attribute and the file exists, use it.
+    2) Otherwise, materialize `ds.get_queries()` into a binary file with header:
+       [nq(uint32 little), dim(uint32 little)] + raw data.
+    """
+    candidate_attrs = []
+    if private_query:
+        candidate_attrs += [
+            'qs_private_fn',
+            'private_qs_fn',
+            'private_queries_fn',
+        ]
+    candidate_attrs += [
+        'qs_fn',
+        'queries_fn',
+        'query_fn',
+    ]
+
+    for attr in candidate_attrs:
+        rel_or_abs = getattr(ds, attr, None)
+        if not rel_or_abs:
+            continue
+        path = str(rel_or_abs)
+        if not os.path.isabs(path):
+            path = os.path.join(ds.basedir, path)
+        if os.path.exists(path):
+            return path
+
+    # Fallback: write queries to a file under the ground-truth directory.
+    out_dir = gt_dir(ds, runbook_path)
+    os.makedirs(out_dir, exist_ok=True)
+
+    dtype = _dtype_str_to_numpy(ds.dtype)
+    suffix = {np.float32: 'fbin', np.int8: 'i8bin', np.uint8: 'u8bin'}[dtype]
+    query_file = os.path.join(out_dir, f'queries_{ds.nq}_{ds.d}.{suffix}')
+
+    if os.path.exists(query_file):
+        return query_file
+
+    queries = ds.get_queries()
+    if queries is None:
+        raise RuntimeError(
+            f"Dataset {ds.__class__.__name__} returned None from get_queries(); "
+            "cannot build query file for ground truth."
+        )
+
+    queries = np.ascontiguousarray(queries, dtype=dtype)
+    if queries.ndim != 2:
+        raise RuntimeError(f"Queries must be 2D (nq, d), got shape {queries.shape}")
+    if queries.shape[1] != ds.d:
+        raise RuntimeError(
+            f"Query dim mismatch: ds.d={ds.d} but queries.shape[1]={queries.shape[1]}"
+        )
+
+    with open(query_file, 'wb') as f:
+        f.write(int(queries.shape[0]).to_bytes(4, byteorder='little'))
+        f.write(int(queries.shape[1]).to_bytes(4, byteorder='little'))
+        queries.tofile(f)
+
+    return query_file
+
+
 def load_runbook(dataset_name: str, nb: int, runbook_path: str) -> Tuple[int, Dict]:
     """
     加载 runbook 文件
@@ -381,12 +459,16 @@ def main():
 
     # Load dataset
     ds = DATASETS[args.dataset]()
+
+    # Optionally download/prepare dataset
+    if args.download:
+        ds.prepare()
     
     # Load runbook
     max_pts, runbook = load_runbook(args.dataset, ds.nb, args.runbook_file)
     
-    # Get query file
-    query_file = ds.qs_fn if args.private_query else ds.qs_fn
+    # Get query file (path). Some Dataset implementations don't expose `qs_fn`.
+    query_file = ensure_query_file(ds, args.runbook_file, private_query=args.private_query)
     
     # Build base command for compute_groundtruth
     common_cmd = args.gt_cmdline_tool + ' --dist_fn '
@@ -412,8 +494,8 @@ def main():
     else:
         raise RuntimeError('Invalid datatype')
     
-    common_cmd += ' --K 100'
-    common_cmd += ' --query_file ' + os.path.join(ds.basedir, query_file)
+    common_cmd += ' --K 10'
+    common_cmd += ' --query_file ' + query_file
 
     # Process runbook - 参考 big-ann-benchmarks 的处理流程
     # runbook 是一个字典，key 是步骤号，需要按顺序处理

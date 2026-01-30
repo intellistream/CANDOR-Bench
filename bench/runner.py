@@ -182,7 +182,11 @@ class BenchmarkRunner:
         # Cache profiler（需要在创建worker之前初始化）
         self.cache_profiler = None
         if enable_cache_profiling:
-            self.cache_profiler = CacheProfiler()
+            # 默认情况下，优先使用进程级采集；如果当前为 root 或者强制环境变量指定，则启用 system-wide
+            import os as _os
+            force_system = _os.environ.get('FORCE_PERF_SYSTEM', '').lower() in ('1', 'true', 'yes')
+            use_system = (_os.geteuid() == 0) or force_system
+            self.cache_profiler = CacheProfiler(enable_system_wide=use_system)
             # 在启动时检查可用性
             if not self.cache_profiler.is_available():
                 print("  ⚠️  Cache profiling 不可用，将禁用该功能")
@@ -222,6 +226,7 @@ class BenchmarkRunner:
             "totalTime": 0,
             "continuousQueryLatencies": [],
             "continuousQueryResults": [],
+            "optimizedTechLatencies": [],
             "latencyInsert": [],
             "latencyQuery": [],
             "latencyDelete": [],
@@ -330,6 +335,8 @@ class BenchmarkRunner:
                 self._wait_pending()
             elif op_type == 'endHPC':
                 self._stop_workers()
+            elif op_type == 'optimized_technique':
+                self._execute_optimized_tech(op)
             else:
                 print(f"  ⚠️  未知操作类型: {op_type}")
         
@@ -388,6 +395,19 @@ class BenchmarkRunner:
         self.maintenance_state.live_points = data_size
         
         print(f"  ✓ 初始加载完成: {data_size:,} 条数据, 耗时: {elapsed:.2f}s")
+
+        # 可选：在 initial 完成后只执行一次结构优化  by ghr
+        if op.get('applyOptimizedTechOnceAfterInitial'):
+            optimized_cfg = op.get('optimizedTechParams', {}) or {}
+            technique = optimized_cfg.get('technique', 'offline_build') if isinstance(optimized_cfg, dict) else 'offline_build'
+            force = optimized_cfg.get('force', False) if isinstance(optimized_cfg, dict) else False
+            print("  执行一次优化技术 (initial 后)")
+            opt_elapsed = self._maybe_apply_optimized_tech(technique, force)
+            if opt_elapsed is not None:
+                self.attrs['optimizedTechLatencies'].append(opt_elapsed)
+                print(f"       ↪ 优化技术耗时 {opt_elapsed:.3f}s")
+            else:
+                print("       ↪ 当前算法未能执行优化技术，本轮将跳过")
     
     def _load_data_range(self, start_idx: int, end_idx: int) -> np.ndarray:
         """
@@ -555,6 +575,14 @@ class BenchmarkRunner:
         continuous_query_latencies = []
         continuous_query_results = []  # 存储查询返回的邻居 ID
         inserted_count = 0
+
+        # 可选：在连续查询前执行优化技术 by ghr
+        apply_optimized_before_query = op.get('applyOptimizedTechBeforeQuery', False)
+        optimized_cfg = op.get('optimizedTechParams', {})
+        opt_technique = optimized_cfg.get('technique', 'offline_build') if isinstance(optimized_cfg, dict) else 'offline_build'
+        opt_force = optimized_cfg.get('force', False) if isinstance(optimized_cfg, dict) else False
+        opt_once = optimized_cfg.get('once', False) if isinstance(optimized_cfg, dict) else False
+        opt_has_run = False
         
         # 记录初始丢弃计数
         initial_drop_count = self.worker.drop_count_total if self.use_worker and self.worker else 0
@@ -619,7 +647,16 @@ class BenchmarkRunner:
                 current_range_end = start_idx + batch_end
                 progress_pct = (inserted_count / count) * 100
                 print(f"    [{batch_idx}] {current_range_start}~{current_range_end} querying all {len(queries)} queries (进度: {progress_pct:.1f}%)")
-                
+                # 在查询前应用优化技术（如果配置了）by ghr
+                if apply_optimized_before_query and (not opt_once or not opt_has_run):
+                    opt_elapsed = self._maybe_apply_optimized_tech(opt_technique, opt_force)
+                    if opt_elapsed is not None:
+                        opt_has_run = True
+                        self.attrs['optimizedTechLatencies'].append(opt_elapsed)
+                        print(f"       ↪ 优化技术耗时 {opt_elapsed:.3f}s")
+                    else:
+                        print("       ↪ 当前算法未能执行优化技术，后续将继续尝试")
+
                 # 执行全量查询：一次性传入所有查询向量
                 # 时间测量在 worker.query() 内部进行，避免引入锁等待时间
                 # 查询延迟从 worker.query_timestamps 获取
@@ -780,6 +817,41 @@ class BenchmarkRunner:
                 batch_insert_count
             )
     
+    def _maybe_apply_optimized_tech(self, technique: str = 'offline_build', force: bool = False):
+        """尝试触发优化技术，若不可用则返回 None"""
+
+        start = time.time()
+        target = getattr(self.algo, 'apply_optimized_tech', None)
+        duration = None
+
+        if callable(target):
+            duration = target(technique=technique, force=force)
+        else:
+            fallback = getattr(self.algo, 'offline_build', None)
+            if callable(fallback):
+                try:
+                    duration = fallback(force=force)
+                except TypeError:
+                    duration = fallback()
+            else:
+                print("       ⚠️  当前算法不支持优化技术接口，跳过")
+                return None
+
+        if isinstance(duration, (int, float)):
+            return float(duration)
+        return time.time() - start
+
+    def _execute_optimized_tech(self, op: Dict):
+        """执行离线优化技术（例如 Gorder 重排序）"""
+        technique = op.get('technique', 'offline_build')
+        force = op.get('force', False)
+        print(f"  执行优化技术: {technique}")
+        elapsed = self._maybe_apply_optimized_tech(technique, force)
+        if elapsed is None:
+            raise AttributeError("当前算法不支持优化技术操作")
+        self.attrs['optimizedTechLatencies'].append(elapsed)
+        print(f"  ✓ 优化操作完成: {elapsed:.3f}s")
+
     def _execute_insert(self, op: Dict):
         """
         执行简单插入操作

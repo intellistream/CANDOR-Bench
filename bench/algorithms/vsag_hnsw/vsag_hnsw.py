@@ -85,11 +85,13 @@ class VsagIndexWrapper:
         self._search_params_json = json.dumps(self._effective_search_params(self._search_params_template))
 
     def insert(self, vectors: np.ndarray, ids: np.ndarray) -> None:
+        print("Inserting {} vectors into VSAG HNSW index".format(vectors.shape[0]))
         dense = self._prepare_dense_vectors(vectors)
         id_array = self._prepare_ids(ids, dense.shape[0])
         if dense.size == 0:
             return
         if not self._is_built:
+            print("Building VSAG HNSW index with {} vectors".format(dense.shape[0]))
             self.index.build(vectors=dense, ids=id_array, num_elements=dense.shape[0], dim=self.dim)
             self._is_built = True
         else:
@@ -174,7 +176,12 @@ class VsagIndexWrapper:
             arr = arr.reshape(1, -1)
         if arr.shape[1] != self.dim:
             raise ValueError(f"Vector dimension {arr.shape[1]} does not match index dim {self.dim}")
-        return np.ascontiguousarray(arr, dtype=np.float32)
+        # pyvsag may write into the input buffer; ensure a writable, C-contiguous copy to avoid mmap read-only crashes
+        if not (arr.flags["C_CONTIGUOUS"] and arr.flags["WRITEABLE"]):
+            arr = np.array(arr, dtype=np.float32, copy=True, order="C")
+        else:
+            arr = np.ascontiguousarray(arr, dtype=np.float32)
+        return arr
 
     @staticmethod
     def _prepare_ids(ids: np.ndarray, expected: int) -> np.ndarray:

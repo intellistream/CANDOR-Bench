@@ -6,6 +6,7 @@ Faiss HNSW Optimized Algorithm Implementation
 支持 reorder_gorder(window) 进行图重排序优化
 """
 
+import time
 import numpy as np
 from ..base import BaseStreamingANN
 
@@ -44,6 +45,10 @@ class FaissHnswOptimized(BaseStreamingANN):
         self.index = None
         self.ntotal = 0
 
+        # 优化控制
+        self.optimized = not self.apply_gorder
+        self._warned_unoptimized = False
+
         # ID 映射：faiss 内部 ID <-> 外部 ID
         self.my_index = None  # my_index[internal_id] = external_id
         self.my_inverse_index = None  # my_inverse_index[external_id] = internal_id
@@ -73,6 +78,8 @@ class FaissHnswOptimized(BaseStreamingANN):
         self.ndim = ndim
         self.ntotal = 0
         self.trained = False
+        self.optimized = not self.apply_gorder
+        self._warned_unoptimized = False
 
     def insert(self, X, ids):
         """
@@ -106,6 +113,9 @@ class FaissHnswOptimized(BaseStreamingANN):
         self.ntotal += new_data.shape[0]
 
         print(f"Faiss indices {indices[0]}:{indices[-1]} to Global {new_ids[0]}:{new_ids[-1]}")
+        if self.apply_gorder:
+            self.optimized = False
+            self._warned_unoptimized = False
 
     def delete(self, ids):
         """
@@ -122,19 +132,36 @@ class FaissHnswOptimized(BaseStreamingANN):
                     self.my_inverse_index[ext_id] = -1
                     if internal_id < len(self.my_index):
                         self.my_index[internal_id] = -1
+                        if self.apply_gorder:
+                            self.optimized = False
+                            self._warned_unoptimized = False
 
-    def offline_build(self):
+    def offline_build(self, force: bool = False) -> float:
         """
         在所有数据插入完成后调用，应用 Gorder 优化
 
         Gorder 算法通过图重排序优化缓存局部性，提高搜索性能
         """
+        if self.optimized and not force:
+            return 0.0
+
+        start = time.time()
+
         if self.apply_gorder and hasattr(self.index, "reorder_gorder"):
             print(f"Applying Gorder reordering with window={self.gorder_window}...")
             self.index.reorder_gorder(self.gorder_window)
             print("Gorder optimization completed!")
+            self.optimized = True
+            self._warned_unoptimized = False
         elif self.apply_gorder:
             print("Warning: reorder_gorder method not available on this index")
+            self.optimized = True
+            self._warned_unoptimized = False
+        else:
+            self.optimized = True
+            self._warned_unoptimized = False
+
+        return time.time() - start
 
     def query(self, X, k):
         """
@@ -147,7 +174,10 @@ class FaissHnswOptimized(BaseStreamingANN):
         Returns:
             (ids, distances): 最近邻 ID 和距离
         """
-        self.offline_build()  # 确保在查询前应用 Gorder 优化
+        """ if (not self.optimized) and self.apply_gorder and (not self._warned_unoptimized):
+            print("⚠️  Index not optimized yet. Call apply_optimized_tech() or offline_build() before querying.")
+            self._warned_unoptimized = True """
+        self.offline_build()
         X = X.astype(np.float32)
         query_size = X.shape[0]
 
@@ -158,6 +188,12 @@ class FaissHnswOptimized(BaseStreamingANN):
         ids = self.my_index[results]
         self.res = ids.reshape(X.shape[0], k)
         return self.res, None  # 返回 (ids, distances)，distances 暂时为 None
+
+    def apply_optimized_tech(self, technique: str = "offline_build", force: bool = False) -> float:
+        """对外暴露优化技术入口，便于单独计时"""
+        if technique not in (None, "offline_build"):
+            raise ValueError(f"Unsupported technique: {technique}")
+        return self.offline_build(force=force)
 
     def set_query_arguments(self, query_args):
         """设置查询参数"""
