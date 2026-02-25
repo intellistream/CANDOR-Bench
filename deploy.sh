@@ -201,6 +201,23 @@ if [ -d "/opt/intel/oneapi/mkl/latest/lib/intel64" ]; then
 elif [ -d "/opt/intel/mkl/lib/intel64" ]; then
     export LD_LIBRARY_PATH="/opt/intel/mkl/lib/intel64:$LD_LIBRARY_PATH"
 fi
+
+# Intel OpenMP runtime (required by MKL intel_thread) and C++ runtime
+if [ -d "/opt/intel/oneapi/compiler/2025.3/lib" ]; then
+    export LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/2025.3/lib:$LD_LIBRARY_PATH"
+    export LD_PRELOAD="/opt/intel/oneapi/compiler/2025.3/lib/libiomp5.so:/usr/lib/x86_64-linux-gnu/libstdc++.so.6${LD_PRELOAD:+:$LD_PRELOAD}"
+elif [ -d "/opt/intel/oneapi/compiler/latest/lib" ]; then
+    export LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/latest/lib:$LD_LIBRARY_PATH"
+    export LD_PRELOAD="/opt/intel/oneapi/compiler/latest/lib/libiomp5.so:/usr/lib/x86_64-linux-gnu/libstdc++.so.6${LD_PRELOAD:+:$LD_PRELOAD}"
+fi
+
+# Prefer system libstdc++ to avoid Conda's older version
+if [ -f "/usr/lib/x86_64-linux-gnu/libstdc++.so.6" ]; then
+    case ":$LD_PRELOAD:" in
+        *":/usr/lib/x86_64-linux-gnu/libstdc++.so.6:"*) ;;
+        *) export LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libstdc++.so.6${LD_PRELOAD:+:$LD_PRELOAD}" ;;
+    esac
+fi
 EOF
     print_success "MKL 路径已添加到虚拟环境"
 else
@@ -287,6 +304,13 @@ if [ "$SKIP_BUILD" = false ]; then
         print_step "加载 Intel oneAPI 环境..."
         source /opt/intel/oneapi/setvars.sh --force 2>/dev/null || true
         export LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/latest/lib/intel64:$LD_LIBRARY_PATH"
+        if [ -d "/opt/intel/oneapi/compiler/2025.3/lib" ]; then
+            export LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/2025.3/lib:$LD_LIBRARY_PATH"
+            export LD_PRELOAD="/opt/intel/oneapi/compiler/2025.3/lib/libiomp5.so:/usr/lib/x86_64-linux-gnu/libstdc++.so.6${LD_PRELOAD:+:$LD_PRELOAD}"
+        elif [ -d "/opt/intel/oneapi/compiler/latest/lib" ]; then
+            export LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/latest/lib:$LD_LIBRARY_PATH"
+            export LD_PRELOAD="/opt/intel/oneapi/compiler/latest/lib/libiomp5.so:/usr/lib/x86_64-linux-gnu/libstdc++.so.6${LD_PRELOAD:+:$LD_PRELOAD}"
+        fi
         print_success "MKL 环境已配置"
     elif [ -d "/opt/intel/oneapi/mkl/latest" ]; then
         export MKLROOT="/opt/intel/oneapi/mkl/latest"

@@ -50,14 +50,14 @@ sift:
     operation: "initial"
     start: 0
     end: 10000
-    #applyOptimizedTechOnceAfterInitial: true
-    #optimizedTechParams:
-    #technique: offline_build
-    #force: false
+    applyOptimizedTechOnceAfterInitial: false
+    # optimizedTechParams:
+    #   technique: offline_build
+    #   force: false
   3:
     operation: "batch_insert"
     start: 10000
-    end: 200000
+    end: 12500
     batchSize: 2500
     eventRate: 10000
     applyOptimizedTechBeforeQuery: true          # 开启在连续查询前调用优化

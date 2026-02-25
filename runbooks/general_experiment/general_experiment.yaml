@@ -53,7 +53,7 @@ sift:
   3:
     operation: "batch_insert"
     start: 10000
-    end: 100000
+    end: 500000
     batchSize: 2500
     eventRate: 10000
   4:

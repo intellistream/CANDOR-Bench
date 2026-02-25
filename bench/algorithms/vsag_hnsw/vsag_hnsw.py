@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import copy
 import json
+import time
 from typing import Any, Dict, Optional
 
 import numpy as np
@@ -142,6 +143,23 @@ class VsagIndexWrapper:
     def get_last_results(self) -> Optional[np.ndarray]:
         return self._last_results
 
+    def elp_optimize(self) -> None:
+        # Trigger C++ elp optimizer (only meaningful for HGraph when enabled)
+        self.index.elp_optimize()
+
+    def offline_build(self, force: bool = False) -> float:
+        """Apply offline optimization (ELP) after bulk load."""
+        if not force and not self._is_built:
+            return 0.0
+        start = time.time()
+        self.elp_optimize()
+        return time.time() - start
+
+    def apply_optimized_tech(self, technique: str = "offline_build", force: bool = False) -> float:
+        if technique not in (None, "offline_build", "elp_optimize"):
+            raise ValueError(f"Unsupported technique: {technique}")
+        return self.offline_build(force=force)
+
     def _build_index_params(self) -> Dict[str, Any]:
         if self.dim is None:
             raise RuntimeError("setup() must be called before building index parameters")
@@ -240,3 +258,12 @@ class VsagHnsw(BaseStreamingANN):
 
     def get_results(self) -> Optional[np.ndarray]:
         return self._wrapper.get_last_results()
+
+    def elp_optimize(self) -> None:
+        self._wrapper.elp_optimize()
+
+    def offline_build(self, force: bool = False) -> float:
+        return self._wrapper.offline_build(force=force)
+
+    def apply_optimized_tech(self, technique: str = "offline_build", force: bool = False) -> float:
+        return self._wrapper.apply_optimized_tech(technique=technique, force=force)
