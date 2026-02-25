@@ -130,7 +130,7 @@ class CongestionDropWorker(AbstractThread):
         # Worker 标识和配置
         self.my_id = 0
         self.vec_dim = 0
-        self.congestion_drop = True  # 启用拥塞丢弃逻辑
+        self.congestion_drop = False  # 启用拥塞丢弃逻辑
         self.ingested_vectors = 0
         self.single_worker_opt = True
         
@@ -510,7 +510,8 @@ class CongestionDropWorker(AbstractThread):
                 'lock_wait_time': lock_wait_time,   # 锁等待时间（微秒）
                 'query_time': query_exec_time       # 纯查询时间（微秒）
             })
-            
+            print("query time is {:.3f} ms (lock wait {:.3f} ms, query exec {:.3f} ms)".format(
+                total_time / 1e3, lock_wait_time / 1e3, query_exec_time / 1e3))
             return result  # 返回查询结果
         finally:
             self.m_mut.release()

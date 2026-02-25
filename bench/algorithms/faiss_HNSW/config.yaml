@@ -20,4 +20,4 @@ sift:
         args: |
           [{"efConstruction": 120, "indexkey": "HNSW16"}]
         query-args: |
-          [{"ef": 40}]
+          [{"ef": 120}]

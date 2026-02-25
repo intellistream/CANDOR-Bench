@@ -7,6 +7,7 @@
 #include <pybind11/numpy.h>
 #include <torch/extension.h>
 #include <torch/torch.h>
+#include <chrono>
 #include <Utils/ConfigMap.hpp>
 #include <Utils/IntelliLog.h>
 #include <Utils/SPSCQueue.hpp>
@@ -26,6 +27,7 @@
 //#endif
 #include <faiss/index_factory.h>
 #include <faiss/IndexHNSWOptimized.h>
+#include <faiss/IndexHNSWIncremental.h>
 
 
 #include<puck/pyapi_wrapper/py_api_wrapper.h>
@@ -36,6 +38,37 @@ using namespace pybind11::literals;
 using namespace CANDY;
 torch::Tensor add_tensors(torch::Tensor a, torch::Tensor b) {
   return a + b;
+}
+
+std::vector<faiss::idx_t> index_search_warm(
+        const std::shared_ptr<faiss::Index>& index,
+        faiss::idx_t n,
+    const py::array_t<float, py::array::c_style | py::array::forcecast>& x,
+        faiss::idx_t k,
+        int ef_search,
+  int warm_start_levels,
+  bool direct_reuse) {
+  py::buffer_info x_info = x.request();
+  const float* x_ptr = static_cast<const float*>(x_info.ptr);
+    std::vector<float> distances(n * k);
+    std::vector<faiss::idx_t> labels(n * k);
+
+    if (auto* inc = dynamic_cast<faiss::IndexHNSWIncremental*>(index.get())) {
+        faiss::SearchParametersHNSWIncremental params;
+        params.efSearch = ef_search;
+        params.warm_start_levels = warm_start_levels;
+        params.direct_reuse = direct_reuse;
+         auto search_t0 = std::chrono::steady_clock::now();
+     inc->search(n, x_ptr, k, distances.data(), labels.data(), &params);
+         auto search_t1 = std::chrono::steady_clock::now();
+         double elapsed_ms = std::chrono::duration<double, std::milli>(search_t1 - search_t0).count();
+         printf("PYBIND search elapsed %.3f ms\n",
+           elapsed_ms);
+        return labels;
+    }
+
+  std::vector<float> x_vec(x_ptr, x_ptr + x_info.size);
+  return index->search_arrays(n, x_vec, k, ef_search);
 }
 py::dict configMapToDict(const std::shared_ptr<ConfigMap> &cfg) {
   py::dict d;
@@ -361,6 +394,11 @@ PYBIND11_MODULE(PyCANDYAlgo, m) {
          // .def(py::init<>())
           .def("add",&faiss::Index::add_arrays)
           .def("search",&faiss::Index::search_arrays)
+          .def("search_warm", &index_search_warm,
+                   py::arg("n"), py::arg("x"), py::arg("k"), py::arg("ef_search"),
+                   py::arg("warm_start_levels") = 0,
+                   py::arg("direct_reuse") = false,
+               "Search k nearest neighbors with efSearch and warm-start levels")
           .def("train",&faiss::Index::train_arrays)
           .def("add_with_ids", &faiss::Index::add_arrays_with_ids)
         .def_readwrite("verbose", &faiss::Index::verbose);

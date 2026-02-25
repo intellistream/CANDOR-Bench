@@ -331,17 +331,21 @@ def export_results(dataset_name: str, algorithm: str, runbook_name: str,
     # 5.2 合并插入QPS
     if batch_insert_qps_file.exists():
         insert_qps_df = pd.read_csv(batch_insert_qps_file)
-        if len(insert_qps_df) == len(mean_recalls):
+        if 'batch_idx' in insert_qps_df.columns:
+            insert_qps_dict = dict(zip(insert_qps_df['batch_idx'], insert_qps_df['insert_qps']))
+            data['insert_qps'] = [insert_qps_dict.get(i, np.nan) for i in data['batch_idx']]
+        elif len(insert_qps_df) == len(mean_recalls):
             data['insert_qps'] = insert_qps_df['insert_qps'].values
         else:
-            # 插入QPS数量可能少于查询次数（正常现象）：
-            # - 随机丢弃：某些批次被 random_drop 丢弃
-            # - 拥塞丢弃：队列满时批次被丢弃
-            # - 未处理完：某些批次还在队列中
+            # 插入QPS数量可能少于或多于查询次数（正常现象）：
+            # - 查询并非每个批次触发
+            # - 随机/拥塞丢弃导致部分批次缺失
             print(f"  ℹ️  插入QPS记录({len(insert_qps_df)}) ≠ 查询批次({len(mean_recalls)}) - 可能有批次被丢弃或未处理完")
-            # 用已有数据填充，不足的用 NaN
             insert_qps_values = list(insert_qps_df['insert_qps'].values)
-            data['insert_qps'] = insert_qps_values + [np.nan] * (len(mean_recalls) - len(insert_qps_values))
+            if len(insert_qps_values) >= len(mean_recalls):
+                data['insert_qps'] = insert_qps_values[:len(mean_recalls)]
+            else:
+                data['insert_qps'] = insert_qps_values + [np.nan] * (len(mean_recalls) - len(insert_qps_values))
     
     # 5.3 查询QPS和延迟
     if batch_query_qps_file.exists():
