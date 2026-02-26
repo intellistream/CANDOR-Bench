@@ -1,4 +1,4 @@
-# CANDOR-Bench: Benchmarking In-Memory Continuous ANNS under Dynamic Open-World Streams
+# CANDOR-Bench: Benchmarking In-Memory Continuous ANNS under Dynamic Open-World Streams [SIGMOD'2026]
 
 CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-woRld Streams) is a benchmarking framework designed to evaluate in-memory ANNS algorithms under realistic, dynamic data stream conditions. 
 
