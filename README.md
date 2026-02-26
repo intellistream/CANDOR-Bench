@@ -1,3 +1,5 @@
+# CANDOR-Bench: Benchmarking In-Memory Continuous ANNS under Dynamic Open-World Streams [SIGMOD'2026]
+
 <div align="center">
 
 # 🚀 SAGE-DB-Bench
