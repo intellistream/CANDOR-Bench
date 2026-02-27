@@ -20,4 +20,4 @@ sift:
         args: |
           [{"efConstruction": 120, "indexkey": "HNSWIncremental16","verbose": true}]
         query-args: |
-          [{"ef": 120, "warm_start_levels": 1, "direct_reuse": false}]
+          [{"ef": 120, "warm_start_levels": 2, "direct_reuse": false}]

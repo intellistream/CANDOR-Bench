@@ -14,8 +14,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("csv_a", help="First CSV with batch_idx, recall, query_qps.")
     parser.add_argument("csv_b", help="Second CSV with batch_idx, recall, query_qps.")
-    parser.add_argument("--label-a", default="A", help="Label for first CSV.")
-    parser.add_argument("--label-b", default="B", help="Label for second CSV.")
+    parser.add_argument("--label-a", default=None, help="Label for first CSV.")
+    parser.add_argument("--label-b", default=None, help="Label for second CSV.")
     parser.add_argument(
         "--out",
         default=None,
@@ -47,6 +47,18 @@ def main() -> None:
         raise ValueError(f"Second CSV missing columns: {', '.join(sorted(missing_b))}")
     df_b = df_b.sort_values("batch_idx")
 
+    def _default_label(csv_path: str) -> str:
+        parts = os.path.normpath(csv_path).split(os.sep)
+        if "results" in parts:
+            idx = parts.index("results")
+            if len(parts) > idx + 2:
+                # results/<dataset>/<algorithm>/... -> use algorithm
+                return parts[idx + 2]
+        return os.path.basename(os.path.dirname(csv_path)) or ""
+
+    label_a = args.label_a or _default_label(csv_a) or "A"
+    label_b = args.label_b or _default_label(csv_b) or "B"
+
     fig, axes = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
 
     axes[0].plot(
@@ -54,14 +66,14 @@ def main() -> None:
         df_a["recall"],
         color="#D62828",
         linewidth=2,
-        label=args.label_a,
+        label=label_a,
     )
     axes[0].plot(
         df_b["batch_idx"],
         df_b["recall"],
         color="#0057B7",
         linewidth=2,
-        label=args.label_b,
+        label=label_b,
     )
     axes[0].set_ylabel("Recall")
     axes[0].set_title("Recall vs Batch ID")
@@ -73,14 +85,14 @@ def main() -> None:
         df_a["query_qps"],
         color="#D62828",
         linewidth=2,
-        label=args.label_a,
+        label=label_a,
     )
     axes[1].plot(
         df_b["batch_idx"],
         df_b["query_qps"],
         color="#0057B7",
         linewidth=2,
-        label=args.label_b,
+        label=label_b,
     )
     axes[1].set_xlabel("Batch ID")
     axes[1].set_ylabel("Query QPS")

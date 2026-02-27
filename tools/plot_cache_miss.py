@@ -126,7 +126,7 @@ def main():
     parser = argparse.ArgumentParser(description='Plot cache_misses vs query_idx')
     parser.add_argument(
         '--base-dirs',
-        default='/home/ghr/candor-bench/SAGE-DB-Bench/results/sift/faiss_HNSW1, /home/ghr/candor-bench/SAGE-DB-Bench/results/sift/faiss_hnsw_incremental1',
+        default='/home/ghr/candor-bench/SAGE-DB-Bench/results/sift/faiss_HNSW, /home/ghr/candor-bench/SAGE-DB-Bench/results/sift/faiss_hnsw_incremental',
         help='comma-separated algorithm directories containing test*_result folders'
     )
     parser.add_argument(
@@ -136,7 +136,7 @@ def main():
     )
     parser.add_argument(
         '--pattern',
-        default='test[0-9]/ef-120_query_cache_miss.csv, test10/ef-120_query_cache_miss.csv',
+        default='ef-120/ef-120_query_cache_miss.csv',
         help='glob pattern(s) relative to base-dir, comma-separated'
     )
     parser.add_argument(
