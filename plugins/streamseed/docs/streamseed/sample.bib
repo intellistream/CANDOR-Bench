@@ -1,0 +1,133 @@
+@article{Zhong20255017,
+author = {Zhong, Xiaoyao and Li, Haotian and Jin, Jiabao and Yang, Mingyu and Chu, Deming and Wang, Xiangyu and Shen, Zhitao and Jia, Wei and Gu, George and Xie, Yi and Lin, Xuemin and Shen, Heng Tao and Song, Jingkuan and Cheng, Peng},
+title = {VSAG: An Optimized Search Framework for Graph-Based Approximate Nearest Neighbor Search},
+year = {2025},
+volume = {18},
+number = {12},
+doi = {10.14778/3750601.3750624},
+journal = {Proc. VLDB Endow.},
+pages = {5017--5030},
+numpages = {14}
+}
+
+@inproceedings{Jayaram2019,
+ author = {Jayaram Subramanya, Suhas and Devvrit, Fnu and Simhadri, Harsha Vardhan and Krishnawamy, Ravishankar and Kadekodi, Rohan},
+ booktitle = {Advances in Neural Information Processing Systems},
+ pages = {},
+ title = {DiskANN: Fast Accurate Billion-point Nearest Neighbor Search on a Single Node},
+ volume = {32},
+ year = {2019}
+}
+
+@ARTICLE{Malkov2020824,
+  author={Malkov, Yu A. and Yashunin, D. A.},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence}, 
+  title={Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs}, 
+  year={2020},
+  volume={42},
+  number={4},
+  pages={824-836},
+  keywords={Routing;Complexity theory;Search problems;Data models;Approximation algorithms;Biological system modeling;Brain modeling;Graph and tree search strategies;artificial intelligence;information search and retrieval;information storage and retrieval;information technology and systems;search process;graphs and networks;data structures;nearest neighbor search;big data;approximate search;similarity search},
+  doi={10.1109/TPAMI.2018.2889473}}
+
+@article{Gou2025,
+author = {Gou, Yutong and Gao, Jianyang and Xu, Yuexuan and Long, Cheng},
+title = {SymphonyQG: Towards Symphonious Integration of Quantization and Graph for Approximate Nearest Neighbor Search},
+year = {2025},
+issue_date = {February 2025},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {3},
+number = {1},
+url = {https://doi.org/10.1145/3709730},
+doi = {10.1145/3709730},
+abstract = {Approximate nearest neighbor (ANN) search in high-dimensional Euclidean space has a broad range of applications. Among existing ANN algorithms, graph-based methods have shown superior performance in terms of the time-accuracy trade-off. However, they face performance bottlenecks due to the random memory accesses caused by the searching process on the graph indices and the costs of computing exact distances to guide the searching process. To relieve the bottlenecks, a recent method named NGT-QG makes an attempt by integrating quantization and graph. It (1) replicates and stores the quantization codes of a vertex's neighbors compactly so that they can be accessed sequentially, and (2) uses a SIMD-based implementation named FastScan to efficiently estimate distances based on the quantization codes in batch for guiding the searching process. While NGT-QG achieves promising improvements over the vanilla graph-based methods, it has not fully unleashed the potential of integrating quantization and graph. For instance, it entails a re-ranking step to compute exact distances at the end, which introduces extra random memory accesses; its graph structure is not jointly designed considering the in-batch nature of FastScan, which causes wastes of computation in searching. In this work, following NGT-QG, we present a new method named SymphonyQG, which achieves more symphonious integration of quantization and graph (e.g., it avoids the explicit re-ranking step and refines the graph structure to be more aligned with FastScan). Based on extensive experiments on real-world datasets, SymphonyQG establishes the new state-of-the-art in terms of the time-accuracy trade-off: at 95\% recall, SymphonyQG achieves 1.5x-4.5x QPS compared with the most competitive baselines and achieves 3.5x-17x QPS compared with the classical library HNSWlib across all tested datasets. At the same time, its indexing is at least 8x faster than NGT-QG.},
+journal = {Proc. ACM Manag. Data},
+month = feb,
+articleno = {80},
+numpages = {26},
+keywords = {approximate nearest neighbor search, high-dimensional vector, vector quantization}
+}
+
+@article{Wang2025,
+author = {Wang, Mengzhao and Wu, Haotian and Ke, Xiangyu and Gao, Yunjun and Zhu, Yifan and Zhou, Wenchao},
+title = {Accelerating Graph Indexing for ANNS on Modern CPUs},
+year = {2025},
+issue_date = {June 2025},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {3},
+number = {3},
+url = {https://doi.org/10.1145/3725260},
+doi = {10.1145/3725260},
+abstract = {In high-dimensional vector spaces, Approximate Nearest Neighbor Search (ANNS) is a key component in database and artificial intelligence infrastructures. Graph-based ANNS methods, particularly HNSW, have emerged as leading solutions, offering an impressive trade-off between search efficiency and accuracy. Many vector databases utilize graph indexes as their core algorithms, benefiting from various optimizations to enhance search performance. However, the high indexing time associated with graph algorithms poses a significant challenge, especially given the increasing volume of data, query processing complexity, and dynamic index maintenance demand. This has rendered indexing time a critical performance metric for users.In this paper, we comprehensively analyze the underlying causes of the low graph indexing efficiency on modern CPUs, identifying that distance computation dominates indexing time, primarily due to high memory access latency and suboptimal arithmetic operation efficiency. We demonstrate that distance comparisons during index construction can be effectively performed using compact vector codes at an appropriate compression error. Drawing from insights gained through integrating existing compact coding methods in the graph indexing process, we propose a novel compact coding strategy, named Flash, designed explicitly for graph indexing and optimized for modern CPU architectures. By minimizing random memory accesses and maximizing the utilization of SIMD (Single Instruction, Multiple Data) instructions, Flash significantly enhances cache hit rates and arithmetic operations. Extensive experiments conducted on eight real-world datasets, ranging from ten million to one billion vectors, exhibit that Flash achieves a speedup of 10.4\texttimes{} to 22.9\texttimes{} in index construction efficiency, while maintaining or improving search performance.},
+journal = {Proc. ACM Manag. Data},
+month = jun,
+articleno = {123},
+numpages = {29},
+keywords = {approximate nearest neighbor search, graph-based vector index, vector compression}
+}
+
+
+@inproceedings{Chen20233225,
+author = {Chen, Patrick and Chang, Wei-Cheng and Jiang, Jyun-Yu and Yu, Hsiang-Fu and Dhillon, Inderjit and Hsieh, Cho-Jui},
+title = {FINGER: Fast Inference for Graph-based Approximate Nearest Neighbor Search},
+year = {2023},
+isbn = {9781450394161},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3543507.3583318},
+doi = {10.1145/3543507.3583318},
+abstract = {Approximate K-Nearest Neighbor Search (AKNNS) has now become ubiquitous in modern applications, such as a fast search procedure with two-tower deep learning models. Graph-based methods for AKNNS in particular have received great attention due to their superior performance. These methods rely on greedy graph search to traverse the data points as embedding vectors in a database. Under this greedy search scheme, we make a key observation: many distance computations do not influence search updates so that these computations can be approximated without hurting performance. As a result, we propose FINGER, a fast inference method for efficient graph search in AKNNS. FINGER approximates the distance function by estimating angles between neighboring residual vectors. The approximated distance can be used to bypass unnecessary computations for faster searches. Empirically, when it comes to speeding up the inference of HNSW, which is one of the most popular graph-based AKNNS methods, FINGER significantly outperforms existing acceleration approaches and conventional libraries by 20 to 60 across different benchmark datasets.},
+booktitle = {Proceedings of the ACM Web Conference 2023},
+pages = {3225–3235},
+numpages = {11},
+keywords = {Approximate K-Nearest Neighbor Search (AKNNS), Graph-based Approximate K-Nearest Neighbor Search., Similarity Search},
+location = {Austin, TX, USA},
+series = {WWW '23}
+}
+
+@article{Gao2023,
+author = {Gao, Jianyang and Long, Cheng},
+title = {High-Dimensional Approximate Nearest Neighbor Search: with Reliable and Efficient Distance Comparison Operations},
+year = {2023},
+issue_date = {June 2023},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {1},
+number = {2},
+url = {https://doi.org/10.1145/3589282},
+doi = {10.1145/3589282},
+abstract = {Approximate K nearest neighbor (AKNN) search in the high-dimensional Euclidean vector space is a fundamental and challenging problem. We observe that in high-dimensional space, the time consumption of nearly all AKNN algorithms is dominated by that of the distance comparison operations (DCOs). For each operation, it scans full dimensions of an object and thus, runs in linear time wrt the dimensionality. To speed it up, we propose a randomized algorithm named ADSampling which runs in logarithmic time wrt the dimensionality for the majority of DCOs and succeeds with high probability. In addition, based on ADSampling we develop one generic and two algorithm-specific techniques as plugins to enhance existing AKNN algorithms. Both theoretical and empirical studies confirm that: (1) our techniques introduce nearly no accuracy loss and (2) they consistently improve the efficiency.},
+journal = {Proc. ACM Manag. Data},
+month = jun,
+articleno = {137},
+numpages = {27},
+keywords = {distance comparison operation, high-dimensional nearest neighbor search, random projection}
+}
+
+@article{Song2025,
+author = {Song, Ziwen and Wang, Bin and Yang, Xiaochun},
+title = {Accelerating High-Dimensional ANN Search via Skipping Redundant Distance Computations},
+year = {2025},
+issue_date = {December 2025},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {3},
+number = {6},
+url = {https://doi.org/10.1145/3769753},
+doi = {10.1145/3769753},
+abstract = {Graph-based methods for high-dimensional Approximate Nearest Neighbor (ANN) search have achieved remarkable success. Recent studies have revealed that DCO (distance comparison operation) is a bottleneck in graph-based methods due to distance computations. Optimizations such as ADSampling, DDC and DADE are employed to alleviate this issue by terminating the distance computation early. Although these optimizations achieve significant speedup, they rely on an estimation-and-testing process for early termination. Their effectiveness diminishes when SIMD (Single Instruction Multiple Data) acceleration is enabled in distance computation, the cost introduced in estimation-and-testing process may outweigh the benefit of early termination, leading to performance degradation. Furthermore, the best-first-search strategy employed in graph-based methods requires DCO for all neighboring points, incurring redundant distance computation. To address these issues, in this paper, we first perform a cost analysis to reveal the inefficiency of existing DCO optimizations under SIMD-enabled setting. We then analyze the current search strategy to demonstrate that not all neighboring nodes require DCO. Based on these analyses, we present SkipComputing to accelerate the ANN search. Specifically, we first propose a subspace-based candidate search strategy to identify promising points for DCO, thereby eliminating the reliance on estimation-and-testing based DCO optimization for low potential points. We then develop a lower-bound pruning method based on distance decomposition to enable early termination of distance computations in DCO. Finally, we optimize the data layout to reduce the overhead of random memory access during candidate search. When SIMD is enabled, experimental results show that SkipComputing substantially outperforms HNSW, achieving up to 6x performance improvement. Furthermore, it achieves up to 2.7x speedup over state-of-the-art optimization methods while maintaining competitive space efficiency.},
+journal = {Proc. ACM Manag. Data},
+month = dec,
+articleno = {288},
+numpages = {29},
+keywords = {approximate nearest neighbor search, distance comparison operation, graph-based method, high-dimensional data, vector search}
+}
+
+@misc{TweetPerSecond,
+    author = {MARISA MURGATROYD},
+    title = {X/Twitter Statistics},
+    year = {2025},
+    note = {\url{https://liveyourmessage.com/twitter-statistics/}}
+}

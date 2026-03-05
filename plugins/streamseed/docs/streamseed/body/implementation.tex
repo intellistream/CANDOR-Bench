@@ -1,0 +1,41 @@
+\section{Implementation}
+\label{sec:implementation}
+
+To make the design-to-system path explicit, Table~\ref{tab:design-impl-map} summarizes how the two design aspects in Chapter~3 map to implementation focus in this chapter.
+
+\begin{table}[t]
+\centering
+\caption{Mapping from design aspects to implementation mechanisms.}
+\label{tab:design-impl-map}
+\begin{tabular}{p{0.38\linewidth} p{0.56\linewidth}}
+\hline
+\textbf{Design Aspect} & \textbf{Implementation Focus} \\
+\hline
+Workload-aligned reuse under drift & Bounded hint state, online utility-aware gating, warm-start seed adaptation, and fallback-on-drift safety. \\
+Backend-decoupled control interface & Policy/Adapter/Runtime layering, backend-agnostic control signals, and runbook-configurable reproducible execution. \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Implementation for Design Aspect I: Workload-Aligned Reuse under Drift}
+To operationalize the first design aspect, reuse is implemented as a guarded online decision process rather than a fixed acceleration path.
+The core runtime state is a bounded hint table, where each entry maintains confidence, freshness, and recent utility signals.
+All updates are incremental and localized, ensuring that policy maintenance remains lightweight under high-rate streams.
+
+At query time, the policy layer applies utility-aware gating: hints are activated only when recent evidence indicates positive gain; otherwise, the system reverts to native traversal.
+For dynamic HNSW backends, accepted hints are translated into warm-start seeds and controlled expansion signals.
+When drift weakens confidence, fallback is triggered immediately to prevent stale reuse from degrading recall.
+This mechanism instantiates the ``selective and self-correcting'' behavior introduced in Section~3 while preserving throughput in stable phases.
+
+\subsection{Implementation for Design Aspect II: Backend-Decoupled Control Interface}
+To operationalize the second design aspect, StreamSeed is integrated into CANDOR-Bench as a pluginized module with explicit separation between policy and backend mechanics.
+The implementation is organized into three cooperating layers:
+\begin{itemize}
+	\item \textbf{Policy layer}: AQHC state machine, hint scoring, gating, and eviction.
+	\item \textbf{Adapter layer}: translation between backend-agnostic hints and backend-native index operations.
+	\item \textbf{Runtime layer}: runbook-driven scheduling, maintenance orchestration, and statistics logging.
+\end{itemize}
+
+This interface-first structure preserves existing experiment entry points while allowing backend-specific optimizations to evolve independently.
+Major controls (hint budget, gating thresholds, refresh aggressiveness, and maintenance cadence) are exposed through runbook and algorithm configuration files to ensure reproducibility.
+Consequently, the same policy implementation can be compared across event rates, datasets, and dynamic backends under consistent instrumentation.

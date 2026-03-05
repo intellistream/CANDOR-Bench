@@ -1,0 +1,23 @@
+random-xs:
+  faiss_hnsw_streamseed:
+    module: benchmark_anns.bench.algorithms.faiss_hnsw_streamseed.faiss_hnsw_streamseed
+    constructor: FaissHnswStreamSeed
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"efConstruction": 120, "indexkey": "HNSWIncremental16"}]
+        query-args: |
+          [{"ef": 40, "streamseed_mode": "streamseed_core", "hint_hops": 1, "hint_max_candidates": 256, "hint_gate": -1.0, "hint_table_slots": 256}]
+
+sift:
+  faiss_hnsw_streamseed:
+    module: benchmark_anns.bench.algorithms.faiss_hnsw_streamseed.faiss_hnsw_streamseed
+    constructor: FaissHnswStreamSeed
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"efConstruction": 120, "indexkey": "HNSWIncremental16","verbose": true}]
+        query-args: |
+          [{"ef": 120, "streamseed_mode": "streamseed_core", "hint_hops": 1, "hint_max_candidates": 256, "hint_gate": -1.0, "hint_table_slots": 1024}]

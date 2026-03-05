@@ -46,8 +46,11 @@ std::vector<faiss::idx_t> index_search_warm(
     const py::array_t<float, py::array::c_style | py::array::forcecast>& x,
         faiss::idx_t k,
         int ef_search,
-  int warm_start_levels,
-  bool direct_reuse) {
+  int streamseed_mode,
+  int hint_hops,
+  int hint_max_candidates,
+  float hint_gate,
+  int hint_table_slots) {
   py::buffer_info x_info = x.request();
   const float* x_ptr = static_cast<const float*>(x_info.ptr);
     std::vector<float> distances(n * k);
@@ -56,8 +59,11 @@ std::vector<faiss::idx_t> index_search_warm(
     if (auto* inc = dynamic_cast<faiss::IndexHNSWIncremental*>(index.get())) {
         faiss::SearchParametersHNSWIncremental params;
         params.efSearch = ef_search;
-        params.warm_start_levels = warm_start_levels;
-        params.direct_reuse = direct_reuse;
+        params.streamseed_mode = streamseed_mode;
+        params.hint_hops = hint_hops;
+        params.hint_max_candidates = hint_max_candidates;
+        params.hint_gate = hint_gate;
+        params.hint_table_slots = hint_table_slots;
          auto search_t0 = std::chrono::steady_clock::now();
      inc->search(n, x_ptr, k, distances.data(), labels.data(), &params);
          auto search_t1 = std::chrono::steady_clock::now();
@@ -396,9 +402,12 @@ PYBIND11_MODULE(PyCANDYAlgo, m) {
           .def("search",&faiss::Index::search_arrays)
           .def("search_warm", &index_search_warm,
                    py::arg("n"), py::arg("x"), py::arg("k"), py::arg("ef_search"),
-                   py::arg("warm_start_levels") = 0,
-                   py::arg("direct_reuse") = false,
-               "Search k nearest neighbors with efSearch and warm-start levels")
+                   py::arg("streamseed_mode") = 1,
+                 py::arg("hint_hops") = 1,
+                 py::arg("hint_max_candidates") = 256,
+                 py::arg("hint_gate") = -1.0f,
+                 py::arg("hint_table_slots") = 1024,
+               "Search k nearest neighbors with efSearch and StreamSeed-Core hint control")
           .def("train",&faiss::Index::train_arrays)
           .def("add_with_ids", &faiss::Index::add_arrays_with_ids)
         .def_readwrite("verbose", &faiss::Index::verbose);

@@ -1,0 +1,26 @@
+\section{StreamSeed Design}
+\label{sec:streamseed-design}
+
+StreamSeed targets dynamic ANNS where index quality and workload characteristics co-evolve under continuous updates.
+Rather than formulating optimization as an offline pre-processing stage, the design unifies \emph{optimization objectives} and \emph{runtime behavior} within a single online framework: sustaining retrieval quality, preserving throughput stability, and minimizing integration overhead across heterogeneous backends.
+This perspective follows directly from the problem analysis in Section 2: hint utility can degrade quickly under updates, trust decisions must be made online at query time, and coarse global refresh is too expensive in high-rate streams.
+To address these coupled issues without introducing a monolithic backend-specific solution, StreamSeed organizes the design into two complementary aspects: workload-aligned adaptive reuse and backend-decoupled control.
+Accordingly, the design is structured around two core aspects.
+
+\subsection{Design Aspect I: Workload-Aligned Reuse under Drift}
+The first aspect is to make reuse \emph{selective and self-correcting} instead of perpetually enabled.
+In streaming settings, both data distribution and query focus may evolve rapidly; reuse hints that are beneficial at one time can become counterproductive later.
+StreamSeed therefore treats reuse as a provisional hypothesis that must be continuously validated against recent workload evidence.
+
+At a high level, this aspect emphasizes three principles: (1) value-aware reuse only when the expected utility is positive, (2) uncertainty-aware fallback when confidence degrades, and (3) continuous adaptation so that historical signals do not dominate current workload reality.
+These principles mitigate quality collapse under drift while preserving acceleration gains in stable phases.
+Its implementation is detailed in the first subsection of Section~\ref{sec:implementation}.
+
+\subsection{Design Aspect II: Backend-Decoupled Control Interface}
+The second aspect separates optimization policy from index-specific mechanics.
+Dynamic ANN systems often incorporate multiple backends with heterogeneous traversal and maintenance behaviors; tightly coupling optimization logic to a single backend reduces portability and increases engineering cost.
+StreamSeed therefore defines a lightweight control interface through which the policy layer exchanges only minimal, backend-agnostic signals with the underlying index.
+
+This interface-centric design enables a single policy family to be reused across implementations while preserving backend autonomy for low-level execution.
+Consequently, policy and backend optimizations can evolve independently, improving experimental comparability and reducing migration friction in production settings.
+Its implementation is detailed in the second subsection of Section~\ref{sec:implementation}.

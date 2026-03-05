@@ -1,0 +1,76 @@
+\section{Problem Statement and Motivation}
+
+\subsection{Problem Statement}
+We study dynamic ANNS over a vector collection $\mathcal{D}_t \subset \mathbb{R}^d$ that evolves under a streaming workload.
+At each discrete step $t$, the system receives either an update event $u_t \in \mathcal{U}$ (insert/delete) or a query event $q_t \in \mathcal{Q}$.
+For each query $q_t$, the index returns an approximate top-$k$ result set $\widehat{N}_k(q_t)$, with quality measured by Recall@$k$:
+\begin{equation}
+\mathrm{Recall@}k(q_t)=\frac{|\widehat{N}_k(q_t)\cap N_k^{\ast}(q_t)|}{k},
+\end{equation}
+where $N_k^{\ast}(q_t)$ is the exact top-$k$ neighbor set.
+
+Many fast graph-based systems maintain reusable search artifacts (e.g., entry points, frontier states, local routing hints).
+We abstract them as a bounded hint state $\mathcal{H}_t$.
+Under a window $W=[t_1,t_2]$, the amortized per-query latency is
+\begin{equation}
+\bar{L}(W)=\frac{\sum_{q_t\in W} L_{\mathrm{search}}(q_t,\mathcal{H}_t) + \sum_{u_t\in W} L_{\mathrm{maint}}(u_t,\mathcal{H}_t)}{|\{q_t\in W\}|}.
+\end{equation}
+Our objective is to maximize throughput (equivalently minimize $\bar{L}(W)$) under both quality and memory constraints:
+\begin{equation}
+\begin{aligned}
+\min\ &\bar{L}(W)\\
+	ext{s.t. }&\frac{1}{|\{q_t\in W\}|}\sum_{q_t\in W}\mathrm{Recall@}k(q_t)\ge \tau,\\
+&|\mathcal{H}_t|\le B,\ \forall t.
+\end{aligned}
+\end{equation}
+Here $\tau$ is the target recall threshold and $B$ is the hint-state budget.
+
+\subsection{Notation Summary}
+Table~\ref{tab:notation} summarizes the core symbols used throughout Sections 2--5.
+\begin{table}[t]
+\caption{Core notation in dynamic ANNS formulation.}
+\label{tab:notation}
+\centering
+\begin{tabular}{ll}
+	oprule
+Symbol & Meaning \\
+\midrule
+$\mathcal{D}_t$ & Dynamic vector collection at time $t$ \\
+$q_t,\ u_t$ & Query event and update event at time $t$ \\
+$\mathcal{H}_t$ & Bounded query-hint state \\
+$W=[t_1,t_2]$ & Evaluation window \\
+$\bar{L}(W)$ & Amortized per-query latency in $W$ \\
+$\tau$ & Target average Recall@$k$ threshold \\
+$B$ & Memory budget of hint state \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Motivation from Preliminary Results}
+Our preliminary runs on dynamic HNSW show a consistent two-sided failure mode.
+When hint maintenance is disabled or too weak, stale hints accumulate and search trajectories drift away from high-quality graph regions, causing rising tail latency and recall loss as update rates increase.
+When global maintenance is too aggressive, maintenance overhead dominates amortized latency, offsetting the gain from faster query routing.
+
+This behavior can be summarized as a staleness--overhead tension:
+\begin{equation}
+\Delta \bar{L} \approx \underbrace{\Delta L_{\mathrm{stale}}}_{\text{insufficient refresh}} + \underbrace{\Delta L_{\mathrm{maint}}}_{\text{excessive refresh}},
+\end{equation}
+where reducing one term naively often increases the other.
+Therefore, dynamic ANNS needs \emph{adaptive} maintenance rather than fixed-period recomputation.
+
+\subsection{Motivational Examples}
+	extbf{Example 1: Burst updates.}
+In high event-rate intervals, newly inserted vectors quickly change local graph topology.
+Hints learned shortly before the burst become unreliable, so blindly reusing them increases traversal detours and cache-miss-heavy random accesses.
+
+	extbf{Example 2: Distribution shift.}
+When query focus shifts to a new semantic region, historical hints remain frequent but no longer informative.
+Static reuse policies keep activating these high-frequency yet low-value hints, hurting both latency and recall unless the policy can detect and gate them online.
+
+\subsection{Why Existing Approaches Fail in This Regime}
+Existing optimizations are mostly designed for static or quasi-static settings, and they break in dynamic streams for three reasons.
+First, many methods assume hint validity changes slowly, but stream updates can invalidate local graph neighborhoods within short horizons.
+Second, maintenance is often decoupled from online query behavior, so the system cannot decide \emph{when to trust} or \emph{when to fallback} at query time.
+Third, global rebuild/reoptimization mechanisms are coarse-grained and cannot match rapidly changing update intensity without either over-paying maintenance cost or under-refreshing hints.
+
+These limitations motivate Section~\ref{sec:streamseed-design}: a unified online control loop that jointly handles hint construction, usage gating, and incremental refresh.

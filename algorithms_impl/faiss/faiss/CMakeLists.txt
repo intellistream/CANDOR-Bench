@@ -122,6 +122,7 @@ set(FAISS_HEADERS
   IndexFlatCodes.h
   IndexHNSW.h
   IndexHNSWIncremental.h
+  StreamSeedCore.h
   IndexNSW.h
   IndexMNRU.h
   IndexVanama.h
@@ -239,12 +240,26 @@ if(NOT WIN32)
   list(APPEND FAISS_HEADERS invlists/OnDiskInvertedLists.h)
 endif()
 
+# StreamSeed-Core: physical sources live with streamseed plugin, then get
+# compiled as object files and injected into faiss variants.
+set(STREAMSEED_CORE_SRC
+  ${PROJECT_SOURCE_DIR}/../../plugins/streamseed/core/src/StreamSeedCore.cpp
+)
+
+add_library(streamseed_core_obj OBJECT ${STREAMSEED_CORE_SRC})
+target_include_directories(streamseed_core_obj PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../../plugins/streamseed/core/include>
+)
+
 # Export FAISS_HEADERS variable to parent scope.
 set(FAISS_HEADERS ${FAISS_HEADERS} PARENT_SCOPE)
 
 add_library(faiss ${FAISS_SRC})
+target_sources(faiss PRIVATE $<TARGET_OBJECTS:streamseed_core_obj>)
 
 add_library(faiss_avx2 ${FAISS_SRC})
+target_sources(faiss_avx2 PRIVATE $<TARGET_OBJECTS:streamseed_core_obj>)
 if(NOT FAISS_OPT_LEVEL STREQUAL "avx2")
   set_target_properties(faiss_avx2 PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endif()
@@ -261,6 +276,7 @@ else()
 endif()
 
 add_library(faiss_avx512 ${FAISS_SRC})
+target_sources(faiss_avx512 PRIVATE $<TARGET_OBJECTS:streamseed_core_obj>)
 if(NOT FAISS_OPT_LEVEL STREQUAL "avx512")
   set_target_properties(faiss_avx512 PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endif()
@@ -276,13 +292,16 @@ endif()
 
 # Handle `#include <faiss/foo.h>`.
 target_include_directories(faiss PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../../plugins/streamseed/core/include>)
 # Handle `#include <faiss/foo.h>`.
 target_include_directories(faiss_avx2 PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../../plugins/streamseed/core/include>)
 # Handle `#include <faiss/foo.h>`.
 target_include_directories(faiss_avx512 PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../../plugins/streamseed/core/include>)
 
 set_target_properties(faiss PROPERTIES
   POSITION_INDEPENDENT_CODE ON
@@ -308,6 +327,10 @@ target_compile_definitions(faiss_avx2 PRIVATE FINTEGER=int)
 target_compile_definitions(faiss_avx512 PRIVATE FINTEGER=int)
 
 find_package(OpenMP REQUIRED)
+if (OpenMP_CXX_FLAGS)
+  target_compile_options(streamseed_core_obj PRIVATE ${OpenMP_CXX_FLAGS})
+endif()
+target_link_libraries(streamseed_core_obj PRIVATE OpenMP::OpenMP_CXX)
 target_link_libraries(faiss PRIVATE OpenMP::OpenMP_CXX)
 target_link_libraries(faiss_avx2 PRIVATE OpenMP::OpenMP_CXX)
 target_link_libraries(faiss_avx512 PRIVATE OpenMP::OpenMP_CXX)
