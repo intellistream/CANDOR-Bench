@@ -1,0 +1,18 @@
+\section{Related Work}
+
+\subsection{Most Directly Related: Dynamic and Graph-based ANNS}
+Graph-based methods such as HNSW and its variants are widely adopted for high-recall and low-latency vector search.
+Most designs, however, are optimized for static or slowly changing datasets, where index quality and auxiliary search artifacts are built offline.
+Recent dynamic ANNS studies explore incremental index maintenance and update-aware operations.
+In contrast, StreamSeed focuses on policy-level control of query hint reuse and provides a pluginized path to integrate with existing dynamic backends.
+
+\subsection{Indirectly Related: System and Algorithm Acceleration}
+Prior system works improve ANNS throughput via hardware-conscious layouts, vector quantization, and SIMD-friendly distance computation.
+These approaches are complementary to StreamSeed: they optimize execution efficiency but do not directly address online staleness of reusable query guidance.
+Algorithmic methods reduce unnecessary distance evaluations through pruning, lower-bound estimation, or partial-dimension strategies.
+While effective in static contexts, they usually rely on assumptions that weaken under high-rate updates and distribution drift.
+
+\subsection{Other: Positioning of This Work}
+StreamSeed is orthogonal to both system-only and algorithm-only accelerations.
+Its contribution is a unified online control loop (AQHC) that jointly manages hint construction, usage, and update,
+bridging algorithmic reuse opportunities with systems-level deployability in streaming settings.

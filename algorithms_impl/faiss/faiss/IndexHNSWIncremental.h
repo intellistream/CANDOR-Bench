@@ -9,7 +9,10 @@
 
 #pragma once
 
+#include <cstdint>
 #include <vector>
+
+#include <omp.h>
 
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexPQ.h>
@@ -79,9 +82,13 @@ struct IndexHNSWIncremental : Index {
 
         ReconstructFromNeighborsIncremental* reconstruct_from_neighbors = nullptr;
 
-    // Cache per fixed query id: last top-k neighbors
-    mutable std::vector<std::vector<idx_t>> query_cache;
-    mutable idx_t query_cache_k = 0;
+    // Shared query-hint table for StreamSeed-Core
+    mutable std::vector<std::vector<idx_t>> warm_seed_dictionary;
+    mutable idx_t warm_seed_dictionary_k = 0;
+    mutable std::vector<float> warm_seed_dictionary_score;
+    mutable std::vector<uint64_t> warm_seed_dictionary_age;
+    mutable std::vector<omp_lock_t> warm_seed_dictionary_locks;
+    mutable uint64_t warm_seed_dictionary_clock = 0;
 
     explicit IndexHNSWIncremental(int d = 0, int M = 32, MetricType metric = METRIC_L2);
     explicit IndexHNSWIncremental(Index* storage, int M = 32);

@@ -1,0 +1,21 @@
+\begin{abstract}
+Approximate nearest neighbor search is a core primitive in modern data systems, 
+but most high-performance graph-based methods are optimized for static snapshots 
+rather than continuous updates. Under streaming insertions and deletions, 
+pre-computed search hints quickly become stale, causing either throughput 
+collapse or expensive re-optimization. In this paper, we present 
+\textbf{StreamSeed}, a pluggable optimization module for dynamic ANNS 
+that turns per-query reuse into an adaptive \emph{Query Hint Reuse (QHR)} workflow. 
+Our key abstraction is \emph{Adaptive Query Hint Control (AQHC)}, which unifies 
+hint-table construction, online usage control, and hint-state updates in a 
+single policy loop. This design enables StreamSeed to maintain compact, 
+high-value reusable query hints under distribution drift, while preserving 
+compatibility with existing ANNS backends. We implement StreamSeed in 
+\textbf{CANDOR-Bench}, a streaming ANNS benchmark framework, and validate 
+its pluggability across multiple ANN backends under a unified 
+plugin interface for runbook-driven 
+evaluation. Experiments on streaming workloads show that StreamSeed 
+consistently improves end-to-end search efficiency while sustaining 
+competitive recall under high update rates, and its ablations validate 
+that unified query-hint control is critical to robustness in dynamic settings.
+\end{abstract}

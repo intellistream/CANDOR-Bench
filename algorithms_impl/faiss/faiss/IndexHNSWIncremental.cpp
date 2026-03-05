@@ -29,6 +29,7 @@
 #include <faiss/Index2Layer.h>
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexIVFPQ.h>
+#include <faiss/StreamSeedCore.h>
 #include <faiss/impl/AuxIndexStructures.h>
 #include <faiss/impl/FaissAssert.h>
 #include <faiss/utils/Heap.h>
@@ -123,6 +124,12 @@ DistanceComputer* storage_distance_computer(const Index* storage) {
         return storage->get_distance_computer();
     }
 }
+
+using streamseed::HintSearchContext;
+using streamseed::HintSearchResult;
+using streamseed::IHintStrategy;
+using streamseed::ISeedSource;
+using streamseed::OptimizationConfig;
 
 void hnsw_add_vertices(
         IndexHNSWIncremental& index_hnsw,
@@ -274,6 +281,7 @@ IndexHNSWIncremental::IndexHNSWIncremental(Index* storage, int M)
         : Index(storage->d, storage->metric_type), hnsw(M), storage(storage) {}
 
 IndexHNSWIncremental::~IndexHNSWIncremental() {
+    streamseed::clear_dictionary_locks(warm_seed_dictionary_locks);
     if (own_fields) {
         delete storage;
     }
@@ -307,35 +315,40 @@ void IndexHNSWIncremental::search(
             storage,
             "Please use IndexHNSWFlatIncremental (or variants) instead of IndexHNSWIncremental directly");
     const SearchParametersHNSWIncremental* params = nullptr;
-
-    int efSearch = hnsw.efSearch;
-    int warm_start_levels = 0;
-    bool direct_reuse = false;
     if (params_in) {
         params = dynamic_cast<const SearchParametersHNSWIncremental*>(params_in);
         FAISS_THROW_IF_NOT_MSG(params, "params type invalid");
-        efSearch = params->efSearch;
-        warm_start_levels = params->warm_start_levels;
-        direct_reuse = params->direct_reuse;
     }
-    double search_block_t0 = getmillisecs();
-    const bool use_cache = warm_start_levels > 0 || direct_reuse;
 
-    if (use_cache) {
-        if (query_cache_k != k) {
-            query_cache_k = k;
-            query_cache.clear();
-        }
-        if (query_cache.size() < static_cast<size_t>(n)) {
-            query_cache.resize(n);
-        }
-    }
+    const OptimizationConfig optimization_config =
+            streamseed::resolve_optimization_config(hnsw, params);
+    double search_block_t0 = getmillisecs();
+        streamseed::prepare_dictionary_if_needed(
+            warm_seed_dictionary,
+            warm_seed_dictionary_k,
+            warm_seed_dictionary_score,
+            warm_seed_dictionary_age,
+            warm_seed_dictionary_locks,
+            optimization_config,
+            k);
+
+        std::unique_ptr<ISeedSource> seed_source = streamseed::create_seed_source(
+            optimization_config,
+            warm_seed_dictionary,
+            warm_seed_dictionary_score,
+            warm_seed_dictionary_age,
+            warm_seed_dictionary_locks,
+            warm_seed_dictionary_clock);
+
+        std::unique_ptr<IHintStrategy> hint_strategy =
+            streamseed::create_streamseed_strategy(optimization_config);
 
     size_t n1 = 0, n2 = 0, n3 = 0, ndis = 0, nreorder = 0;
-    size_t warm_start_used = 0;
+    size_t hint_used = 0;
 
     idx_t check_period =
-            InterruptCallback::get_period_hint(hnsw.max_level * d * efSearch);
+            InterruptCallback::get_period_hint(
+                hnsw.max_level * d * optimization_config.ef_search);
 
     for (idx_t i0 = 0; i0 < n; i0 += check_period) {
         idx_t i1 = std::min(i0 + check_period, n);
@@ -347,135 +360,33 @@ void IndexHNSWIncremental::search(
             std::unique_ptr<DistanceComputer> dis(
                     storage_distance_computer(storage));
 
-#pragma omp for reduction(+ : n1, n2, n3, ndis, nreorder, warm_start_used) schedule(guided)
+#pragma omp for reduction(+ : n1, n2, n3, ndis, nreorder, hint_used) schedule(guided)
             for (idx_t i = i0; i < i1; i++) {
                 idx_t* idxi = labels + i * k;
                 float* simi = distances + i * k;
                 dis->set_query(x + i * d);
 
-                // added by ghr
-                bool used_warm_start = false;
-                bool warm_start_touched = false;
-                if (use_cache && i < static_cast<idx_t>(query_cache.size())) {
-                    const auto& cache_ids = query_cache[i];
-                    if (direct_reuse) {
-                        if (!cache_ids.empty()) {
-                            const size_t cache_size = cache_ids.size();
-                            for (idx_t j2 = 0; j2 < k; j2++) {
-                                idx_t cached_id = (static_cast<size_t>(j2) < cache_size)
-                                        ? cache_ids[j2]
-                                        : -1;
-                                idxi[j2] = cached_id;
-                                if (cached_id >= 0) {
-                                    simi[j2] = 0.0f;
-                                } else {
-                                    simi[j2] = std::numeric_limits<float>::infinity();
-                                }
-                            }
-
-                            used_warm_start = true;
-                            warm_start_used += 1;
-                        }
-                    } else if (warm_start_levels > 0) {
-                        std::vector<storage_idx_t> frontier;
-                        std::vector<storage_idx_t> candidates;
-
-                        frontier.reserve(cache_ids.size());
-                        candidates.reserve(cache_ids.size() * 8);
-
-                        for (idx_t cached_id : cache_ids) {
-                            if (cached_id < 0) {
-                                continue;
-                            }
-                            storage_idx_t sid = static_cast<storage_idx_t>(cached_id);
-                            if (!vt.get(sid)) {
-                                vt.set(sid);
-                                warm_start_touched = true;
-                                frontier.push_back(sid);
-                                candidates.push_back(sid);
-                            }
-                        }
-
-                        if (!frontier.empty()) {
-                            std::vector<storage_idx_t> next_frontier;
-                            for (int level = 0; level < warm_start_levels; ++level) {
-                                next_frontier.clear();
-                                for (storage_idx_t u : frontier) {
-                                    size_t begin = 0, end = 0;
-                                    hnsw.neighbor_range(u, 0, &begin, &end);
-                                    for (size_t j = begin; j < end; j++) {
-                                        storage_idx_t v = hnsw.neighbors[j];
-                                        if (v < 0) {
-                                            break;
-                                        }
-                                        if (!vt.get(v)) {
-                                            vt.set(v);
-                                            warm_start_touched = true;
-                                            next_frontier.push_back(v);
-                                            candidates.push_back(v);
-                                        }
-                                    }
-                                }
-                                if (next_frontier.empty()) {
-                                    break;
-                                }
-                                frontier.swap(next_frontier);
-                            }
-                        }
-
-                        if (!candidates.empty()) {
-                            std::vector<std::pair<float, storage_idx_t>> scored;
-                            scored.reserve(candidates.size());
-
-                            size_t j = 0;
-                            for (; j + 4 <= candidates.size(); j += 4) {
-                                float dis0 = 0.0f, dis1 = 0.0f, dis2 = 0.0f, dis3 = 0.0f;
-                                dis->distances_batch_4(
-                                        candidates[j],
-                                        candidates[j + 1],
-                                        candidates[j + 2],
-                                        candidates[j + 3],
-                                        dis0,
-                                        dis1,
-                                        dis2,
-                                        dis3);
-                                scored.emplace_back(dis0, candidates[j]);
-                                scored.emplace_back(dis1, candidates[j + 1]);
-                                scored.emplace_back(dis2, candidates[j + 2]);
-                                scored.emplace_back(dis3, candidates[j + 3]);
-                            }
-                            for (; j < candidates.size(); ++j) {
-                                scored.emplace_back((*dis)(candidates[j]), candidates[j]);
-                            }
-
-                            const size_t topn = std::min(static_cast<size_t>(k), scored.size());
-                            std::partial_sort(
-                                    scored.begin(),
-                                    scored.begin() + topn,
-                                    scored.end(),
-                                    [](const auto& a, const auto& b) {
-                                        return a.first < b.first;
-                                    });
-
-                            for (idx_t j2 = 0; j2 < k; j2++) {
-                                if (static_cast<size_t>(j2) < topn) {
-                                    simi[j2] = scored[j2].first;
-                                    idxi[j2] = scored[j2].second;
-                                } else {
-                                    simi[j2] = std::numeric_limits<float>::infinity();
-                                    idxi[j2] = -1;
-                                }
-                            }
-
-                            query_cache[i].assign(idxi, idxi + k);
-                            used_warm_start = true;
-                            warm_start_used += 1;
-                        }
+                HintSearchResult hint_result;
+                if (hint_strategy && seed_source->available(i)) {
+                    const auto& cache_ids = seed_source->get(i);
+                    HintSearchContext hint_ctx{
+                            k,
+                            idxi,
+                            simi,
+                            cache_ids,
+                            vt,
+                            *dis,
+                            hnsw};
+                    hint_result = hint_strategy->apply(hint_ctx);
+                    if (hint_result.used) {
+                        hint_used += 1;
                     }
                 }
-                //end by ghr
-                if (!used_warm_start) {
-                    if (warm_start_touched) {
+
+                const bool used_hint = hint_result.used;
+                const bool hint_touched = hint_result.touched;
+                if (!used_hint) {
+                    if (hint_touched) {
                         vt.advance();
                     }
                     maxheap_heapify(k, simi, idxi);
@@ -488,14 +399,11 @@ void IndexHNSWIncremental::search(
                     nreorder += stats.nreorder;
                     maxheap_reorder(k, simi, idxi);
 
-                    if (use_cache && i < static_cast<idx_t>(query_cache.size())) {
-                        query_cache[i].assign(idxi, idxi + k);
-                    }
-                } else if (warm_start_touched) {
+                } else if (hint_touched) {
                     vt.advance();
                 }
 
-                if (!used_warm_start && reconstruct_from_neighbors &&
+                if (!used_hint && reconstruct_from_neighbors &&
                     reconstruct_from_neighbors->k_reorder != 0) {
                     int k_reorder = reconstruct_from_neighbors->k_reorder;
                     if (k_reorder == -1 || k_reorder > k)
@@ -509,11 +417,13 @@ void IndexHNSWIncremental::search(
                             k_reorder, simi, idxi, simi, idxi, k_reorder);
                     maxheap_reorder(k_reorder, simi, idxi);
                 }
+
+                seed_source->writeback({i, k, idxi, simi});
             }
         }
-        if (warm_start_levels > 0 && verbose) {
-            printf("warm_start_used %zu/%zu queries in chunk [%" PRId64 ", %" PRId64 ")\n",
-                   warm_start_used,
+        if (optimization_config.streamseed_enabled() && verbose) {
+            printf("streamseed_hint_used %zu/%zu queries in chunk [%" PRId64 ", %" PRId64 ")\n",
+                   hint_used,
                    static_cast<size_t>(i1 - i0),
                    static_cast<int64_t>(i0),
                    static_cast<int64_t>(i1));
@@ -554,8 +464,12 @@ void IndexHNSWIncremental::reset() {
     hnsw.reset();
     storage->reset();
     ntotal = 0;
-    query_cache.clear();
-    query_cache_k = 0;
+    warm_seed_dictionary.clear();
+    warm_seed_dictionary_k = 0;
+    warm_seed_dictionary_score.clear();
+    warm_seed_dictionary_age.clear();
+    streamseed::clear_dictionary_locks(warm_seed_dictionary_locks);
+    warm_seed_dictionary_clock = 0;
 }
 
 void IndexHNSWIncremental::reconstruct(idx_t key, float* recons) const {
