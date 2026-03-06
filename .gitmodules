@@ -21,7 +21,7 @@
 [submodule "src/CANDY/ConcurrentIndex/hnsw/hnswlib"]
 	path = src/CANDY/ConcurrentIndex/hnsw/hnswlib
 	url = https://github.com/intellistream/hnswlib.git
-	branch = master
+	branch = instr
 [submodule "src/CANDY/ConcurrentIndex/parlayann/parlayann"]
 	path = src/CANDY/ConcurrentIndex/parlayann/parlayann
 	url = https://github.com/Kwan-Yiu/ParlayANN.git

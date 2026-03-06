@@ -1,52 +1,68 @@
 # CANDOR-Bench: Benchmarking In-Memory Continuous ANNS under Dynamic Open-World Streams [SIGMOD'2026]
 
-CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-woRld Streams) is a benchmarking framework designed to evaluate in-memory ANNS algorithms under realistic, dynamic data stream conditions.
+CANDOR-Bench (Continuous Approximate Nearest Neighbor Search under Dynamic Open-woRld Streams) is a benchmarking framework for evaluating **in-memory ANN systems under dynamic, non-static workloads**.
 
-This repository merges two benchmark stacks:
+This repository now brings together two closely related benchmark stacks:
 
 - **CANDY benchmark stack** — the original stream-oriented ANN evaluation framework
-- **ccANN-Bench concurrency-control benchmark stack** — read/write concurrency experiments
+- **ccANN-Bench concurrency-control benchmark stack** — focused on read/write concurrency experiments
 
 ---
 
-> **🚨🚨 Strong Recommendation: Use Docker! 🚨🚨**
+> **🚨 Strong recommendation: use Docker**
 >
-> We strongly recommend using Docker to build and run this project.
+> This project pulls together multiple ANN implementations and third-party dependencies. Local setup can be tedious and fragile. If you want the most reproducible path, use the provided Dockerfile.
 >
-> There are many algorithm libraries with complex dependencies. Setting up the environment locally can be difficult and error-prone.
-> Docker provides a consistent and reproducible environment, saving you time and avoiding compatibility issues.
->
-> **Note:** Building the Docker image may take **15–30 minutes** depending on your network and hardware, please be patient.
+> **Note:** building the image may take **15–30 minutes** depending on your machine and network.
 
 ---
 
-## What This Project Does
+## Table of Contents
 
-CANDOR-Bench is a research benchmark suite for ANN systems where data and workloads are dynamic, not static.
+- [Overview](#overview)
+- [Track Overview](#track-overview)
+- [Original CANDOR Benchmark Tracks](#original-candor-benchmark-tracks)
+- [Datasets and Algorithms](#datasets-and-algorithms)
+  - [Summary of Datasets](#summary-of-datasets)
+  - [Summary of Algorithms](#summary-of-algorithms)
+- [Quick Start](#quick-start)
+- [ccANN Track (Merged ccANN-Bench)](#ccann-track-merged-ccann-bench)
+- [CANDY Track Usage (big-ann-benchmarks)](#candy-track-usage-big-ann-benchmarks)
+- [Output Layout](#output-layout)
+- [Repository Map](#repository-map)
+- [Common Pitfalls](#common-pitfalls)
+- [Citation](#citation)
+- [License](#license)
 
-It focuses on scenarios such as:
+## Overview
+
+CANDOR-Bench targets ANN workloads where **data keeps changing while queries keep arriving**.
+
+It is designed for scenarios such as:
 
 - continuous inserts while search is running
-- read/write contention and lock strategy trade-offs
-- workload shifts (for example round-robin, chasing, peeking, zipfian query modes)
+- read/write contention and lock-strategy trade-offs
+- workload shifts such as `round_robin`, `chasing`, `peeking`, and `zipfian`
 - concurrency-control features such as MVCC and search sharing
 
-This repo has two primary tracks:
+At a high level, the repository now has **two primary user-facing tracks**:
 
-- Track A: CANDY Track (core C++/Py bindings + benchmark scripts via big-ann-benchmarks)
-- Track B: ccANN Track (ccANN-Bench integration for concurrency-control experiments)
+- **Track A: CANDY Track** — core C++ / Python-oriented benchmark stack, with paper-facing scripts living under `big-ann-benchmarks/`
+- **Track B: ccANN Track** — merged concurrency-control benchmark runner and configs
 
 ## Track Overview
 
 | Track | Purpose | Main entry |
 | --- | --- | --- |
-| CANDY Track | Stream-oriented ANN indexing library + legacy experiment scripts | `src/CANDY/`, `include/CANDY/`, `benchmark/scripts/` |
+| CANDY Track | Stream-oriented ANN indexing library + paper-facing benchmark scripts | `src/CANDY/`, `include/CANDY/`, `big-ann-benchmarks/scripts/` |
 | ccANN Track | Read/write concurrency, MVCC, search-sharing, workload-mode studies | `src/CANDY/ConcurrentIndex/`, `include/CANDY/ConcurrentIndex/`, `benchmark/concurrent/`, `benchmark/configs/concurrent/` |
-| big-ann-benchmarks (submodule) | Additional benchmark framework integration | `big-ann-benchmarks/` |
+| big-ann-benchmarks (submodule) | Additional benchmark framework integration and original benchmark scripts | `big-ann-benchmarks/` |
 
-Note: `big-ann-benchmarks/` is a git submodule. It appears empty until submodules are initialized.
-Fusion layout: ccANN algorithms are merged under `src/CANDY/ConcurrentIndex/`; runner stays in `benchmark/concurrent/`.
-Legacy note: original CANDY concurrent prototype is retained as `LegacyConcurrentIndex` and not used in default build.
+**Notes**
+
+- `big-ann-benchmarks/` is a git submodule and appears empty until submodules are initialized.
+- The merged ccANN backends live under `src/CANDY/ConcurrentIndex/`, while the runner remains under `benchmark/concurrent/`.
+- The original CANDY concurrent prototype is retained as `LegacyConcurrentIndex` and is **not** the default path.
 
 ## Original CANDOR Benchmark Tracks
 
@@ -65,24 +81,24 @@ Under `big-ann-benchmarks/neurips23/`, you will also see benchmark assets for tr
 
 ## Datasets and Algorithms
 
-Our evaluation involves the following datasets and algorithms.
+CANDOR-Bench evaluates a mix of real-world and synthetic datasets, together with a broad set of ANN baselines and dynamic variants.
 
 ### Summary of Datasets
 
 | Category | Name | Description | Dimension | Data Size | Query Size | Code Identifier |
 |:--------:|:----:|:-----------:|:---------:|:---------:|:----------:|:---------------:|
 | **Real-world** | SIFT | Image | 128 | 1M | 10K | `sift` |
-| | OpenImagesStreaming | Image | 512 | 1M | 10K | — |
-| | Sun | Image | 512 | 79K | 200 | `sun` |
-| | SIFT100M | Image | 128 | 100M | 10K | `sift100M` |
-| | Msong | Audio | 420 | 990K | 200 | `msong` |
-| | COCO | Multi-Modal | 768 | 100K | 500 | `coco` |
-| | Glove | Text | 100 | 1.192M | 200 | `glove` |
-| | MSTuring | Text | 100 | 30M | 10K | `msturing` |
+|  | OpenImagesStreaming | Image | 512 | 1M | 10K | — |
+|  | Sun | Image | 512 | 79K | 200 | `sun` |
+|  | SIFT100M | Image | 128 | 100M | 10K | `sift100M` |
+|  | Msong | Audio | 420 | 990K | 200 | `msong` |
+|  | COCO | Multi-Modal | 768 | 100K | 500 | `coco` |
+|  | Glove | Text | 100 | 1.192M | 200 | `glove` |
+|  | MSTuring | Text | 100 | 30M | 10K | `msturing` |
 | **Synthetic** | Gaussian | i.i.d values | Adjustable | 500K | 1000 | — |
-| | Blob | Gaussian Blobs | 768 | 500K | 1000 | — |
-| | WTE | Text | 768 | 100K | 100 | — |
-| | FreewayML | Constructed | 128 | 100K | 1K | — |
+|  | Blob | Gaussian Blobs | 768 | 500K | 1000 | — |
+|  | WTE | Text | 768 | 100K | 100 | — |
+|  | FreewayML | Constructed | 128 | 100K | 1K | — |
 
 ### Summary of Algorithms
 
@@ -90,23 +106,23 @@ Our evaluation involves the following datasets and algorithms.
 |:--------:|:---------:|:------------|:---------------:|
 | **Tree-based** | SPTAG | Space-partitioning tree structure for efficient data segmentation | `candy_sptag` |
 | **LSH-based** | LSH | Data-independent hashing for approximate nearest neighbors | `faiss_lsh` |
-| | LSHAPG | LSH-driven optimization using LSB-Tree to differentiate graph regions | `candy_lshapg` |
-| | PLSH | Parallel LSH optimized for high-throughput similarity search on data streams | `plsh` |
+|  | LSHAPG | LSH-driven optimization using LSB-Tree to differentiate graph regions | `candy_lshapg` |
+|  | PLSH | Parallel LSH optimized for high-throughput similarity search on data streams | `plsh` |
 | **Clustering-based** | PQ | Product quantization for efficient clustering into compact subspaces | `faiss_pq` |
-| | IVFPQ | Inverted index with product quantization for hierarchical clustering | `faiss_IVFPQ` |
-| | OnlinePQ | Incremental updates of centroids in product quantization for streaming data | `faiss_onlinepq` |
-| | Puck | Non-orthogonal inverted indexes with multiple quantization | `puck` |
-| | SCANN | Small-bit quantization to improve register utilization | `faiss_fast_scan` |
+|  | IVFPQ | Inverted index with product quantization for hierarchical clustering | `faiss_IVFPQ` |
+|  | OnlinePQ | Incremental updates of centroids in product quantization for streaming data | `faiss_onlinepq` |
+|  | Puck | Non-orthogonal inverted indexes with multiple quantization | `puck` |
+|  | SCANN | Small-bit quantization to improve register utilization | `faiss_fast_scan` |
 | **Graph-based** | NSW | Navigable Small World graph for fast nearest neighbor search | `faiss_NSW` |
-| | HNSW | Hierarchical Navigable Small World for scalable search | `faiss_HNSW` |
-| | FreshDiskANN | Streaming graph construction with refined robust edge pruning | `diskann` |
-| | MNRU | Enhances HNSW with efficient updates to prevent unreachable points | `candy_mnru` |
-| | Cufe | Enhances FreshDiskANN with batched neighbor expansion | `cufe` |
-| | Pyanns | Enhances FreshDiskANN with fix-sized huge pages | `pyanns` |
-| | IPDiskANN | Efficient in-place deletions for FreshDiskANN | `ipdiskann` |
-| | GTI | Hybrid tree-graph indexing for dynamic high-dimensional search | `gti` |
-| | PARLAY_HNSW | Parallel, deterministic HNSW for improved scalability | `parlay_hnsw` |
-| | PARLAY_VAMANA | Parallel, deterministic Vamana-based graph construction | `parlay_vamana` |
+|  | HNSW | Hierarchical Navigable Small World for scalable search | `faiss_HNSW` |
+|  | FreshDiskANN | Streaming graph construction with refined robust edge pruning | `diskann` |
+|  | MNRU | Enhances HNSW with efficient updates to prevent unreachable points | `candy_mnru` |
+|  | Cufe | Enhances FreshDiskANN with batched neighbor expansion | `cufe` |
+|  | Pyanns | Enhances FreshDiskANN with fix-sized huge pages | `pyanns` |
+|  | IPDiskANN | Efficient in-place deletions for FreshDiskANN | `ipdiskann` |
+|  | GTI | Hybrid tree-graph indexing for dynamic high-dimensional search | `gti` |
+|  | PARLAY_HNSW | Parallel, deterministic HNSW for improved scalability | `parlay_hnsw` |
+|  | PARLAY_VAMANA | Parallel, deterministic Vamana-based graph construction | `parlay_vamana` |
 
 ## Quick Start
 
@@ -116,22 +132,22 @@ Our evaluation involves the following datasets and algorithms.
 git submodule update --init --recursive
 ```
 
-### 2. Build options
+### 2. Choose a build path
 
-Option A: Docker (full environment)
+#### Option A: Docker (recommended)
 
 ```bash
 docker build -t candor-bench .
 docker run -it candor-bench
 ```
 
-Option B: Local CPU build helper
+#### Option B: Local CPU build helper
 
 ```bash
 bash buildCPUOnly.sh
 ```
 
-Option C: Local CUDA build helper
+#### Option C: Local CUDA build helper
 
 ```bash
 bash buildWithCuda.sh
@@ -139,7 +155,9 @@ bash buildWithCuda.sh
 
 ### 3. Choose a track
 
-Track A: CANDY Track (build core library / Python bindings)
+#### Track A: CANDY Track
+
+Build the core library / Python bindings:
 
 ```bash
 # CPU
@@ -149,7 +167,9 @@ bash buildCPUOnly.sh
 bash buildWithCuda.sh
 ```
 
-Track B: ccANN Track (merged ccANN-Bench runner)
+#### Track B: ccANN Track
+
+Build and run the merged ccANN runner:
 
 ```bash
 cd benchmark/concurrent
@@ -162,35 +182,34 @@ cd benchmark/concurrent
 This track combines:
 
 - C++ index backends in `src/CANDY/ConcurrentIndex/`
-- a Go runner in `benchmark/concurrent`
-- YAML sweep/variant configs in `benchmark/configs/concurrent`
+- a Go runner in `benchmark/concurrent/`
+- YAML sweep / variant configs in `benchmark/configs/concurrent/`
 
-### Config Cheat Sheet
-
-Example config: `benchmark/configs/concurrent/round_robin_baseline_sift.yaml`
-
-Included example configs:
+### Example configs
 
 - `benchmark/configs/concurrent/round_robin_baseline_{sift,gist}.yaml`
 - `benchmark/configs/concurrent/round_robin_search_sharing_{sift,gist}.yaml`
 - `benchmark/configs/concurrent/chasing_warm_start_{sift,gist}.yaml`
 
+### Config cheat sheet
+
+Example config: `benchmark/configs/concurrent/round_robin_baseline_sift.yaml`
+
 | Section | Key fields | Meaning |
 | --- | --- | --- |
-| `data` | `data_path`, `query_path`, `max_elements`, `begin_num` | Dataset locations and active data window |
-| `index` | `index_type`, `m`, `ef_construction`, `alpha`, `visit_limit` | Index type and build/search structure params |
-| `search` | `ef_search`, `recall_at`, `enable_mvcc`, `enable_search_sharing` | Runtime search behavior |
+| `data` | `data_path`, `query_path`, `incr_query_path`, `overall_query_path`, `max_elements`, `begin_num` | Dataset locations and active data window |
+| `index` | `index_type`, `m`, `ef_construction`, `alpha`, `visit_limit` | Index type and build/search structure parameters |
+| `search` | `ef_search`, `recall_at`, `enable_search_sharing`, `enable_warm_start`, `use_node_lock` | Runtime search behavior |
 | `workload` | `batch_size`, `num_threads`, `rate_groups(r/w)`, `query_mode` | Concurrency load pattern |
-| `throughput_sweep` | `enabled`, `start_rate`, `end_rate`, `steps` | Auto-generate throughput/latency curve |
+| `throughput_sweep` | `enabled`, `start_rate`, `end_rate`, `steps` | Auto-generated throughput / latency curve |
 | `result` | `output_dir` | Result export root |
 
-Current supported `index_type` values in code:
+Current documented `index_type` values in this merged track:
 
 - `hnsw`
 - `vamana`
 - `parlayhnsw`
 - `parlayvamana`
-- `segmented`
 
 Current supported `query_mode` values in code:
 
@@ -201,7 +220,7 @@ Current supported `query_mode` values in code:
 
 ## CANDY Track Usage (big-ann-benchmarks)
 
-All the following operations are performed inside the `big-ann-benchmarks/` directory.
+All commands below are meant to be run inside `big-ann-benchmarks/` unless stated otherwise.
 
 ### Preparing datasets
 
@@ -228,9 +247,9 @@ python3 run.py \
   --dataset "$DS"
 ```
 
-- `$ALGO`: Algorithm code identifier (see Summary of Algorithms table)
-- `$DS`: Dataset name
-- `$PATH`: Path to runbook YAML, e.g. `neurips23/runbooks/congestion/general_experiment/general_experiment.yaml`
+- `$ALGO`: algorithm code identifier (see the Summary of Algorithms table)
+- `$DS`: dataset name
+- `$PATH`: path to the runbook YAML, e.g. `neurips23/runbooks/congestion/general_experiment/general_experiment.yaml`
 
 ### Computing ground truth for runbooks
 
@@ -248,52 +267,70 @@ chmod 777 -R results/
 python3 data_export.py --out "$OUT" --track congestion
 ```
 
-Common `--out` values: `gen`, `batch`, `event`, `conceptDrift`, `randomContamination`, `randomDrop`, `wordContamination`, `bulkDeletion`, `batchDeletion`, `multiModal`, etc.
+Common `--out` values include:
+
+- `gen`
+- `batch`
+- `event`
+- `conceptDrift`
+- `randomContamination`
+- `randomDrop`
+- `wordContamination`
+- `bulkDeletion`
+- `batchDeletion`
+- `multiModal`
 
 ## Output Layout
 
-ccANN run outputs are written under `result.output_dir` (from YAML), including:
+### ccANN Track outputs
+
+ccANN runs write results under `result.output_dir` from the YAML config, typically including:
 
 - summary CSV: `benchmark_results.csv`
 - per-experiment files: `result.output_dir/<index>/<dataset>/<query>/files/*.res`
 - optional recall files: `*.rc`
 - optional throughput sweep curve: `throughput_latency_curve.csv`
 
-Legacy CANDY scripts also generate outputs under `benchmark/figures/` and per-script `perfLists/` folders.
+### CANDY Track outputs
+
+Legacy CANDY scripts also generate outputs under locations such as:
+
+- `benchmark/figures/`
+- per-script `perfLists/` folders
 
 ## Repository Map
 
 ```text
 CANDOR-Bench/
-├── benchmark/
-│   ├── concurrent/            # Go runner (merged ccANN-Bench track)
-│   ├── configs/concurrent/    # YAML configs for CC experiments
-│   ├── scripts/               # CANDY legacy benchmark scripts and plotting utilities
-│   └── figures/               # Generated/archived figures
 ├── src/
 │   └── CANDY/
-│       ├── ...                # CANDY algorithm implementations
-│       ├── ConcurrentIndex/   # Merged ccANN algorithm implementations
-│       └── LegacyConcurrentIndex.cpp  # Old prototype impl (not used by default)
+│       ├── ...
+│       ├── ConcurrentIndex/        # Merged ccANN algorithm implementations
+│       └── LegacyConcurrentIndex.cpp
 ├── include/
 │   └── CANDY/
-│       ├── ConcurrentIndex/   # Merged ccANN index interfaces
-│       └── LegacyConcurrentIndex.h # Old prototype header
-├── thirdparty/                # Third-party dependencies
-├── GTI/                       # Submodule
-├── DiskANN/                   # Submodule
-├── IP-DiskANN/                # Submodule
-├── PLSH/                      # Submodule
-├── big-ann-benchmarks/        # Submodule (init required)
+│       ├── ConcurrentIndex/        # Merged ccANN index interfaces
+│       └── LegacyConcurrentIndex.h
+├── benchmark/
+│   ├── concurrent/                 # Go runner for ccANN track
+│   ├── configs/concurrent/         # YAML configs for ccANN experiments
+│   └── figures/                    # Generated / archived figures
+├── big-ann-benchmarks/             # Original benchmark framework (submodule)
+│   ├── scripts/                    # Paper-facing scripts
+│   └── neurips23/                  # Benchmark assets and runbooks
+├── GTI/                            # Submodule
+├── DiskANN/                        # Submodule
+├── IP-DiskANN/                     # Submodule
+├── PLSH/                           # Submodule
 └── Dockerfile
 ```
 
 ## Common Pitfalls
 
-- Datasets are not bundled. Paths in YAML configs must point to real `.bin`/ground-truth files on your machine.
-- Many scripts assume Linux and native build tools (`cmake`, `g++`, `go`, OpenMP/TBB, Python packages).
-- If `big-ann-benchmarks/` is empty, run submodule initialization first.
-- `benchmark/scripts` and `benchmark/concurrent` belong to different tracks. Pick one track first, then follow that track end-to-end.
+- Datasets are not bundled. Config paths must point to real `.bin` files and ground-truth files on your machine.
+- Many scripts assume Linux and native build tools such as `cmake`, `g++`, `go`, OpenMP, TBB, and Python packages.
+- If `big-ann-benchmarks/` is empty, initialize submodules first.
+- `big-ann-benchmarks/scripts` and `benchmark/concurrent` belong to different tracks. Pick one track first and follow it end to end.
 
 ## Citation
 
