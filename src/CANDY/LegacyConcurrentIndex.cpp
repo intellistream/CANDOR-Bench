@@ -5,13 +5,13 @@
  *  Description:
  */
 
-#include <CANDY/ConcurrentIndex.h>
+#include <CANDY/LegacyConcurrentIndex.h>
 #include <Utils/UtilityFunctions.h>
 #include <time.h>
 #include <chrono>
 #include <assert.h>
 
-bool CANDY::ConcurrentIndex::setConfig(INTELLI::ConfigMapPtr cfg) {
+bool CANDY::LegacyConcurrentIndex::setConfig(INTELLI::ConfigMapPtr cfg) {
   assert(cfg);
   std::string concurrentlAlgoTag = cfg->tryString("concurrentAlgoTag", "flat", true);
   IndexTable it;
@@ -30,12 +30,12 @@ bool CANDY::ConcurrentIndex::setConfig(INTELLI::ConfigMapPtr cfg) {
   return true;
 }
 
-bool CANDY::ConcurrentIndex::loadInitialTensor(torch::Tensor &t) {
+bool CANDY::LegacyConcurrentIndex::loadInitialTensor(torch::Tensor &t) {
   auto ru = myIndexAlgo->loadInitialTensor(t);
   return ru;
 }
 
-std::vector<SearchRecord> CANDY::ConcurrentIndex::ccInsertAndSearchTensor(torch::Tensor &t, 
+std::vector<SearchRecord> CANDY::LegacyConcurrentIndex::ccInsertAndSearchTensor(torch::Tensor &t, 
     torch::Tensor &qt, int64_t k) {
   if (!myIndexAlgo) {
     throw std::runtime_error("Index algorithm not initialized.");
@@ -124,10 +124,10 @@ std::vector<SearchRecord> CANDY::ConcurrentIndex::ccInsertAndSearchTensor(torch:
   return searchRes;
 }
 
-std::vector<torch::Tensor> CANDY::ConcurrentIndex::searchTensor(torch::Tensor &q, int64_t k) {
+std::vector<torch::Tensor> CANDY::LegacyConcurrentIndex::searchTensor(torch::Tensor &q, int64_t k) {
   return myIndexAlgo->searchTensor(q, k);
 }
 
-void CANDY::ConcurrentIndex::reset() {
+void CANDY::LegacyConcurrentIndex::reset() {
 
 }

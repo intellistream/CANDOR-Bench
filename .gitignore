@@ -19,6 +19,8 @@
 # Fortran module files
 *.mod
 *.smod
+!go.mod
+!**/go.mod
 
 # Compiled Static libraries
 *.lai
@@ -47,4 +49,3 @@ PyCANDYAlgo.egg-info/
 dist/
 commit_info
 commit.sh
-

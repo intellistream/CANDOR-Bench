@@ -1,5 +1,5 @@
-#ifndef CANDY_INCLUDE_CANDY_CONCURRENTINDEX_H_
-#define CANDY_INCLUDE_CANDY_CONCURRENTINDEX_H_
+#ifndef CANDY_INCLUDE_CANDY_LEGACYCONCURRENTINDEX_H_
+#define CANDY_INCLUDE_CANDY_LEGACYCONCURRENTINDEX_H_
 
 #include <Utils/ConfigMap.hpp>
 #include <memory>
@@ -17,7 +17,7 @@ using SearchRecord = std::tuple<BatchIndex, QueryIndex, SearchResults>;
 
 namespace CANDY {
 
-class ConcurrentIndex : public CANDY::AbstractIndex {
+class LegacyConcurrentIndex : public CANDY::AbstractIndex {
  protected:
   AbstractIndexPtr myIndexAlgo = nullptr;
   std::string myConfigString = "";
@@ -28,11 +28,11 @@ class ConcurrentIndex : public CANDY::AbstractIndex {
   int64_t batchSize = 0;
 
  public:
-  ConcurrentIndex() {
+  LegacyConcurrentIndex() {
 
   }
 
-  ~ConcurrentIndex() {
+  ~LegacyConcurrentIndex() {
 
   }
 
@@ -47,9 +47,9 @@ class ConcurrentIndex : public CANDY::AbstractIndex {
   virtual std::vector<torch::Tensor> searchTensor(torch::Tensor &q, int64_t k);
 };
 
-typedef std::shared_ptr<class CANDY::ConcurrentIndex> ConcurrentIndexPtr;
+typedef std::shared_ptr<class CANDY::LegacyConcurrentIndex> LegacyConcurrentIndexPtr;
 
-#define newConcurrentIndex std::make_shared<CANDY::ConcurrentIndex>
+#define newLegacyConcurrentIndex std::make_shared<CANDY::LegacyConcurrentIndex>
 }
 
-#endif // CANDY_INCLUDE_CANDY_CONCURRENTINDEX_H_
+#endif // CANDY_INCLUDE_CANDY_LEGACYCONCURRENTINDEX_H_

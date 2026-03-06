@@ -18,3 +18,15 @@
 	path = PLSH
 	url = https://github.com/Kwan-Yiu/PLSH.git
 	branch = master
+[submodule "src/CANDY/ConcurrentIndex/hnsw/hnswlib"]
+	path = src/CANDY/ConcurrentIndex/hnsw/hnswlib
+	url = https://github.com/intellistream/hnswlib.git
+	branch = master
+[submodule "src/CANDY/ConcurrentIndex/parlayann/parlayann"]
+	path = src/CANDY/ConcurrentIndex/parlayann/parlayann
+	url = https://github.com/Kwan-Yiu/ParlayANN.git
+	branch = debug
+[submodule "src/CANDY/ConcurrentIndex/vamana/diskann"]
+	path = src/CANDY/ConcurrentIndex/vamana/diskann
+	url = https://github.com/Kwan-Yiu/DiskANN.git
+	branch = pic
