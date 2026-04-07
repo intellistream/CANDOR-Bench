@@ -1,21 +1,18 @@
 \begin{abstract}
-Approximate nearest neighbor search is a core primitive in modern data systems, 
-but most high-performance graph-based methods are optimized for static snapshots 
-rather than continuous updates. Under streaming insertions and deletions, 
-pre-computed search hints quickly become stale, causing either throughput 
-collapse or expensive re-optimization. In this paper, we present 
-\textbf{StreamSeed}, a pluggable optimization module for dynamic ANNS 
-that turns per-query reuse into an adaptive \emph{Query Hint Reuse (QHR)} workflow. 
-Our key abstraction is \emph{Adaptive Query Hint Control (AQHC)}, which unifies 
-hint-table construction, online usage control, and hint-state updates in a 
-single policy loop. This design enables StreamSeed to maintain compact, 
-high-value reusable query hints under distribution drift, while preserving 
-compatibility with existing ANNS backends. We implement StreamSeed in 
-\textbf{CANDOR-Bench}, a streaming ANNS benchmark framework, and validate 
-its pluggability across multiple ANN backends under a unified 
-plugin interface for runbook-driven 
-evaluation. Experiments on streaming workloads show that StreamSeed 
+Approximate Nearest Neighbor Search (ANNS) is a core primitive in modern data systems, 
+but most high-performance graph-based indices are optimized for static workloads 
+rather than continuously evolving data. Under streaming insertions and deletions, 
+pre-computed search guidance quickly becomes stale, causing either lower query efficiency 
+or expensive re-optimization. To address this challenge, we present BriskSeed, 
+a pluggable optimization module for dynamic ANNS.
+Its key idea is to turn past successful search outcomes into reusable search primitives, referred to as \textit{seeds}, while controlling the overhead and risk of stale reuse under evolving data.
+Specifically, BriskSeed integrates seed storage, seed-guided search, and reliability control into a unified online workflow: it organizes seeds in a two-tier utility-aware 
+storage scheme, activates them through exact lookup and bounded semantic probing, and validates them through 
+a lightweight acceptance-and-fallback policy.
+This design preserves a compact set of high-value seeds under distribution drift while remaining compatible with existing ANNS backends.
+We evaluate BriskSeed on
+\textbf{CANDOR-Bench}, a streaming ANNS benchmark framework, across multiple ANNS backends under a unified plugin interface.
+Experimental results show that BriskSeed 
 consistently improves end-to-end search efficiency while sustaining 
-competitive recall under high update rates, and its ablations validate 
-that unified query-hint control is critical to robustness in dynamic settings.
+competitive recall under high update rates.
 \end{abstract}

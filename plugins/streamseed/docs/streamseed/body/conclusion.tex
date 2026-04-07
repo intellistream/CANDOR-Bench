@@ -1,9 +1,9 @@
 \section{Conclusion}
-This paper presented StreamSeed, a pluginized optimization module for dynamic ANNS under streaming updates.
-By introducing Query Hint Reuse (QHR) with Adaptive Query Hint Control (AQHC), StreamSeed unifies hint construction, online usage control, and state updates within a single policy loop.
+This paper presented BriskSeed, a pluginized optimization module for dynamic ANNS under streaming updates.
+By introducing Query Hint Reuse (QHR) with Adaptive Query Hint Control (AQHC), BriskSeed unifies hint construction, online usage control, and state updates within a single policy loop.
 The proposed design addresses the stale-hint challenge in dynamic workloads and improves amortized end-to-end efficiency while preserving recall safety through controlled fallback.
 
-Implemented in CANDOR-Bench, StreamSeed enables runbook-driven and backend-comparable evaluation within a reproducible workflow.
+Implemented in CANDOR-Bench, BriskSeed enables runbook-driven and backend-comparable evaluation within a reproducible workflow.
 Empirical results and ablations indicate that unified hint control is a key ingredient for robust performance under high update rates and distribution drift.
 
 Future work includes deeper backend co-design for dynamic HNSW internals, stronger drift-aware policy learning, and broader cross-dataset generalization studies.

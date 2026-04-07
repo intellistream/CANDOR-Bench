@@ -39,6 +39,35 @@ def _normalize_batches(data: np.ndarray, batch_size: int):
     raise ValueError(f"Unexpected neighbors shape: {data.shape}")
 
 
+def _compute_per_query_overlap(current_batch: np.ndarray, ref_batch: np.ndarray):
+    """Compute overlap by matching the same query index across two batches."""
+    if current_batch.shape != ref_batch.shape:
+        raise ValueError(
+            f"batch shape mismatch: current {current_batch.shape}, ref {ref_batch.shape}"
+        )
+
+    batch_size, k = current_batch.shape
+    repeated_count = 0
+    for qid in range(batch_size):
+        repeated_count += np.intersect1d(
+            current_batch[qid], ref_batch[qid], assume_unique=False
+        ).size
+
+    total_neighbors = batch_size * k
+    repeated_percent = (repeated_count / total_neighbors) * 100 if total_neighbors else 0.0
+    return repeated_count, total_neighbors, repeated_percent
+
+
+def _compute_batch_set_overlap(current_batch: np.ndarray, ref_batch: np.ndarray):
+    """Compute overlap by treating all neighbors in a batch as one global set."""
+    current_set = set(current_batch.reshape(-1).tolist())
+    ref_set = set(ref_batch.reshape(-1).tolist())
+    repeated_count = len(current_set.intersection(ref_set))
+    total_neighbors = current_batch.size
+    repeated_percent = (repeated_count / total_neighbors) * 100 if total_neighbors else 0.0
+    return repeated_count, total_neighbors, repeated_percent
+
+
 def main():
     p = argparse.ArgumentParser(description="Compute batch-to-batch neighbor repeat ratio")
     p.add_argument("hdf5", help="Path to .hdf5 file")
@@ -46,6 +75,15 @@ def main():
     p.add_argument("--output", type=str, default=None, help="Output CSV path")
     p.add_argument("--compare", choices=["prev", "first"], default="prev",
                    help="Compare each batch to previous batch or first batch")
+    p.add_argument(
+        "--mode",
+        choices=["per-query", "batch-set"],
+        default="per-query",
+        help=(
+            "Overlap definition: per-query compares each query's top-k with the same "
+            "query index in reference batch; batch-set compares global neighbor sets"
+        ),
+    )
     args = p.parse_args()
 
     h5_path = Path(args.hdf5)
@@ -56,24 +94,30 @@ def main():
     batches, num_batches, k = _normalize_batches(data, args.batch_size)
 
     rows = []
-    baseline_set = None
+    baseline_batch = None
+    prev_batch = None
     for batch_id in range(num_batches):
         batch = batches[batch_id]
-        flat = batch.reshape(-1)
-        total_neighbors = flat.size
-        current_set = set(flat.tolist())
 
         if batch_id == 0:
             repeated_count = 0
             repeated_percent = 0.0
-            baseline_set = current_set
+            total_neighbors = batch.size
+            baseline_batch = batch
         else:
             if args.compare == "first":
-                ref_set = baseline_set
+                ref_batch = baseline_batch
             else:
-                ref_set = prev_set
-            repeated_count = len(current_set.intersection(ref_set))
-            repeated_percent = (repeated_count / total_neighbors) * 100 if total_neighbors else 0.0
+                ref_batch = prev_batch
+
+            if args.mode == "per-query":
+                repeated_count, total_neighbors, repeated_percent = _compute_per_query_overlap(
+                    batch, ref_batch
+                )
+            else:
+                repeated_count, total_neighbors, repeated_percent = _compute_batch_set_overlap(
+                    batch, ref_batch
+                )
 
         rows.append({
             "batch_id": batch_id,
@@ -81,10 +125,12 @@ def main():
             "total_neighbors": total_neighbors,
             "repeated_percent": repeated_percent,
             "dataset": dataset_name,
-            "compare": args.compare
+            "compare": args.compare,
+            "mode": args.mode,
+            "k": k,
         })
 
-        prev_set = current_set
+        prev_batch = batch
 
     out_path = Path(args.output) if args.output else h5_path.with_name("result.csv")
     pd.DataFrame(rows).to_csv(out_path, index=False)

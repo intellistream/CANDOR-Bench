@@ -17,18 +17,83 @@ Backend-decoupled control interface & Policy/Adapter/Runtime layering, backend-a
 \end{tabular}
 \end{table}
 
-\subsection{Implementation for Design Aspect I: Workload-Aligned Reuse under Drift}
-To operationalize the first design aspect, reuse is implemented as a guarded online decision process rather than a fixed acceleration path.
-The core runtime state is a bounded hint table, where each entry maintains confidence, freshness, and recent utility signals.
-All updates are incremental and localized, ensuring that policy maintenance remains lightweight under high-rate streams.
+\subsection{Algorithm for BriskSeed}
 
-At query time, the policy layer applies utility-aware gating: hints are activated only when recent evidence indicates positive gain; otherwise, the system reverts to native traversal.
-For dynamic HNSW backends, accepted hints are translated into warm-start seeds and controlled expansion signals.
-When drift weakens confidence, fallback is triggered immediately to prevent stale reuse from degrading recall.
-This mechanism instantiates the ``selective and self-correcting'' behavior introduced in Section~3 while preserving throughput in stable phases.
+Algorithm~\ref{alg:briskseed-pipeline} gives the full online pipeline of BriskSeed, including seed retrieval, bounded recovery, acceptance/fallback, writeback, and online budget adjustment.
+
+\begin{algorithm}[t]
+\caption{BriskSeed Online Pipeline}
+\label{alg:briskseed-pipeline}
+\begin{algorithmic}[1]
+\Require Query $q$, graph index $G$, hot layer $\mathcal{H}$, semantic layer $\mathcal{S}$, and parameters $(P,m,\tau_{\mathrm{qual}},\tau_{\mathrm{cons}})$
+\State $r \gets \emptyset$
+\If{$g(q) \in \mathcal{H}$}
+	\State $r \gets \mathcal{H}[g(q)]$
+\Else
+	\State Retrieve candidate seeds from $\mathcal{N}(q)$ with probing width $P$ and per-slot cap $m$
+	\State Score each seed by $u(r)=\lambda\,\mathrm{sim}(\phi(q),\beta)+(1-\lambda)\,\rho$
+	\State $r \gets$ top-ranked seed; if no seed is found, keep $r=\emptyset$
+\EndIf
+\If{$r \neq \emptyset$}
+	\State Recover candidates from seed anchors $\mathbf{z}$ by one-hop expansion
+	\If{$r$ is semantic-shared and one-hop evidence is weak}
+		\State Continue to two-hop expansion
+	\EndIf
+	\State Rank recovered candidates and form provisional set $\hat{\mathbf{z}}$
+	\State Compute $\mathrm{qual}(q)$ and $\mathrm{cons}(q)$
+	\If{$\mathrm{qual}(q) \ge \tau_{\mathrm{qual}} \land \mathrm{cons}(q) \ge \tau_{\mathrm{cons}}$}
+		\State Accept $\hat{\mathbf{z}}$ as final output
+		\State Increase successful-reuse count $\rho$ for seed $r$
+	\Else
+		\State Run native graph search on $G$ and output top-$k$
+	\EndIf
+\Else
+	\State Run native graph search on $G$ and output top-$k$
+\EndIf
+\State Write back final top-$k$ result as a new/updated seed record
+\State If a target slot is full, evict by $\mathrm{keep}(r)=\xi\rho-(1-\xi)\,\mathrm{age}_n(r)$
+\State Every $T$ rounds, update $(H,S,m,P)$ from moving-average hit/acceptance/cost statistics
+\end{algorithmic}
+\end{algorithm}
+
+The logic is interpreted as follows.
+Line 1 defines all runtime inputs and control parameters.
+Lines 2--7 perform two-tier seed retrieval: first exact hot lookup, then bounded semantic probing and seed ranking.
+Lines 8--18 execute the seed-guided path, including bounded expansion, provisional top-$k$ construction, and two-signal acceptance/fallback decision.
+Line 19 guarantees correctness when no reusable seed is available by directly invoking native graph search.
+Lines 20--21 perform online writeback and eviction, so seed memory stays bounded and utility-aware.
+Line 22 periodically updates hot/semantic budget and probing settings using recent telemetry, making the controller adaptive under drift.
+
+\subsection{Implementation for Design Aspect I: Workload-Aligned Reuse under Drift}
+To complement the pipeline in Section~3.2, we expose concrete decision thresholds and update rules in implementation.
+The goal is to keep reuse decisions stable and reproducible under drift, rather than tuning behavior implicitly.
+
+\noindent\textbf{Acceptance thresholds.}
+BriskSeed accepts a provisional result only when both quality and consistency pass fixed gates.
+In our default setup, we use $\tau_{\mathrm{qual}}=0.08$ and $\tau_{\mathrm{cons}}=0.30$.
+The first filters weak winners, and the second prevents low-overlap reuse from replacing native search.
+
+\noindent\textbf{Expansion trigger for semantic seeds.}
+Semantic seeds use one-hop expansion by default and escalate to two-hop only when one-hop evidence is insufficient.
+Operationally, two-hop is triggered if one-hop fails either acceptance gate, i.e.,
+$\mathrm{qual}(q)<\tau_{\mathrm{qual}}$ or $\mathrm{cons}(q)<\tau_{\mathrm{cons}}$.
+This keeps most queries on low-cost one-hop recovery while reserving deeper expansion for hard cases.
+
+\noindent\textbf{Bounded retrieval budget.}
+We enforce the semantic probing budget through the hard cap $Pm\le K_{\max}$.
+In experiments, we set $K_{\max}=32$ and use $(P,m)=(4,8)$ by default, which bounds retrieval overhead while preserving slot diversity.
+
+\noindent\textbf{Promotion and demotion rule.}
+Tier movement is evaluated only when a seed is used.
+We promote a semantic seed if it has sufficiently high reuse count and low age, and demote a hot seed when reuse utility stays low over recent accesses.
+To avoid oscillation, a moved seed is frozen for one update interval before becoming eligible for the next movement.
+
+\noindent\textbf{Periodic parameter refresh.}
+Every $T$ rounds (default $T=10$), BriskSeed refreshes $(H,S,m,P)$ using moving averages of hot-hit rate, semantic-hit rate, acceptance rate, and observed query cost.
+Only candidate settings satisfying the recall constraint and $Pm\le K_{\max}$ are considered, so adaptation remains safe by construction.
 
 \subsection{Implementation for Design Aspect II: Backend-Decoupled Control Interface}
-To operationalize the second design aspect, StreamSeed is integrated into CANDOR-Bench as a pluginized module with explicit separation between policy and backend mechanics.
+To operationalize the second design aspect, BriskSeed is integrated into CANDOR-Bench as a pluginized module with explicit separation between policy and backend mechanics.
 The implementation is organized into three cooperating layers:
 \begin{itemize}
 	\item \textbf{Policy layer}: AQHC state machine, hint scoring, gating, and eviction.

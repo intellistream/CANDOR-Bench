@@ -2,7 +2,7 @@
 
 \subsection{Setup and Overview}
 \paragraph{Goals.}
-We evaluate StreamSeed along four questions: \textbf{EQ1 (Effectiveness)} asks whether StreamSeed improves end-to-end throughput under streaming updates while maintaining recall; \textbf{EQ2 (Robustness)} tests behavior under varying event rates, batch sizes, and distribution drift; \textbf{EQ3 (Ablation)} identifies which AQHC components contribute most to robustness; and \textbf{EQ4 (Overhead)} quantifies the amortized maintenance cost of hint control.
+We evaluate BriskSeed along four questions: \textbf{EQ1 (Effectiveness)} asks whether BriskSeed improves end-to-end throughput under streaming updates while maintaining recall; \textbf{EQ2 (Robustness)} tests behavior under varying event rates, batch sizes, and distribution drift; \textbf{EQ3 (Ablation)} identifies which AQHC components contribute most to robustness; and \textbf{EQ4 (Overhead)} quantifies the amortized maintenance cost of hint control.
 
 \paragraph{Workloads.}
 We use streaming ANNS workloads with mixed query/update events over benchmark datasets (e.g., SIFT and additional stress variants).
@@ -10,14 +10,14 @@ Runbooks control event rates, batch insertion scales, and maintenance cadence to
 Our default reproducible setup uses algorithm \texttt{faiss\_hnsw\_streamseed}, dataset \texttt{sift}, runbook \texttt{runbooks/general\_experiment/general\_experiment.yaml}, and enables cache profiling.
 
 \paragraph{Methods.}
-We compare: (i) backend-native dynamic index without StreamSeed, (ii) StreamSeed-enabled backend, and (iii) selected ablation variants.
+We compare: (i) backend-native dynamic index without BriskSeed, (ii) BriskSeed-enabled backend, and (iii) selected ablation variants.
 
 \paragraph{Metrics.}
 Primary metrics are Recall@$k$, QPS, P95 latency, and amortized maintenance cost.
 When available, we additionally report cache-related statistics to explain systems-level behavior.
 
 \subsection{Main Results (EQ1)}
-Across default streaming settings, StreamSeed improves end-to-end search efficiency over the non-StreamSeed baseline while preserving competitive recall.
+Across default streaming settings, BriskSeed improves end-to-end search efficiency over the non-BriskSeed baseline while preserving competitive recall.
 Table~\ref{tab:main-results} summarizes representative results.
 
 \begin{table}[t]
@@ -29,14 +29,14 @@ Table~\ref{tab:main-results} summarizes representative results.
 		Method & Recall@$k$ & QPS & P95 Latency (ms) & Maint. Overhead (\%) \\
 		\midrule
 		Baseline & \texttt{TBD} & \texttt{TBD} & \texttt{TBD} & \texttt{TBD} \\
-		StreamSeed & \texttt{TBD} & \texttt{TBD} & \texttt{TBD} & \texttt{TBD} \\
+		BriskSeed & \texttt{TBD} & \texttt{TBD} & \texttt{TBD} & \texttt{TBD} \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
 \subsection{Sensitivity and Drift Robustness (EQ2)}
 Under higher event rates, baseline performance degrades as reusable optimization context becomes stale.
-StreamSeed maintains more stable QPS and latency by adapting hint usage and refresh behavior.
+BriskSeed maintains more stable QPS and latency by adapting hint usage and refresh behavior.
 Figure-level analyses should report trends over event-rate and batch-size sweeps.
 
 \subsection{Ablation Study (EQ3)}
@@ -51,7 +51,7 @@ Results demonstrate that joint control is necessary; partial designs are less ro
 \subsection{Overhead Breakdown (EQ4)}
 We decompose runtime into search, hint lookup/gating, and maintenance updates.
 The additional policy cost remains bounded and is compensated by reduced ineffective traversals.
-This confirms that StreamSeed improves amortized end-to-end efficiency rather than only per-query micro-latency.
+This confirms that BriskSeed improves amortized end-to-end efficiency rather than only per-query micro-latency.
 
 \subsection{Discussion}
 Two practical observations emerge.

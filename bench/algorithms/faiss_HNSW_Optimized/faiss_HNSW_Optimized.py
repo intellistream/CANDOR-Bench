@@ -177,12 +177,12 @@ class FaissHnswOptimized(BaseStreamingANN):
         """ if (not self.optimized) and self.apply_gorder and (not self._warned_unoptimized):
             print("⚠️  Index not optimized yet. Call apply_optimized_tech() or offline_build() before querying.")
             self._warned_unoptimized = True """
-        #self.offline_build()
+        self.offline_build()
         #X = X.astype(np.float32)
         query_size = X.shape[0]
 
         # 调用 PyCANDYAlgo 的 search 接口
-        results = np.array(self.index.search(query_size, X.flatten(), k, self.ef))
+        results = np.array(self.index.search(query_size, X.ravel(), k, self.ef))
 
         # 将 faiss 内部 ID 映射回外部 ID
         ids = self.my_index[results]

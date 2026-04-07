@@ -50,21 +50,21 @@ sift:
     operation: "initial"
     start: 0
     end: 10000
-    applyOptimizedTechOnceAfterInitial: false
-    # optimizedTechParams:
-    #   technique: offline_build
-    #   force: false
+    applyOptimizedTechOnceAfterInitial: false          # 开启在初始构建后调用优化一次
+    #optimizedTechParams:
+    #  technique: offline_build
+    #  force: false
   3:
     operation: "batch_insert"
     start: 10000
-    end: 12500
+    end: 100000
     batchSize: 2500
     eventRate: 10000
-    applyOptimizedTechBeforeQuery: true          # 开启在连续查询前调用优化
-    optimizedTechParams:                         # 可选的参数字典
-      technique: "offline_build"                # 默认就是 offline_build，可换成算法支持的其它名字
-      force: true                               # 是否强制执行
-      once: false                                # 只执行一次；设成 false 则每次连续查询前都会调用
+    applyOptimizedTechBeforeQuery: false          # 开启在连续查询前调用优化
+    #optimizedTechParams:                         # 可选的参数字典
+    #  technique: "offline_build"                # 默认就是 offline_build，可换成算法支持的其它名字
+    #  force: true                               # 是否强制执行
+    #  once: false                                # 只执行一次；设成 false 则每次连续查询前都会调用
   4:
     operation: "waitPending"
   5:
