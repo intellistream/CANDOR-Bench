@@ -87,7 +87,7 @@ def load_all_rows(files, algo_label):
 
 def plot_files(algo_to_files, out_path, show):
     sns.set_theme(style='whitegrid', context='talk')
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(8, 6))
     found_total = 0
     all_rows = []
     for algo_label, files in algo_to_files.items():
@@ -103,7 +103,7 @@ def plot_files(algo_to_files, out_path, show):
         # Darker line colors; CI band will be light via alpha
         palette = {
             algo_labels[0]: '#D62828',
-            algo_labels[1]: '#0057B7'
+            algo_labels[1]: '#1B9E77'
         }
     # Mean across tests with 95% CI band
     sns.lineplot(
@@ -117,11 +117,11 @@ def plot_files(algo_to_files, out_path, show):
         err_kws={'alpha': 0.12},
         linewidth=2.2
     )
-    plt.xlabel('batch_id (1w->50w expansion, batchsize=2500)')
+    plt.xlabel('batch_id (1w->10w expansion, batchsize=2500)')
     plt.ylabel('qps')
     plt.title('qps vs batch_id (mean with 95% CI)')
     plt.grid(True)
-    plt.legend(title='algo')
+    plt.legend(title='algorithm')
     plt.tight_layout()
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -139,7 +139,7 @@ def main():
     parser = argparse.ArgumentParser(description='Plot qps vs batch_id for multiple tests')
     parser.add_argument(
         '--base-dirs',
-        default='results/sift/faiss_HNSW1, results/sift/faiss_hnsw_incremental1',
+        default='/home/ghr/SAGE-DB-NEW/SAGE-DB-Bench/results/sift/faiss_HNSW,/home/ghr/SAGE-DB-NEW/SAGE-DB-Bench/results/sift/faiss_HNSW_Frequent_reoptimization',
         help='comma-separated algorithm directories containing test*_result folders'
     )
     parser.add_argument(
@@ -147,7 +147,7 @@ def main():
         default='',
         help='comma-separated labels for each algorithm directory (optional)'
     )
-    parser.add_argument('--pattern', default='test[0-9]/ef-120_batch_query_qps.csv, test10/ef-120_batch_query_qps.csv', help='glob pattern(s) relative to base-dir, comma-separated')
+    parser.add_argument('--pattern', default='test[1-9]/ef-120_batch_query_qps.csv,test10/ef-120_batch_query_qps.csv', help='glob pattern(s) relative to base-dir, comma-separated')
     parser.add_argument('--out', default='results/sift/qps_batch_compare.png', help='output image path')
     parser.add_argument('--show', action='store_true', help='show plot interactively')
     args = parser.parse_args()

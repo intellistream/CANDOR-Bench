@@ -332,6 +332,9 @@ void prepare_dictionary_if_needed(
             omp_init_lock(&warm_seed_dictionary_locks[i]);
         }
     }
+    printf("Prepared seed dictionary with %zu slots for ef_search=%d\n",
+           warm_seed_dictionary.size(),
+           config.ef_search);
 }
 
 std::unique_ptr<ISeedSource> create_seed_source(

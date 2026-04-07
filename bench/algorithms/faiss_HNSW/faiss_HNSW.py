@@ -91,7 +91,7 @@ class FaissHnsw(BaseStreamingANN):
         query_size = X.shape[0]
 
         # 调用 PyCANDYAlgo 的 search 接口
-        results = np.array(self.index.search(query_size, X.flatten(), k, self.ef))
+        results = np.array(self.index.search(query_size, X.ravel(), k, self.ef))
 
         # 将 faiss 内部 ID 映射回外部 ID
         ids = self.my_index[results]

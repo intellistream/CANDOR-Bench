@@ -26,6 +26,7 @@
 #include <DiskANN/python/include/builder.h>
 //#endif
 #include <faiss/index_factory.h>
+#include <faiss/IndexHNSW.h>
 #include <faiss/IndexHNSWOptimized.h>
 #include <faiss/IndexHNSWIncremental.h>
 
@@ -38,6 +39,62 @@ using namespace pybind11::literals;
 using namespace CANDY;
 torch::Tensor add_tensors(torch::Tensor a, torch::Tensor b) {
   return a + b;
+}
+
+std::vector<faiss::idx_t> index_search_fast(
+        const std::shared_ptr<faiss::Index>& index,
+        faiss::idx_t n,
+        const py::array_t<float, py::array::c_style | py::array::forcecast>& x,
+        faiss::idx_t k,
+        int ef_search) {
+  py::buffer_info x_info = x.request();
+  const float* x_ptr = static_cast<const float*>(x_info.ptr);
+
+  std::vector<float> distances(n * k);
+  std::vector<faiss::idx_t> labels(n * k);
+
+  if (auto* inc = dynamic_cast<faiss::IndexHNSWIncremental*>(index.get())) {
+    faiss::SearchParametersHNSWIncremental params;
+    params.efSearch = ef_search;
+    inc->search(n, x_ptr, k, distances.data(), labels.data(), &params);
+    return labels;
+  }
+
+  if (auto* hnsw = dynamic_cast<faiss::IndexHNSW*>(index.get())) {
+    faiss::SearchParametersHNSW params;
+    params.efSearch = ef_search;
+    hnsw->search(n, x_ptr, k, distances.data(), labels.data(), &params);
+    return labels;
+  }
+
+  if (auto* hnsw_opt = dynamic_cast<faiss::IndexHNSWOptimized*>(index.get())) {
+    faiss::SearchParametersHNSW params;
+    params.efSearch = ef_search;
+    hnsw_opt->search(n, x_ptr, k, distances.data(), labels.data(), &params);
+    return labels;
+  }
+
+  // Non-HNSW indexes ignore ef_search and run the default search path.
+  index->search(n, x_ptr, k, distances.data(), labels.data());
+  return labels;
+}
+
+std::vector<faiss::idx_t> index_search_hnsw_optimized_fast(
+        const std::shared_ptr<faiss::IndexHNSWFlatOptimized>& index,
+        faiss::idx_t n,
+        const py::array_t<float, py::array::c_style | py::array::forcecast>& x,
+        faiss::idx_t k,
+        int ef_search) {
+  py::buffer_info x_info = x.request();
+  const float* x_ptr = static_cast<const float*>(x_info.ptr);
+
+  std::vector<float> distances(n * k);
+  std::vector<faiss::idx_t> labels(n * k);
+
+  faiss::SearchParametersHNSW params;
+  params.efSearch = ef_search;
+  index->search(n, x_ptr, k, distances.data(), labels.data(), &params);
+  return labels;
 }
 
 std::vector<faiss::idx_t> index_search_warm(
@@ -399,7 +456,9 @@ PYBIND11_MODULE(PyCANDYAlgo, m) {
   py::class_<faiss::Index,std::shared_ptr<faiss::Index>>(m, "IndexFAISS")
          // .def(py::init<>())
           .def("add",&faiss::Index::add_arrays)
-          .def("search",&faiss::Index::search_arrays)
+       .def("search", &index_search_fast,
+           py::arg("n"), py::arg("x"), py::arg("k"), py::arg("ef_search"),
+           "Search k nearest neighbors with efSearch using a NumPy buffer path")
           .def("search_warm", &index_search_warm,
                    py::arg("n"), py::arg("x"), py::arg("k"), py::arg("ef_search"),
                    py::arg("streamseed_mode") = 1,
@@ -434,9 +493,9 @@ PYBIND11_MODULE(PyCANDYAlgo, m) {
            "  metric: distance metric (METRIC_L2 or METRIC_INNER_PRODUCT)")
       .def("add", &faiss::IndexHNSWFlatOptimized::add_arrays,
            "Add vectors to the index")
-      .def("search", &faiss::IndexHNSWFlatOptimized::search_arrays,
+       .def("search", &index_search_hnsw_optimized_fast,
            py::arg("n"), py::arg("x"), py::arg("k"), py::arg("ef_search"),
-           "Search k nearest neighbors with given efSearch parameter")
+         "Search k nearest neighbors with efSearch using a NumPy buffer path")
       .def("train", &faiss::IndexHNSWFlatOptimized::train_arrays,
            "Train the index (no-op for Flat storage)")
       .def("reset", &faiss::IndexHNSWFlatOptimized::reset,
