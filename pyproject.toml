@@ -43,7 +43,7 @@ markers = [
 ]
 
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -52,7 +52,7 @@ version = "0.1.0"
 description = "Streaming ANN Benchmark Framework"
 readme = "README.md"
 requires-python = ">=3.8"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
     {name = "SAGE-DB-Bench Team", email = "intellistream@example.com"}
 ]
@@ -61,7 +61,6 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -108,4 +107,12 @@ Repository = "https://github.com/intellistream/SAGE-DB-Bench"
 "Bug Tracker" = "https://github.com/intellistream/SAGE-DB-Bench/issues"
 
 [project.scripts]
-sage-bench = "bench.cli:main"
+sage-bench = "run_benchmark:main"
+candor-build-gammafresh = "candor_tasks.cli:build_gammafresh"
+candor-test = "candor_tasks.cli:run_tests"
+
+[tool.setuptools]
+py-modules = ["run_benchmark", "prepare_dataset"]
+
+[tool.setuptools.packages.find]
+include = ["bench*", "candor_tasks*", "datasets*"]

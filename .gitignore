@@ -93,3 +93,4 @@ test_report_*.txt
 .coverage
 htmlcov/SAGE-DB-Bench/
 temp/
+/build-pycandy/

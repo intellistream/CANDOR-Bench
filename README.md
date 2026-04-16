@@ -59,6 +59,18 @@
 
 >  **环境要求**：Linux 系统，Python 3.8+
 
+### `uv` 工作流
+
+仓库根目录使用 `uv` 管理 Python 依赖；`GammaFresh` 保持独立子项目环境。
+
+```bash
+uv sync
+uv sync --project GammaFresh
+uv run candor-build-gammafresh
+uv run sage-bench --list-algorithms
+uv run candor-test
+```
+
 ### 📦 方式一：一键部署（推荐）
 
 适用于需要完整算法集（Faiss、DiskANN、VSAG、PyCANDY 等）以及性能测试的场景。

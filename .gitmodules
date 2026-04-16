@@ -18,3 +18,7 @@
 	path = algorithms_impl/vsag
 	url = https://github.com/intellistream/vasg.git
 	branch = main
+[submodule "GammaFresh"]
+	path = GammaFresh
+	url = git@github.com:intellistream/DynaGraph.git
+	branch = gammafresh-benchmark-integration
