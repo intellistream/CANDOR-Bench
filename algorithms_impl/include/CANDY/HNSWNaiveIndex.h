@@ -89,6 +89,15 @@ public:
      */
     virtual std::vector<faiss::idx_t> searchIndex(torch::Tensor q, int64_t k);
 
+    /**
+     * @brief search the k-NN of a query tensor with an explicit efSearch value
+     * @param q the tensor, allow multiple rows
+     * @param k the returned neighbors
+     * @param param the efSearch value to apply for this query
+     * @return std::vector<faiss::idx_t> the index, follow faiss's order
+     */
+    virtual std::vector<faiss::idx_t> searchIndexParam(torch::Tensor q, int64_t k, int64_t param) override;
+
 };
 #define newHNSWNaiveIndex std::make_shared<CANDY::HNSWNaiveIndex>
 #define newNSWIndex std::make_shared<CANDY::HNSWNaiveIndex>

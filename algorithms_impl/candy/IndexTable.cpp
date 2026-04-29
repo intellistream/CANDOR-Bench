@@ -11,7 +11,7 @@
 //#include <FlatAMMIPIndex.h>
 //#include <FlatAMMIPObjIndex.h>
 #include <FlatIndex.h>
-// #include <HNSWNaiveIndex.h>
+#include <HNSWNaiveIndex.h>
 #include <IndexTable.h>
 #include <LSHAPGIndex.h>
 #include <NNDescentIndex.h>
@@ -50,8 +50,8 @@ CANDY::IndexTable::IndexTable() {
   //indexMap["onlineIVFLSH"] = newOnlineIVFLSHIndex();
   //indexMap["onlineIVFL2H"] = newOnlineIVFL2HIndex();
   //indexMap["PQ"] = newPQIndex();
-  // indexMap["HNSWNaive"] = newHNSWNaiveIndex();
-  // indexMap["NSW"] = newNSWIndex();
+  indexMap["HNSWNaive"] = newHNSWNaiveIndex();
+  indexMap["NSW"] = newNSWIndex();
   indexMap["faiss"] = newFaissIndex();
   //indexMap["yinYang"] = newYinYangGraphIndex();
   //indexMap["yinYangSimple"] = newYinYangGraphSimpleIndex();
