@@ -180,3 +180,13 @@ std::vector<faiss::idx_t> CANDY::HNSWNaiveIndex::searchIndex(torch::Tensor q, in
     }
     return ru;
 }
+
+std::vector<faiss::idx_t> CANDY::HNSWNaiveIndex::searchIndexParam(torch::Tensor q, int64_t k, int64_t param) {
+    auto oldEfSearch = hnsw.efSearch;
+    if (param > 0) {
+        hnsw.efSearch = static_cast<size_t>(param);
+    }
+    auto results = searchIndex(q, k);
+    hnsw.efSearch = oldEfSearch;
+    return results;
+}

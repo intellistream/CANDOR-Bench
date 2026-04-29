@@ -5,6 +5,7 @@
 
 #ifndef CANDY_ADSAMPLING_H
 #define CANDY_ADSAMPLING_H
+#include <ATen/ops/linalg_svd.h>
 #include <torch/torch.h>
 
 namespace CANDY {
@@ -15,7 +16,7 @@ class AdSampling {
   static torch::Tensor getTransformMatrix(int64_t dim) {
     torch::manual_seed(time(NULL));
     auto gaus = torch::randn({dim, dim});
-    auto [u, s, vh] = torch::linalg::svd(gaus, true, {});
+    auto [u, s, vh] = at::linalg_svd(gaus, true, std::nullopt);
     return u.matmul(vh);
   }
 
