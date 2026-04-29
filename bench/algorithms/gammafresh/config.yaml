@@ -1,0 +1,65 @@
+random-xs:
+  gammafresh:
+    module: benchmark_anns.bench.algorithms.gammafresh.gammafresh
+    constructor: Gammafresh
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{
+            "backend": "HNSW",
+            "backend_config": {"m": 24, "ef_construction": 100, "ef_search": 64},
+            "gamma_fresh": {
+              "split_factor": 4.0,
+              "gamma_split_threshold": 0.4,
+              "maintenance_interval": 32,
+              "maintenance_query_interval": 32,
+              "maintenance_query_threshold_scale": 0.5
+            }
+          }]
+        query-args: |
+          [{}]
+
+sift-small:
+  gammafresh:
+    module: benchmark_anns.bench.algorithms.gammafresh.gammafresh
+    constructor: Gammafresh
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{
+            "backend": "HNSW",
+            "backend_config": {"m": 24, "ef_construction": 100, "ef_search": 64},
+            "gamma_fresh": {
+              "split_factor": 4.0,
+              "gamma_split_threshold": 0.4,
+              "maintenance_interval": 32,
+              "maintenance_query_interval": 32,
+              "maintenance_query_threshold_scale": 0.5
+            }
+          }]
+        query-args: |
+          [{}]
+
+sift:
+  gammafresh:
+    module: benchmark_anns.bench.algorithms.gammafresh.gammafresh
+    constructor: Gammafresh
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{
+            "backend": "HNSW",
+            "backend_config": {"m": 32, "ef_construction": 120, "ef_search": 80},
+            "gamma_fresh": {
+              "split_factor": 4.0,
+              "gamma_split_threshold": 0.4,
+              "maintenance_interval": 32,
+              "maintenance_query_interval": 32,
+              "maintenance_query_threshold_scale": 0.5
+            }
+          }]
+        query-args: |
+          [{}]

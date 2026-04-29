@@ -3,8 +3,39 @@ Faiss HNSW Algorithm Implementation
 使用 PyCANDYAlgo 封装的 faiss 接口
 """
 
+from __future__ import annotations
+
+import ctypes
+import os
+import sys
+from pathlib import Path
+
 import numpy as np
 from ..base import BaseStreamingANN
+
+
+def _prime_pycandy_environment() -> None:
+    root = Path(__file__).resolve().parents[3]
+    for path in (root / "build-pycandy", root / "build-pycandy" / "src"):
+        path_str = str(path)
+        if path.exists() and path_str not in sys.path:
+            sys.path.insert(0, path_str)
+
+    preload_candidates = [
+        Path("/opt/intel/oneapi/mkl/2026.0/lib/libmkl_intel_lp64.so.3"),
+        Path("/opt/intel/oneapi/mkl/2026.0/lib/libmkl_sequential.so.3"),
+        Path("/opt/intel/oneapi/mkl/2026.0/lib/libmkl_core.so.3"),
+        Path("/opt/intel/oneapi/compiler/latest/lib/libiomp5.so"),
+    ]
+    for lib_path in preload_candidates:
+        if lib_path.exists():
+            try:
+                ctypes.CDLL(str(lib_path), mode=os.RTLD_GLOBAL)
+            except OSError:
+                pass
+
+
+_prime_pycandy_environment()
 
 try:
     import PyCANDYAlgo

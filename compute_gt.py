@@ -149,7 +149,9 @@ def find_compute_groundtruth_tool():
     # Possible relative paths to search
     search_paths = [
         script_dir / 'DiskANN' / 'build' / 'apps' / 'utils' / 'compute_groundtruth',
+        script_dir / 'DiskANN' / 'build' / 'tests' / 'utils' / 'compute_groundtruth',
         script_dir.parent / 'DiskANN' / 'build' / 'apps' / 'utils' / 'compute_groundtruth',
+        script_dir.parent / 'DiskANN' / 'build' / 'tests' / 'utils' / 'compute_groundtruth',
     ]
     
     for path in search_paths:
@@ -246,7 +248,7 @@ def gt_dir(ds, runbook_path: str) -> str:
     return os.path.join(ds.basedir, str(ds.nb), runbook_filename)
 
 
-def output_gt(ds, tag_to_id: dict, step: int, gt_cmdline: str, runbook_path: str) -> None:
+def output_gt(ds, tag_to_id: dict, step: int, gt_cmdline: str, query_file: str, runbook_path: str) -> None:
     """
     Output ground truth for a single search checkpoint.
     
@@ -301,10 +303,7 @@ def output_gt(ds, tag_to_id: dict, step: int, gt_cmdline: str, runbook_path: str
         data_slice.tofile(f)
     
     # Construct and execute command
-    cmdline = gt_cmdline
-    cmdline += ' --base_file ' + data_file
-    cmdline += ' --gt_file ' + gt_file
-    cmdline += ' --tags_file ' + tags_file
+    cmdline = f"{gt_cmdline} {data_file} {query_file} 10 {gt_file} {tags_file}"
     
     print(f"Executing cmdline: {cmdline}")
     os.system(cmdline)
@@ -316,7 +315,7 @@ def output_gt(ds, tag_to_id: dict, step: int, gt_cmdline: str, runbook_path: str
 
 
 def output_gt_batch(ds, tag_to_id: dict, num_batch_insert: int, step: int, 
-                    gt_cmdline: str, runbook_path: str, batch_size: int, 
+                    gt_cmdline: str, query_file: str, runbook_path: str, batch_size: int, 
                     with_deletion: bool = False) -> None:
     """
     Output ground truth for a batch insert checkpoint.
@@ -399,10 +398,7 @@ def output_gt_batch(ds, tag_to_id: dict, num_batch_insert: int, step: int,
         data_slice.tofile(f)
     
     # Construct and execute command
-    cmdline = gt_cmdline
-    cmdline += ' --base_file ' + data_file
-    cmdline += ' --gt_file ' + gt_file
-    cmdline += ' --tags_file ' + tags_file
+    cmdline = f"{gt_cmdline} {data_file} {query_file} 10 {gt_file} {tags_file}"
     
     print(f"Executing cmdline: {cmdline}")
     os.system(cmdline)
@@ -447,7 +443,6 @@ def main():
     )
     parser.add_argument(
         '--gt_cmdline_tool',
-        required=True,
         help='Path to DiskANN compute_groundtruth binary'
     )
     parser.add_argument(
@@ -470,20 +465,16 @@ def main():
     # Get query file (path). Some Dataset implementations don't expose `qs_fn`.
     query_file = ensure_query_file(ds, args.runbook_file, private_query=args.private_query)
     
-    # Build base command for compute_groundtruth
-    common_cmd = args.gt_cmdline_tool + ' --dist_fn '
-    
-    # Map distance metric
-    distance = ds.distance()
-    if distance == 'euclidean':
-        common_cmd += 'l2'
-    elif distance == 'ip':
-        common_cmd += 'mips'
-    else:
-        raise RuntimeError('Invalid metric')
-    
+    gt_tool = args.gt_cmdline_tool or find_compute_groundtruth_tool()
+    if not gt_tool:
+        raise FileNotFoundError("Could not find DiskANN compute_groundtruth binary")
+
+    # Build base command prefix for this DiskANN variant:
+    #   compute_groundtruth <type> <base_file> <query_file> <K> <gt_file> [tag_file]
+    common_cmd = gt_tool
+
     # Map data type
-    common_cmd += ' --data_type '
+    common_cmd += ' '
     dtype = ds.dtype
     if dtype == 'float32':
         common_cmd += 'float'
@@ -494,9 +485,6 @@ def main():
     else:
         raise RuntimeError('Invalid datatype')
     
-    common_cmd += ' --K 10'
-    common_cmd += ' --query_file ' + query_file
-
     # Process runbook - 参考 big-ann-benchmarks 的处理流程
     # runbook 是一个字典，key 是步骤号，需要按顺序处理
     step = 1
@@ -520,7 +508,7 @@ def main():
         
         # Handle search operation
         if entry['operation'] == 'search':
-            output_gt(ds, tag_to_id, step, common_cmd, args.runbook_file)
+            output_gt(ds, tag_to_id, step, common_cmd, query_file, args.runbook_file)
         
         # Handle batch_insert operation
         if entry['operation'] == 'batch_insert':
@@ -539,7 +527,7 @@ def main():
                 # Output GT every 1% of progress
                 if continuous_counter >= (end - start) / 100:
                     print(f"{i}: {start + i * batch_size}~{start + (i + 1) * batch_size} output gt")
-                    output_gt_batch(ds, tag_to_id, num_batch_insert, i, common_cmd, 
+                    output_gt_batch(ds, tag_to_id, num_batch_insert, i, common_cmd, query_file,
                                   args.runbook_file, batch_size)
                     continuous_counter = 0
 
@@ -551,7 +539,7 @@ def main():
                 continuous_counter += batch_size
                 if continuous_counter >= (end - start) / 100:
                     print(f"{batch_step}: {start + batch_step * batch_size}~{end} output gt")
-                    output_gt_batch(ds, tag_to_id, num_batch_insert, batch_step, common_cmd, 
+                    output_gt_batch(ds, tag_to_id, num_batch_insert, batch_step, common_cmd, query_file,
                                   args.runbook_file, batch_size)
                     continuous_counter = 0
 
@@ -580,7 +568,7 @@ def main():
                 # Output GT every 1% of progress
                 if continuous_counter >= (end - start) / 100:
                     print(f"{i}: {start + i * batch_size}~{start + (i + 1) * batch_size} output gt")
-                    output_gt_batch(ds, tag_to_id, num_batch_insert, i, common_cmd, 
+                    output_gt_batch(ds, tag_to_id, num_batch_insert, i, common_cmd, query_file,
                                   args.runbook_file, batch_size, True)
                     continuous_counter = 0
 
@@ -595,7 +583,7 @@ def main():
                 continuous_counter += batch_size
                 if continuous_counter >= (end - start) / 100:
                     print(f"{batch_step}: {start + batch_step * batch_size}~{end} output gt")
-                    output_gt_batch(ds, tag_to_id, num_batch_insert, batch_step, common_cmd, 
+                    output_gt_batch(ds, tag_to_id, num_batch_insert, batch_step, common_cmd, query_file,
                                   args.runbook_file, batch_size, True)
                     continuous_counter = 0
 

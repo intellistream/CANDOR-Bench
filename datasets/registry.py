@@ -33,6 +33,7 @@ class SiftSmallDataset(Dataset):
         # Try both possible filenames
         candidates = [
             os.path.join(self.basedir, "data_10000_128"),
+            os.path.join(self.basedir, "SIFTsmall", "data_10000_128"),
             os.path.join(self.basedir, "sift_base.fvecs"),
         ]
         for fn in candidates:
@@ -55,6 +56,7 @@ class SiftSmallDataset(Dataset):
     def get_queries(self):
         candidates = [
             os.path.join(self.basedir, "queries_100_128"),
+            os.path.join(self.basedir, "SIFTsmall", "queries_100_128"),
             os.path.join(self.basedir, "sift_query.fvecs"),
         ]
         for fn in candidates:
@@ -90,19 +92,39 @@ class SiftDataset(Dataset):
             download_dataset("sift", self.basedir)
 
     def get_dataset_fn(self):
-        return os.path.join(self.basedir, "data_1000000_128")
+        candidates = [
+            os.path.join(self.basedir, "data_1000000_128"),
+            os.path.join(self.basedir, "SIFT", "data_1000000_128"),
+            os.path.join(self.basedir, "sift_base.fvecs"),
+        ]
+        for fn in candidates:
+            if os.path.exists(fn):
+                return fn
+        return candidates[0]
 
     def get_dataset(self):
-        return xbin_mmap(self.get_dataset_fn(), dtype=self.dtype)
+        fn = self.get_dataset_fn()
+        if fn.endswith(".fvecs"):
+            return load_fvecs(fn, maxn=self.nb)
+        return xbin_mmap(fn, dtype=self.dtype)
 
     def get_dataset_iterator(self, bs: int = 512, split: Tuple[int, int] = (1, 0)):
-        data = xbin_mmap(self.get_dataset_fn(), dtype=self.dtype)
+        data = self.get_dataset()
         for i in range(0, len(data), bs):
             yield data[i : i + bs]
 
     def get_queries(self):
-        query_fn = os.path.join(self.basedir, "queries_10000_128")
-        return xbin_mmap(query_fn, dtype=self.dtype, maxn=self.nq)
+        candidates = [
+            os.path.join(self.basedir, "queries_10000_128"),
+            os.path.join(self.basedir, "SIFT", "queries_10000_128"),
+            os.path.join(self.basedir, "sift_query.fvecs"),
+        ]
+        for fn in candidates:
+            if os.path.exists(fn):
+                if fn.endswith(".fvecs"):
+                    return load_fvecs(fn, maxn=self.nq)
+                return xbin_mmap(fn, dtype=self.dtype, maxn=self.nq)
+        raise FileNotFoundError(f"SIFT queries not found under {self.basedir}")
 
     def get_groundtruth(self, k: Optional[int] = None):
         # Groundtruth files are generated dynamically per runbook

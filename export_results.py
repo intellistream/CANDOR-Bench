@@ -23,6 +23,25 @@ from typing import Dict, List, Tuple, Optional
 from datasets.registry import get_dataset, DATASETS
 
 
+def find_runbook_path(runbook_name: str) -> Path:
+    """Resolve a runbook name to an on-disk YAML path."""
+    path = Path(runbook_name)
+    if path.exists():
+        return path
+
+    runbook_dir = Path(__file__).parent / "runbooks"
+    candidates = [runbook_dir / f"{runbook_name}.yaml"]
+    for category_dir in runbook_dir.iterdir():
+        if category_dir.is_dir():
+            candidates.append(category_dir / f"{runbook_name}.yaml")
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+
+    raise FileNotFoundError(f"Runbook not found: {runbook_name}")
+
+
 def load_runbook(dataset_name: str, nb: int, runbook_path: str) -> Tuple[int, Dict]:
     """
     加载 runbook 文件
@@ -246,12 +265,7 @@ def export_results(dataset_name: str, algorithm: str, runbook_name: str,
     print("[1/5] 加载数据集和Runbook...")
     dataset = get_dataset(dataset_name)
     
-    runbook_path = f"runbooks/{runbook_name}/{runbook_name}.yaml"
-    if not os.path.exists(runbook_path):
-        runbook_path = f"runbooks/{runbook_name}.yaml"
-    
-    if not os.path.exists(runbook_path):
-        raise FileNotFoundError(f"Runbook not found: {runbook_path}")
+    runbook_path = str(find_runbook_path(runbook_name))
     
     # 加载 runbook（使用正确的签名）
     max_pts, runbook_config = load_runbook(dataset_name, dataset.nb, runbook_path)
