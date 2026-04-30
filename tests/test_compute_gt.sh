@@ -20,7 +20,7 @@ echo "Test 1: Auto-detection of compute_groundtruth tool"
 python compute_gt.py \
     --dataset sift \
     --runbook_file runbooks/test_simple.yaml \
-    --gt_cmdline_tool DiskANN/build/apps/utils/compute_groundtruth
+    --gt_cmdline_tool algorithms_impl/DiskANN/build/apps/utils/compute_groundtruth
 
 echo ""
 echo "✓ Auto-detection test passed!"

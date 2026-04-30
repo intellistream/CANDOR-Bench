@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
-GAMMAFRESH_DIR = ROOT / "GammaFresh"
+GAMMAFRESH_DIR = ROOT / "algorithms_impl" / "GammaFresh"
 
 
 def _run(cmd: list[str], *, cwd: Path = ROOT) -> None:

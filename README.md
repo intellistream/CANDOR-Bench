@@ -61,11 +61,11 @@
 
 ### `uv` 工作流
 
-仓库根目录使用 `uv` 管理 Python 依赖；`GammaFresh` 保持独立子项目环境。
+仓库根目录使用 `uv` 管理 Python 依赖；`algorithms_impl/GammaFresh` 保持独立子项目环境。
 
 ```bash
 uv sync
-uv sync --project GammaFresh
+uv sync --project algorithms_impl/GammaFresh
 uv run candor-build-gammafresh
 uv run sage-bench --list-algorithms
 uv run candor-test
@@ -301,7 +301,7 @@ sift:
 python3 compute_gt.py \
   --dataset sift \
   --runbook_file runbooks/simple.yaml \
-  --gt_cmdline_tool ./DiskANN/build/apps/utils/compute_groundtruth
+  --gt_cmdline_tool ./algorithms_impl/DiskANN/build/apps/utils/compute_groundtruth
 ```
 
 ### Step 2️⃣ 运行基准测试

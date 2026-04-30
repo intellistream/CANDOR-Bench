@@ -27,3 +27,4 @@ def test_gammafresh_python_command_shape(monkeypatch):
 def test_paths_are_repo_relative():
     assert cli.ROOT == Path(__file__).resolve().parents[1]
     assert cli.GAMMAFRESH_DIR.name == "GammaFresh"
+    assert cli.GAMMAFRESH_DIR.parent.name == "algorithms_impl"
