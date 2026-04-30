@@ -14,7 +14,7 @@ compute_groundtruth tool. It supports:
 
 Usage:
     python compute_gt.py --dataset sift --runbook_file runbooks/general_experiment.yaml \\
-        --gt_cmdline_tool /path/to/DiskANN/build/apps/utils/compute_groundtruth
+        --gt_cmdline_tool /path/to/algorithms_impl/DiskANN/build/apps/utils/compute_groundtruth
 
     Or let it auto-detect the tool:
     python compute_gt.py --dataset sift --runbook_file runbooks/general_experiment.yaml
@@ -138,8 +138,8 @@ def find_compute_groundtruth_tool():
     Automatically find the compute_groundtruth binary.
     
     Searches in the following locations (relative to benchmark_anns):
-    - ./DiskANN/build/apps/utils/compute_groundtruth
-    - ../DiskANN/build/apps/utils/compute_groundtruth
+    - ./algorithms_impl/DiskANN/build/apps/utils/compute_groundtruth
+    - ../algorithms_impl/DiskANN/build/apps/utils/compute_groundtruth
     
     Returns:
         Path to compute_groundtruth binary, or None if not found
@@ -148,10 +148,10 @@ def find_compute_groundtruth_tool():
     
     # Possible relative paths to search
     search_paths = [
-        script_dir / 'DiskANN' / 'build' / 'apps' / 'utils' / 'compute_groundtruth',
-        script_dir / 'DiskANN' / 'build' / 'tests' / 'utils' / 'compute_groundtruth',
-        script_dir.parent / 'DiskANN' / 'build' / 'apps' / 'utils' / 'compute_groundtruth',
-        script_dir.parent / 'DiskANN' / 'build' / 'tests' / 'utils' / 'compute_groundtruth',
+        script_dir / 'algorithms_impl' / 'DiskANN' / 'build' / 'apps' / 'utils' / 'compute_groundtruth',
+        script_dir / 'algorithms_impl' / 'DiskANN' / 'build' / 'tests' / 'utils' / 'compute_groundtruth',
+        script_dir.parent / 'algorithms_impl' / 'DiskANN' / 'build' / 'apps' / 'utils' / 'compute_groundtruth',
+        script_dir.parent / 'algorithms_impl' / 'DiskANN' / 'build' / 'tests' / 'utils' / 'compute_groundtruth',
     ]
     
     for path in search_paths:

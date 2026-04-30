@@ -8,6 +8,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+option(ENABLE_PUCK "Build Puck support into PyCANDYAlgo" OFF)
+
 # 设置路径
 set(ALGORITHMS_IMPL_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(FAISS_DIR ${ALGORITHMS_IMPL_DIR}/faiss)
@@ -20,17 +22,24 @@ set(CANDY_DIR ${ALGORITHMS_IMPL_DIR}/candy)
 # 查找依赖
 find_package(Python3 REQUIRED COMPONENTS Development)
 find_package(Torch REQUIRED)
-find_package(gflags REQUIRED)
-
 # 配置选项 - 禁用 PAPI 和 Ray (CPU only build)
 set(CANDY_PAPI 0)
 set(CANDY_RAY 0)
 set(ENABLE_RAY OFF)
+set(CANDY_PUCK 0)
+if(ENABLE_PUCK)
+    set(CANDY_PUCK 1)
+    find_package(gflags REQUIRED)
+endif()
 
 # 生成配置头文件
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/include/papi_config.h.in"
     "${CMAKE_CURRENT_BINARY_DIR}/include/papi_config.h"
+)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/puck_config.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/include/puck_config.h"
 )
 
 # 收集 CANDY 源文件
@@ -48,8 +57,6 @@ list(FILTER CANDY_SOURCES EXCLUDE REGEX ".*FlatAMMIPIndex.*")
 # 排除所有 main.cpp 文件 (可执行文件，不应该编译到库中)
 list(FILTER CANDY_SOURCES EXCLUDE REGEX ".*/main\\.cpp$")
 list(FILTER CANDY_SOURCES EXCLUDE REGEX ".*FlatAMMIPObjIndex.*")
-list(FILTER CANDY_SOURCES EXCLUDE REGEX ".*HNSWNaiveIndex.*")
-list(FILTER CANDY_SOURCES EXCLUDE REGEX ".*HNSWNaive/HNSW.*")
 
 # 包含目录
 # 将 candy 目录作为 CANDY 包含路径，这样可以使用 <CANDY/xxx.h>
@@ -63,14 +70,18 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/../../include
     ${DISKANN_DIR}/include
     ${DISKANN_DIR}/python/include
-    ${PUCK_DIR}
     ${SPTAG_DIR}/AnnService
     ${TORCH_INCLUDE_DIRS}
     ${Python3_INCLUDE_DIRS}
 )
 
+if(ENABLE_PUCK)
+    include_directories(${PUCK_DIR})
+endif()
+
 # 添加预处理器定义，将 CANDY 映射到 candy 目录
 add_compile_definitions(CANDY_INCLUDE_DIR="${CANDY_DIR}")
+add_compile_definitions(CANDY_DiskANN=1)
 
 # 编译 Faiss
 message(STATUS "Building Faiss...")
@@ -88,7 +99,7 @@ set(DISKANN_BUILD_PYTHON ON CACHE BOOL "Build DiskANN Python bindings")
 add_subdirectory(${DISKANN_DIR} diskann_build)
 
 # 编译 Puck (如果有 CMakeLists.txt)
-if(EXISTS ${PUCK_DIR}/CMakeLists.txt)
+if(ENABLE_PUCK AND EXISTS ${PUCK_DIR}/CMakeLists.txt)
     message(STATUS "Building Puck...")
     add_subdirectory(${PUCK_DIR} puck_build)
 endif()
@@ -158,7 +169,10 @@ endif()
 list(APPEND PYCANDY_LIBS ${TORCH_LIBRARIES})
 
 # 第三组：基础系统库
-list(APPEND PYCANDY_LIBS gflags pthread dl m)
+list(APPEND PYCANDY_LIBS pthread dl m)
+if(ENABLE_PUCK)
+    list(APPEND PYCANDY_LIBS gflags)
+endif()
 
 # 可选: torch_python
 if(TORCH_PYTHON_LIBRARY)
@@ -219,63 +233,65 @@ else()
     message(FATAL_ERROR "SPTAGLibStatic target not found - SPTAG build failed")
 endif()
 
-# 必需: Puck
-if(TARGET puck)
-    list(APPEND PYCANDY_LIBS puck)
-else()
-    message(FATAL_ERROR "puck target not found - Puck build failed")
-endif()
-
-# MKL 库（Puck 依赖）- 使用 find_package 或直接查找
-if(DEFINED ENV{MKLROOT})
-    set(MKLROOT $ENV{MKLROOT})
-    message(STATUS "Using MKL from MKLROOT: ${MKLROOT}")
-    
-    # 添加 MKL 链接目录
-    link_directories(${MKLROOT}/lib/intel64)
-    
-    # 按正确顺序链接 MKL
-    list(APPEND PYCANDY_LIBS
-        mkl_intel_ilp64
-        mkl_intel_thread
-        mkl_core
-        iomp5
-    )
-else()
-    # 尝试直接查找 MKL 库
-    find_library(MKL_INTEL_ILP64 mkl_intel_ilp64 
-        PATHS /opt/intel/oneapi/mkl/latest/lib/intel64 /opt/intel/mkl/lib/intel64
-        NO_DEFAULT_PATH)
-    find_library(MKL_INTEL_THREAD mkl_intel_thread
-        PATHS /opt/intel/oneapi/mkl/latest/lib/intel64 /opt/intel/mkl/lib/intel64
-        NO_DEFAULT_PATH)
-    find_library(MKL_CORE mkl_core
-        PATHS /opt/intel/oneapi/mkl/latest/lib/intel64 /opt/intel/mkl/lib/intel64
-        NO_DEFAULT_PATH)
-    find_library(IOMP5 iomp5
-        PATHS /opt/intel/oneapi/mkl/latest/lib/intel64 /opt/intel/mkl/lib/intel64
-              /opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin
-        NO_DEFAULT_PATH)
-    
-    if(MKL_INTEL_ILP64 AND MKL_INTEL_THREAD AND MKL_CORE)
-        message(STATUS "Found MKL libraries:")
-        message(STATUS "  MKL_INTEL_ILP64: ${MKL_INTEL_ILP64}")
-        message(STATUS "  MKL_INTEL_THREAD: ${MKL_INTEL_THREAD}")
-        message(STATUS "  MKL_CORE: ${MKL_CORE}")
-        message(STATUS "  IOMP5: ${IOMP5}")
-        
-        list(APPEND PYCANDY_LIBS
-            ${MKL_INTEL_ILP64}
-            ${MKL_INTEL_THREAD}
-            ${MKL_CORE}
-        )
-        
-        if(IOMP5)
-            list(APPEND PYCANDY_LIBS ${IOMP5})
-        endif()
+if(ENABLE_PUCK)
+    # 必需: Puck
+    if(TARGET puck)
+        list(APPEND PYCANDY_LIBS puck)
     else()
-        message(WARNING "MKL libraries not found - Puck may not work properly")
-        message(WARNING "Install Intel MKL or set MKLROOT environment variable")
+        message(FATAL_ERROR "puck target not found - Puck build failed")
+    endif()
+
+    # MKL 库（Puck 依赖）- 使用 find_package 或直接查找
+    if(DEFINED ENV{MKLROOT})
+        set(MKLROOT $ENV{MKLROOT})
+        message(STATUS "Using MKL from MKLROOT: ${MKLROOT}")
+        
+        # 添加 MKL 链接目录
+        link_directories(${MKLROOT}/lib/intel64)
+        
+        # 按正确顺序链接 MKL
+        list(APPEND PYCANDY_LIBS
+            mkl_intel_ilp64
+            mkl_intel_thread
+            mkl_core
+            iomp5
+        )
+    else()
+        # 尝试直接查找 MKL 库
+        find_library(MKL_INTEL_ILP64 mkl_intel_ilp64 
+            PATHS /opt/intel/oneapi/mkl/latest/lib/intel64 /opt/intel/mkl/lib/intel64
+            NO_DEFAULT_PATH)
+        find_library(MKL_INTEL_THREAD mkl_intel_thread
+            PATHS /opt/intel/oneapi/mkl/latest/lib/intel64 /opt/intel/mkl/lib/intel64
+            NO_DEFAULT_PATH)
+        find_library(MKL_CORE mkl_core
+            PATHS /opt/intel/oneapi/mkl/latest/lib/intel64 /opt/intel/mkl/lib/intel64
+            NO_DEFAULT_PATH)
+        find_library(IOMP5 iomp5
+            PATHS /opt/intel/oneapi/mkl/latest/lib/intel64 /opt/intel/mkl/lib/intel64
+                  /opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin
+            NO_DEFAULT_PATH)
+        
+        if(MKL_INTEL_ILP64 AND MKL_INTEL_THREAD AND MKL_CORE)
+            message(STATUS "Found MKL libraries:")
+            message(STATUS "  MKL_INTEL_ILP64: ${MKL_INTEL_ILP64}")
+            message(STATUS "  MKL_INTEL_THREAD: ${MKL_INTEL_THREAD}")
+            message(STATUS "  MKL_CORE: ${MKL_CORE}")
+            message(STATUS "  IOMP5: ${IOMP5}")
+            
+            list(APPEND PYCANDY_LIBS
+                ${MKL_INTEL_ILP64}
+                ${MKL_INTEL_THREAD}
+                ${MKL_CORE}
+            )
+            
+            if(IOMP5)
+                list(APPEND PYCANDY_LIBS ${IOMP5})
+            endif()
+        else()
+            message(WARNING "MKL libraries not found - Puck may not work properly")
+            message(WARNING "Install Intel MKL or set MKLROOT environment variable")
+        endif()
     endif()
 endif()
 
@@ -285,6 +301,34 @@ endif()
 set_target_properties(PyCANDYAlgo PROPERTIES
     LINK_WHAT_YOU_USE FALSE
 )
+
+# DiskANN 的静态库会透传 MKL 的 -l 依赖，这里需要显式补上链接目录。
+set(PYCANDY_EXTRA_LINK_DIRS)
+if(EXISTS "/opt/intel/oneapi/mkl/latest/lib/intel64")
+    list(APPEND PYCANDY_EXTRA_LINK_DIRS "/opt/intel/oneapi/mkl/latest/lib/intel64")
+endif()
+if(EXISTS "/opt/intel/oneapi/mkl/latest/lib")
+    list(APPEND PYCANDY_EXTRA_LINK_DIRS "/opt/intel/oneapi/mkl/latest/lib")
+endif()
+if(EXISTS "/opt/intel/oneapi/mkl/2026.0/lib/intel64")
+    list(APPEND PYCANDY_EXTRA_LINK_DIRS "/opt/intel/oneapi/mkl/2026.0/lib/intel64")
+endif()
+if(EXISTS "/opt/intel/oneapi/mkl/2026.0/lib")
+    list(APPEND PYCANDY_EXTRA_LINK_DIRS "/opt/intel/oneapi/mkl/2026.0/lib")
+endif()
+if(EXISTS "/opt/intel/oneapi/compiler/latest/lib")
+    list(APPEND PYCANDY_EXTRA_LINK_DIRS "/opt/intel/oneapi/compiler/latest/lib")
+endif()
+if(EXISTS "/opt/intel/oneapi/compiler/2026.0/lib")
+    list(APPEND PYCANDY_EXTRA_LINK_DIRS "/opt/intel/oneapi/compiler/2026.0/lib")
+endif()
+if(EXISTS "/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin")
+    list(APPEND PYCANDY_EXTRA_LINK_DIRS "/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin")
+endif()
+if(PYCANDY_EXTRA_LINK_DIRS)
+    list(REMOVE_DUPLICATES PYCANDY_EXTRA_LINK_DIRS)
+    target_link_directories(PyCANDYAlgo PRIVATE ${PYCANDY_EXTRA_LINK_DIRS})
+endif()
 
 # 链接所有库
 target_link_libraries(PyCANDYAlgo PRIVATE ${PYCANDY_LIBS})

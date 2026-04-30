@@ -49,8 +49,6 @@ commit_info
 commit.sh
 data/
 raw_data/
-/DiskANN/
-!algorithms_impl/DiskANN/
 results/
 results_*/
 figures/
@@ -61,6 +59,7 @@ algorithms_impl/build
 /IP-DiskANN/
 /PLSH/
 /big-ann-benchmarks/
+/.old-algo/
 
 # Python 虚拟环境
 .venv/
@@ -83,6 +82,9 @@ algorithms_impl/vsag/build/
 algorithms_impl/vsag/build-release/
 algorithms_impl/vsag/wheelhouse/
 algorithms_impl/vsag/.venv/
+algorithms_impl/GammaFresh/.venv/
+algorithms_impl/GammaFresh/build/
+algorithms_impl/GammaFresh/results/
 algorithms_impl/gti/GTI/build/
 algorithms_impl/ipdiskann/build/
 algorithms_impl/plsh/build/
@@ -96,3 +98,4 @@ test_report_*.txt
 htmlcov/SAGE-DB-Bench/
 temp/
 /build-pycandy/
+/.deps/

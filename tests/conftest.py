@@ -5,8 +5,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-GAMMAFRESH_PYTHON = ROOT / "GammaFresh" / "python"
-GAMMAFRESH_BINDINGS = ROOT / "GammaFresh" / "build" / "src" / "bindings" / "python"
+GAMMAFRESH_PYTHON = ROOT / "algorithms_impl" / "GammaFresh" / "python"
+GAMMAFRESH_BINDINGS = ROOT / "algorithms_impl" / "GammaFresh" / "build" / "src" / "bindings" / "python"
 
 for path in (GAMMAFRESH_PYTHON, GAMMAFRESH_BINDINGS):
     path_str = str(path)

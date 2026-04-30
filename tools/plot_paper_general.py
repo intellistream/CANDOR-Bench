@@ -16,11 +16,13 @@ from export_results import export_results
 COLORS = {
     "faiss_HNSW": "#1f4e79",
     "gammafresh": "#1b9e77",
+    "diskann": "#d95f02",
 }
 
 LABELS = {
     "faiss_HNSW": "Faiss-HNSW",
     "gammafresh": "GammaFresh",
+    "diskann": "FreshDiskANN",
 }
 
 

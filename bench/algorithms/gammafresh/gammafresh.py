@@ -18,7 +18,7 @@ from ..base import BaseStreamingANN
 
 
 ROOT = Path(__file__).resolve().parents[3]
-GAMMAFRESH_ROOT = ROOT / "GammaFresh"
+GAMMAFRESH_ROOT = ROOT / "algorithms_impl" / "GammaFresh"
 GAMMAFRESH_BINDINGS = GAMMAFRESH_ROOT / "build" / "src" / "bindings" / "python"
 GAMMAFRESH_PYTHON = GAMMAFRESH_ROOT / "python"
 for _path in (GAMMAFRESH_BINDINGS, GAMMAFRESH_PYTHON):
@@ -158,4 +158,3 @@ class Gammafresh(BaseStreamingANN):
 
     def get_results(self):
         return self.res
-

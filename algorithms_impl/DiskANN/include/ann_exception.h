@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 #pragma once
+#include <cstdint>
 #include <string>
 #include <stdexcept>
 #include <system_error>
