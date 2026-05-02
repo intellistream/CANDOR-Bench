@@ -303,7 +303,7 @@ def output_gt(ds, tag_to_id: dict, step: int, gt_cmdline: str, query_file: str, 
         data_slice.tofile(f)
     
     # Construct and execute command
-    cmdline = f"{gt_cmdline} {data_file} {query_file} 10 {gt_file} {tags_file}"
+    cmdline = f"{gt_cmdline} --base_file {data_file} --query_file {query_file} --K 10 --gt_file {gt_file} --tags_file {tags_file}"
     
     print(f"Executing cmdline: {cmdline}")
     os.system(cmdline)
@@ -398,7 +398,7 @@ def output_gt_batch(ds, tag_to_id: dict, num_batch_insert: int, step: int,
         data_slice.tofile(f)
     
     # Construct and execute command
-    cmdline = f"{gt_cmdline} {data_file} {query_file} 10 {gt_file} {tags_file}"
+    cmdline = f"{gt_cmdline} --base_file {data_file} --query_file {query_file} --K 10 --gt_file {gt_file} --tags_file {tags_file}"
     
     print(f"Executing cmdline: {cmdline}")
     os.system(cmdline)
@@ -470,18 +470,19 @@ def main():
         raise FileNotFoundError("Could not find DiskANN compute_groundtruth binary")
 
     # Build base command prefix for this DiskANN variant:
-    #   compute_groundtruth <type> <base_file> <query_file> <K> <gt_file> [tag_file]
     common_cmd = gt_tool
 
-    # Map data type
-    common_cmd += ' '
+    # Map data type and distance function
+    dist_fn = 'l2' if ds.distance() == 'euclidean' else 'mips'
+    common_cmd += f" --dist_fn {dist_fn}"
+    
     dtype = ds.dtype
     if dtype == 'float32':
-        common_cmd += 'float'
+        common_cmd += ' --data_type float'
     elif dtype == 'int8':
-        common_cmd += 'int8'
+        common_cmd += ' --data_type int8'
     elif dtype == 'uint8':
-        common_cmd += 'uint8'
+        common_cmd += ' --data_type uint8'
     else:
         raise RuntimeError('Invalid datatype')
     

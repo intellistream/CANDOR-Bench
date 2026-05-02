@@ -2,7 +2,7 @@
 #Licensed under the MIT                        license.
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
+set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
 
 if(MSVC)
     add_subdirectory(dll)

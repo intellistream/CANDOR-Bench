@@ -14,7 +14,7 @@ class BinaryDistribution(Distribution):
         return True
 
 # 查找所有编译好的 .so 文件
-so_files = glob.glob('PyCANDYAlgo*.so')
+so_files = glob.glob('PyCANDYAlgo/PyCANDYAlgo*.so')
 
 if not so_files:
     print("Error: No PyCANDYAlgo*.so file found. Please run ./build.sh first.", file=sys.stderr)
@@ -27,12 +27,9 @@ setup(
     version='0.1.2',
     description='CANDY Algorithm implementations with Python bindings',
     author='IntelliStream',
-    py_modules=[],
-    packages=[],
-    # 关键：不使用 ext_modules，直接用 data_files 复制 .so 文件
-    data_files=[
-        ('', so_files),  # 将 .so 文件安装到 site-packages 根目录
-    ],
+    packages=['PyCANDYAlgo'],
+    package_dir={'PyCANDYAlgo': 'PyCANDYAlgo'},
+    package_data={'PyCANDYAlgo': ['*.so']},
     distclass=BinaryDistribution,
     zip_safe=False,
     python_requires='>=3.8',

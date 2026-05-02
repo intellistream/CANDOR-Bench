@@ -207,6 +207,7 @@ else()
                 pthread
                 m
                 dl
+                atomic
         )
     endif()
 endif()
