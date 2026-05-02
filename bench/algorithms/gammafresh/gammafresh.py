@@ -53,7 +53,7 @@ DEFAULT_FRESH_VAMANA = {
 }
 
 DEFAULT_GAMMAFRESH = {
-    "backend": "HNSW",
+    "backend": "FaissHNSW",
     "log_interval": 0,
     "split_factor": 4.0,
     "gamma_split_threshold": 0.4,
@@ -130,7 +130,7 @@ class Gammafresh(BaseStreamingANN):
     def setup(self, dtype, max_pts, ndim):
         if str(dtype) != "float32":
             raise ValueError(f"GammaFresh only supports float32 vectors, got {dtype}")
-        backend = self.index_params.get("backend", "HNSW")
+        backend = self.index_params.get("backend", "FaissHNSW")
         gammafresh_cfg = dict(self.index_params.get("gamma_fresh", {}))
         gammafresh_cfg.setdefault("internal_logs_dir", str(ROOT / "results" / "gammafresh" / "internal_logs"))
         backend_cfg = dict(self.index_params.get("backend_config", {}))
