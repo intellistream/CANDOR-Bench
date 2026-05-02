@@ -36,6 +36,13 @@ DEFAULT_HNSW = {
     "tombstone_rebuild_threshold": 512,
 }
 
+DEFAULT_FAISS_HNSW = {
+    "m": 32,
+    "ef_construction": 120,
+    "ef_search": 80,
+    "tombstone_rebuild_threshold": 512,
+}
+
 DEFAULT_FRESH_VAMANA = {
     "alpha": 1.1,
     "L": 60,
@@ -94,6 +101,7 @@ def _build_config(
         "indexes": {
             "gamma_fresh": copy.deepcopy(DEFAULT_GAMMAFRESH),
             "hnsw": copy.deepcopy(DEFAULT_HNSW),
+            "faiss_hnsw": copy.deepcopy(DEFAULT_FAISS_HNSW),
             "fresh_vamana": copy.deepcopy(DEFAULT_FRESH_VAMANA),
         },
     }
@@ -102,6 +110,8 @@ def _build_config(
         _deep_update(payload["indexes"]["gamma_fresh"], gammafresh)
     if backend == "HNSW" and backend_config:
         _deep_update(payload["indexes"]["hnsw"], backend_config)
+    if backend == "FaissHNSW" and backend_config:
+        _deep_update(payload["indexes"]["faiss_hnsw"], backend_config)
     if backend == "FreshVamana" and backend_config:
         _deep_update(payload["indexes"]["fresh_vamana"], backend_config)
     return payload
