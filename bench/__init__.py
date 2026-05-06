@@ -10,7 +10,13 @@ from .worker import CongestionDropWorker
 from .maintenance import MaintenanceState, MaintenancePolicy
 from .algorithms.base import BaseANN, BaseStreamingANN, DummyStreamingANN
 from .algorithms.registry import get_algorithm, register_algorithm
-from .io_utils import save_run_results
+from .io_utils import (
+    create_timestamped_output_dir,
+    save_run_results,
+    write_json_file,
+    write_manifest_json,
+    write_rows_csv,
+)
 
 __all__ = [
     'BenchmarkRunner',
@@ -23,5 +29,9 @@ __all__ = [
     'DummyStreamingANN',
     'get_algorithm',
     'register_algorithm',
+    'create_timestamped_output_dir',
     'save_run_results',
+    'write_json_file',
+    'write_manifest_json',
+    'write_rows_csv',
 ]

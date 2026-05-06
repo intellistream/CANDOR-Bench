@@ -129,6 +129,21 @@ class RunbookEntry:
     params: dict    # 操作参数
 
 
+_MISSING = object()
+
+
+def _operation_field(operation: Any, *names: str, default: Any = _MISSING) -> Any:
+    """Read a generated operation field from either a dict or dataclass-like object."""
+    for name in names:
+        if isinstance(operation, dict) and name in operation:
+            return operation[name]
+        if hasattr(operation, name):
+            return getattr(operation, name)
+    if default is not _MISSING:
+        return default
+    raise ValueError(f"operation missing required field: {' or '.join(names)}")
+
+
 class BenchmarkRunner:
     """
     测评流程执行器
@@ -254,6 +269,118 @@ class BenchmarkRunner:
             'delete': 0,
             'search': 0,
             'maintenance_rebuild': 0,
+        }
+
+    def run_operation_sequence(
+        self,
+        operations: List[Any],
+        vectors: np.ndarray,
+        *,
+        run_id: str = "",
+        index_name: Optional[str] = None,
+        setup_algorithm: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Execute a fine-grained insert/delete/query operation sequence.
+
+        This is the common execution surface for generated workloads such as
+        gamma_dynamic. It keeps generated workload handling inside the native
+        BenchmarkRunner instead of having experiment modules call algorithm
+        methods directly.
+        """
+        if self.use_worker:
+            raise ValueError("run_operation_sequence requires use_worker=False")
+        if vectors.ndim != 2:
+            raise ValueError("vectors must be a 2D array")
+
+        vectors = np.ascontiguousarray(vectors, dtype=np.float32)
+        if setup_algorithm and hasattr(self.algo, 'setup'):
+            dtype = getattr(self.dataset, 'dtype', 'float32')
+            self.algo.setup(dtype, int(vectors.shape[0]), int(vectors.shape[1]))
+
+        resolved_index_name = index_name or self.metrics.algorithm_name
+        live_ids: set[int] = set()
+        timeseries: List[Dict[str, Any]] = []
+        op_latencies: Dict[str, List[float]] = {
+            "insert_latency": [],
+            "delete_latency": [],
+            "query_latency": [],
+        }
+        op_counts = {"insert": 0, "delete": 0, "query": 0}
+
+        measurement_start: Optional[float] = None
+        measurement_end: Optional[float] = None
+        run_start = time.perf_counter()
+
+        for seq_idx, operation in enumerate(operations, start=1):
+            op_type = _operation_field(operation, "op_type", "type")
+            target_id = int(_operation_field(operation, "target_id"))
+            phase = str(_operation_field(operation, "phase", default="measurement"))
+
+            if target_id < 0 or target_id >= vectors.shape[0]:
+                raise ValueError(f"operation target_id out of range: {target_id}")
+            if phase == "measurement" and measurement_start is None:
+                measurement_start = time.perf_counter()
+
+            start = time.perf_counter()
+            if op_type == "insert":
+                self.algo.insert(
+                    vectors[target_id:target_id + 1],
+                    np.array([target_id], dtype=np.uint32),
+                )
+                live_ids.add(target_id)
+                metric_type = "insert_latency"
+            elif op_type == "delete":
+                self.algo.delete(np.array([target_id], dtype=np.uint32))
+                live_ids.discard(target_id)
+                metric_type = "delete_latency"
+            elif op_type == "query":
+                result = self.algo.query(vectors[target_id:target_id + 1], self.k)
+                if isinstance(result, tuple):
+                    result = result[0]
+                if result is not None:
+                    self.all_results.append(result[0] if len(result) else np.array([]))
+                metric_type = "query_latency"
+            else:
+                raise ValueError(f"unknown operation type: {op_type}")
+
+            elapsed_ms = (time.perf_counter() - start) * 1000.0
+            if phase == "measurement":
+                op_counts[op_type] += 1
+                op_latencies[metric_type].append(elapsed_ms)
+                measurement_end = time.perf_counter()
+
+            timeseries.append(
+                {
+                    "run_id": run_id,
+                    "timestamp_sec": time.perf_counter() - run_start,
+                    "index_type": resolved_index_name,
+                    "op_type": metric_type,
+                    "latency_ms": elapsed_ms,
+                    "current_size": len(live_ids),
+                    "workload_op_seq": seq_idx,
+                    "target_id": target_id,
+                    "phase": phase,
+                }
+            )
+
+        duration_sec = 0.0
+        if measurement_start is not None and measurement_end is not None:
+            duration_sec = max(0.0, measurement_end - measurement_start)
+
+        self.counts["insert"] += op_counts["insert"]
+        self.counts["delete"] += op_counts["delete"]
+        self.counts["search"] += op_counts["query"]
+        self.attrs["latencyInsert"].extend([v * 1000.0 for v in op_latencies["insert_latency"]])
+        self.attrs["latencyDelete"].extend([v * 1000.0 for v in op_latencies["delete_latency"]])
+        self.attrs["latencyQuery"].extend([v / 1000.0 for v in op_latencies["query_latency"]])
+
+        return {
+            "timeseries": timeseries,
+            "op_latencies": op_latencies,
+            "op_counts": op_counts,
+            "duration_sec": duration_sec,
+            "final_live_count": len(live_ids),
         }
     
     def run_runbook(self, runbook: Dict, dataset_name: str = None) -> BenchmarkMetrics:

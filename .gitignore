@@ -99,3 +99,4 @@ htmlcov/SAGE-DB-Bench/
 temp/
 /build-pycandy/
 /.deps/
+results/
