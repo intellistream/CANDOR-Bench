@@ -22,6 +22,10 @@ from bench.runner import BenchmarkRunner
 from datasets.base import Dataset
 
 
+DEFAULT_GAMMA_DIM = 32
+DEFAULT_GAMMA_THREADS = 1
+
+
 @dataclass(frozen=True)
 class GammaOperation:
     op_type: str
@@ -50,14 +54,12 @@ class GammaSweepConfig:
         required = [
             "dataset_size",
             "operations",
-            "dim",
             "topk",
             "gamma_values",
             "random_seed",
             "prefill_ratio",
             "zipf_alpha",
             "delete_ratio",
-            "threads",
         ]
         missing = [key for key in required if key not in data]
         if indices_value is None:
@@ -68,7 +70,7 @@ class GammaSweepConfig:
         cfg = cls(
             dataset_size=int(data["dataset_size"]),
             operations=int(data["operations"]),
-            dim=int(data["dim"]),
+            dim=int(data.get("dim", DEFAULT_GAMMA_DIM)),
             topk=int(data["topk"]),
             gamma_values=[float(v) for v in data["gamma_values"]],
             indices=[str(v) for v in indices_value],
@@ -76,7 +78,7 @@ class GammaSweepConfig:
             prefill_ratio=float(data["prefill_ratio"]),
             zipf_alpha=float(data["zipf_alpha"]),
             delete_ratio=float(data["delete_ratio"]),
-            threads=int(data["threads"]),
+            threads=int(data.get("threads", DEFAULT_GAMMA_THREADS)),
             algorithm_dataset_key=str(data.get("algorithm_dataset_key", "random-xs")),
         )
         cfg.validate()

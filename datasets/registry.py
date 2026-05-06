@@ -421,6 +421,7 @@ class RandomDataset(Dataset):
         self.basedir = f"raw_data/random-{nb//1000}k/"
         self._data = None
         self._queries = None
+        self._groundtruth = {}
 
     def prepare(self, skip_data: bool = False):
         os.makedirs(self.basedir, exist_ok=True)
@@ -448,8 +449,20 @@ class RandomDataset(Dataset):
         return self._queries
 
     def get_groundtruth(self, k: Optional[int] = None):
-        # Compute ground truth on-the-fly for random data
-        return None
+        k = k or self.default_count()
+        k = min(int(k), self.nb)
+        if k in self._groundtruth:
+            return self._groundtruth[k]
+
+        data = self.get_dataset()
+        queries = self.get_queries()
+        result = np.empty((self.nq, k), dtype=np.int32)
+        for start in range(0, self.nq, 32):
+            query_batch = queries[start : start + 32]
+            distances = np.sum((query_batch[:, None, :] - data[None, :, :]) ** 2, axis=2)
+            result[start : start + len(query_batch)] = np.argsort(distances, axis=1)[:, :k]
+        self._groundtruth[k] = result
+        return result
 
     def distance(self):
         return "euclidean"
