@@ -386,8 +386,11 @@ uv run sage-bench \
 | `data/custom_metrics.csv` | operation count、prefill count、final live count 等 |
 | `data/operation_sequence_gamma_*.csv` | 每个 gamma 的确定性 operation sequence |
 | `manifest.json` | 本次 gamma run 的配置和产物说明 |
-| `figures/main/gamma_vs_throughput.png` | gamma vs throughput |
+| `figures/main/gamma_vs_throughput.png` | gamma vs mixed measurement throughput，口径为 `(insert + delete + query) / duration` |
+| `figures/main/gamma_vs_recall_adjusted_throughput.png` | gamma vs recall-adjusted throughput，口径为 `system_ops_per_sec * recall`；`recall` 为 measurement query 时刻 live set 上的 exact Recall@k |
 | `figures/main/gamma_vs_query_latency.png` | gamma vs query latency |
+| `figures/main/gamma_vs_insert_latency.png` | gamma vs insert latency |
+| `figures/main/gamma_vs_delete_latency.png` | gamma vs delete latency |
 
 可以用命令行覆盖 sweep 范围：
 

@@ -808,6 +808,7 @@ def run_gamma_sweep_from_args(args):
         try:
             dataset = get_dataset(args.dataset)
             dataset_name = args.dataset
+            dataset.prepare()
             print(f"✓ 数据集加载成功: {dataset.short_name()}")
             print(f"  - 距离度量: {dataset.distance()}")
             print(f"  - 向量维度: {dataset.d}")

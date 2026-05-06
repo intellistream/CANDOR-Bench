@@ -300,40 +300,129 @@ def plot_gamma_sweep(run_dir: str | Path) -> list[Path]:
     latencies = pd.read_csv(data_dir / "benchmark_latencies.csv")
     outputs: list[Path] = []
 
-    if not runs.empty:
-        fig, ax = plt.subplots(figsize=(8, 5))
-        for index_name, frame in runs.groupby("index"):
-            frame = frame.sort_values("gamma")
-            ax.plot(frame["gamma"], frame["system_ops_per_sec"], marker="o", label=index_name)
-        ax.set_xscale("log")
-        ax.set_xlabel("Gamma (Q / writes)")
-        ax.set_ylabel("System ops/sec")
-        ax.set_title("Gamma Sweep Throughput")
-        ax.grid(True, alpha=0.3)
-        ax.legend()
-        out = figures_dir / "gamma_vs_throughput.png"
-        fig.savefig(out, dpi=220, bbox_inches="tight")
-        plt.close(fig)
-        outputs.append(out)
-
-    query_lat = latencies[latencies["op_type"] == "query_latency"].copy()
-    if not query_lat.empty:
-        fig, ax = plt.subplots(figsize=(8, 5))
-        for index_name, frame in query_lat.groupby("index"):
-            frame = frame.sort_values("gamma")
-            ax.plot(frame["gamma"], frame["avg_latency_ms"], marker="o", label=index_name)
-        ax.set_xscale("log")
-        ax.set_xlabel("Gamma (Q / writes)")
-        ax.set_ylabel("Average query latency (ms)")
-        ax.set_title("Gamma Sweep Query Latency")
-        ax.grid(True, alpha=0.3)
-        ax.legend()
-        out = figures_dir / "gamma_vs_query_latency.png"
-        fig.savefig(out, dpi=220, bbox_inches="tight")
-        plt.close(fig)
-        outputs.append(out)
+    outputs.append(
+        _plot_gamma_runs(
+            runs,
+            figures_dir / "gamma_vs_throughput.png",
+            y_column="system_ops_per_sec",
+            y_label="System ops/sec",
+            title="Gamma Sweep Throughput",
+        )
+    )
+    outputs.append(_plot_recall_adjusted_throughput(runs, figures_dir / "gamma_vs_recall_adjusted_throughput.png"))
+    outputs.append(
+        _plot_gamma_latency(
+            latencies,
+            figures_dir / "gamma_vs_query_latency.png",
+            op_type="query_latency",
+            y_label="Average query latency (ms)",
+            title="Gamma Sweep Query Latency",
+            empty_message="No query latency data available",
+        )
+    )
+    outputs.append(
+        _plot_gamma_latency(
+            latencies,
+            figures_dir / "gamma_vs_insert_latency.png",
+            op_type="insert_latency",
+            y_label="Average insert latency (ms)",
+            title="Gamma Sweep Insert Latency",
+            empty_message="No insert latency data available",
+        )
+    )
+    outputs.append(
+        _plot_gamma_latency(
+            latencies,
+            figures_dir / "gamma_vs_delete_latency.png",
+            op_type="delete_latency",
+            y_label="Average delete latency (ms)",
+            title="Gamma Sweep Delete Latency",
+            empty_message="No delete latency data available",
+        )
+    )
 
     return outputs
+
+
+def _plot_gamma_runs(
+    runs: pd.DataFrame,
+    out: Path,
+    *,
+    y_column: str,
+    y_label: str,
+    title: str,
+    empty_message: str = "No run data available",
+) -> Path:
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    valid = runs.dropna(subset=["gamma", y_column]).copy() if y_column in runs else pd.DataFrame()
+    if valid.empty:
+        _annotate_empty_axis(ax, empty_message)
+    else:
+        for index_name, frame in valid.groupby("index"):
+            frame = frame.sort_values("gamma")
+            ax.plot(frame["gamma"], frame[y_column], marker="o", label=index_name)
+        ax.legend()
+    ax.set_xscale("log")
+    ax.set_xlabel("Gamma (Q / writes)")
+    ax.set_ylabel(y_label)
+    ax.set_title(title)
+    ax.grid(True, alpha=0.3)
+    fig.savefig(out, dpi=220, bbox_inches="tight")
+    plt.close(fig)
+    return out
+
+
+def _plot_recall_adjusted_throughput(runs: pd.DataFrame, out: Path) -> Path:
+    frame = runs.copy()
+    if "recall" in frame:
+        frame["recall"] = pd.to_numeric(frame["recall"], errors="coerce")
+    else:
+        frame["recall"] = math.nan
+    frame["recall_adjusted_ops_per_sec"] = frame["system_ops_per_sec"] * frame["recall"]
+    return _plot_gamma_runs(
+        frame,
+        out,
+        y_column="recall_adjusted_ops_per_sec",
+        y_label="System ops/sec x recall",
+        title="Gamma Sweep Recall-Adjusted Throughput",
+        empty_message="Recall data unavailable",
+    )
+
+
+def _plot_gamma_latency(
+    latencies: pd.DataFrame,
+    out: Path,
+    *,
+    op_type: str,
+    y_label: str,
+    title: str,
+    empty_message: str,
+) -> Path:
+    import matplotlib.pyplot as plt
+
+    frame = latencies[latencies["op_type"] == op_type].copy()
+    fig, ax = plt.subplots(figsize=(8, 5))
+    if frame.empty:
+        _annotate_empty_axis(ax, empty_message)
+    else:
+        for index_name, group in frame.groupby("index"):
+            group = group.sort_values("gamma")
+            ax.plot(group["gamma"], group["avg_latency_ms"], marker="o", label=index_name)
+        ax.legend()
+    ax.set_xscale("log")
+    ax.set_xlabel("Gamma (Q / writes)")
+    ax.set_ylabel(y_label)
+    ax.set_title(title)
+    ax.grid(True, alpha=0.3)
+    fig.savefig(out, dpi=220, bbox_inches="tight")
+    plt.close(fig)
+    return out
+
+
+def _annotate_empty_axis(ax: Any, message: str) -> None:
+    ax.text(0.5, 0.5, message, ha="center", va="center", transform=ax.transAxes)
 
 
 def _run_one_index_gamma(
@@ -363,6 +452,7 @@ def _run_one_index_gamma(
         vectors,
         run_id=run_id,
         index_name=index_name,
+        compute_recall=True,
     )
 
     duration = float(sequence_result["duration_sec"])
@@ -392,7 +482,7 @@ def _run_one_index_gamma(
         "delete_count": op_counts["delete"],
         "query_count": op_counts["query"],
         "system_ops_per_sec": system_ops_per_sec,
-        "recall": math.nan,
+        "recall": sequence_result["recall"],
     }
 
     latency_rows = [
@@ -406,6 +496,7 @@ def _run_one_index_gamma(
         {"run_id": run_id, "key": "measurement_delete_count", "value": op_counts["delete"]},
         {"run_id": run_id, "key": "measurement_query_count", "value": op_counts["query"]},
         {"run_id": run_id, "key": "final_live_count", "value": sequence_result["final_live_count"]},
+        {"run_id": run_id, "key": "mean_recall", "value": sequence_result["recall"]},
     ]
 
     return {
@@ -429,6 +520,7 @@ def _resolve_vectors(
         runner_dataset = _GammaVectorDataset(vectors, resolved_name)
         return replace(cfg, algorithm_dataset_key=algorithm_dataset_key), vectors, runner_dataset, resolved_name
 
+    dataset.prepare()
     data = np.asarray(dataset.get_dataset(), dtype=np.float32)
     if data.ndim != 2:
         raise ValueError(f"Dataset {dataset.short_name()} must return a 2D dense array")
@@ -548,7 +640,7 @@ def _write_manifest(
             "This CANDOR-Bench runner uses the algorithm registry and BaseStreamingANN API.",
             "GammaFresh internals are not modified by this experiment path.",
             "threads is recorded in this first version; execution is serial.",
-            "recall is left empty unless a later baseline/ground-truth integration fills it.",
+            "recall is exact dynamic Recall@k against the live vector set at each measurement query.",
         ],
     }
     write_manifest_json(run_dir, manifest)

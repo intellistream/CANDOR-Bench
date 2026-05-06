@@ -144,6 +144,46 @@ def _operation_field(operation: Any, *names: str, default: Any = _MISSING) -> An
     raise ValueError(f"operation missing required field: {' or '.join(names)}")
 
 
+def _exact_dynamic_recall(
+    *,
+    vectors: np.ndarray,
+    query_vector: np.ndarray,
+    predicted_ids: Any,
+    live_ids: set[int],
+    k: int,
+    metric: str,
+) -> float:
+    if not live_ids:
+        return float("nan")
+
+    live_id_array = np.fromiter(live_ids, dtype=np.int64, count=len(live_ids))
+    k_actual = min(int(k), live_id_array.size)
+    live_vectors = vectors[live_id_array]
+
+    if metric == "ip":
+        scores = live_vectors @ query_vector
+        candidate_positions = np.argpartition(-scores, k_actual - 1)[:k_actual]
+        exact_ids = live_id_array[candidate_positions[np.argsort(-scores[candidate_positions])]]
+    elif metric == "angular":
+        live_norms = np.linalg.norm(live_vectors, axis=1)
+        query_norm = float(np.linalg.norm(query_vector))
+        denom = np.maximum(live_norms * query_norm, 1e-12)
+        scores = (live_vectors @ query_vector) / denom
+        candidate_positions = np.argpartition(-scores, k_actual - 1)[:k_actual]
+        exact_ids = live_id_array[candidate_positions[np.argsort(-scores[candidate_positions])]]
+    else:
+        distances = np.sum((live_vectors - query_vector) ** 2, axis=1)
+        candidate_positions = np.argpartition(distances, k_actual - 1)[:k_actual]
+        exact_ids = live_id_array[candidate_positions[np.argsort(distances[candidate_positions])]]
+
+    predicted = np.asarray(predicted_ids).reshape(-1)
+    if predicted.size == 0:
+        return 0.0
+    predicted = predicted[:k_actual]
+    predicted = predicted[predicted >= 0]
+    return len(set(int(v) for v in predicted) & set(int(v) for v in exact_ids)) / float(k_actual)
+
+
 class BenchmarkRunner:
     """
     测评流程执行器
@@ -279,6 +319,7 @@ class BenchmarkRunner:
         run_id: str = "",
         index_name: Optional[str] = None,
         setup_algorithm: bool = True,
+        compute_recall: bool = False,
     ) -> Dict[str, Any]:
         """
         Execute a fine-grained insert/delete/query operation sequence.
@@ -307,18 +348,61 @@ class BenchmarkRunner:
             "query_latency": [],
         }
         op_counts = {"insert": 0, "delete": 0, "query": 0}
+        query_recalls: List[float] = []
 
         measurement_start: Optional[float] = None
         measurement_end: Optional[float] = None
         run_start = time.perf_counter()
 
-        for seq_idx, operation in enumerate(operations, start=1):
+        op_index = 0
+        while op_index < len(operations):
+            seq_idx = op_index + 1
+            operation = operations[op_index]
             op_type = _operation_field(operation, "op_type", "type")
             target_id = int(_operation_field(operation, "target_id"))
             phase = str(_operation_field(operation, "phase", default="measurement"))
 
             if target_id < 0 or target_id >= vectors.shape[0]:
                 raise ValueError(f"operation target_id out of range: {target_id}")
+
+            if op_type == "insert" and phase == "prefill":
+                batch_ids = []
+                batch_start_seq = seq_idx
+                while op_index < len(operations):
+                    prefill_operation = operations[op_index]
+                    prefill_op_type = _operation_field(prefill_operation, "op_type", "type")
+                    prefill_phase = str(_operation_field(prefill_operation, "phase", default="measurement"))
+                    if prefill_op_type != "insert" or prefill_phase != "prefill":
+                        break
+                    prefill_target_id = int(_operation_field(prefill_operation, "target_id"))
+                    if prefill_target_id < 0 or prefill_target_id >= vectors.shape[0]:
+                        raise ValueError(f"operation target_id out of range: {prefill_target_id}")
+                    batch_ids.append(prefill_target_id)
+                    op_index += 1
+
+                ids_array = np.asarray(batch_ids, dtype=np.uint32)
+                start = time.perf_counter()
+                self.algo.initial_load(vectors[ids_array], ids_array)
+                elapsed_ms = (time.perf_counter() - start) * 1000.0
+                per_item_elapsed_ms = elapsed_ms / len(batch_ids) if batch_ids else 0.0
+
+                for offset, prefill_target_id in enumerate(batch_ids):
+                    live_ids.add(prefill_target_id)
+                    timeseries.append(
+                        {
+                            "run_id": run_id,
+                            "timestamp_sec": time.perf_counter() - run_start,
+                            "index_type": resolved_index_name,
+                            "op_type": "insert_latency",
+                            "latency_ms": per_item_elapsed_ms,
+                            "current_size": len(live_ids),
+                            "workload_op_seq": batch_start_seq + offset,
+                            "target_id": prefill_target_id,
+                            "phase": "prefill",
+                        }
+                    )
+                continue
+
             if phase == "measurement" and measurement_start is None:
                 measurement_start = time.perf_counter()
 
@@ -340,6 +424,18 @@ class BenchmarkRunner:
                     result = result[0]
                 if result is not None:
                     self.all_results.append(result[0] if len(result) else np.array([]))
+                    if compute_recall and phase == "measurement":
+                        metric = self.dataset.distance() if hasattr(self.dataset, "distance") else "euclidean"
+                        query_recalls.append(
+                            _exact_dynamic_recall(
+                                vectors=vectors,
+                                query_vector=vectors[target_id],
+                                predicted_ids=result[0] if len(result) else np.array([]),
+                                live_ids=live_ids,
+                                k=self.k,
+                                metric=metric,
+                            )
+                        )
                 metric_type = "query_latency"
             else:
                 raise ValueError(f"unknown operation type: {op_type}")
@@ -363,6 +459,7 @@ class BenchmarkRunner:
                     "phase": phase,
                 }
             )
+            op_index += 1
 
         duration_sec = 0.0
         if measurement_start is not None and measurement_end is not None:
@@ -375,12 +472,16 @@ class BenchmarkRunner:
         self.attrs["latencyDelete"].extend([v * 1000.0 for v in op_latencies["delete_latency"]])
         self.attrs["latencyQuery"].extend([v / 1000.0 for v in op_latencies["query_latency"]])
 
+        finite_recalls = [value for value in query_recalls if not np.isnan(value)]
+
         return {
             "timeseries": timeseries,
             "op_latencies": op_latencies,
             "op_counts": op_counts,
             "duration_sec": duration_sec,
             "final_live_count": len(live_ids),
+            "recall": float(np.mean(finite_recalls)) if finite_recalls else float("nan"),
+            "query_recalls": query_recalls,
         }
     
     def run_runbook(self, runbook: Dict, dataset_name: str = None) -> BenchmarkMetrics:

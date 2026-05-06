@@ -334,11 +334,19 @@ def _load_algorithm_config(algo_name: str, dataset: str = 'random-xs') -> Dict[s
         with open(config_path, 'r') as f:
             config = yaml.safe_load(f)
 
-        # 查找数据集配置，支持带后缀的算法名
-        algo_key = algo_name if algo_name in config.get(dataset, {}) else base_algo_name
+        # 优先使用请求的数据集配置，fallback 到 random-xs
+        datasets_to_try = [dataset]
+        if dataset != 'random-xs' and 'random-xs' in config:
+            datasets_to_try.append('random-xs')
 
-        if dataset in config and algo_key in config[dataset]:
-            algo_config = config[dataset][algo_key]
+        for ds_name in datasets_to_try:
+            # 查找数据集配置，支持带后缀的算法名
+            algo_key = algo_name if algo_name in config.get(ds_name, {}) else base_algo_name
+
+            if ds_name not in config or algo_key not in config[ds_name]:
+                continue
+
+            algo_config = config[ds_name][algo_key]
 
             # 提取基础参数
             params = {}
@@ -409,6 +417,8 @@ def _load_algorithm_config(algo_name: str, dataset: str = 'random-xs') -> Dict[s
                                     pass
 
             return params
+
+        return {}
     except Exception as e:
         print(f"⚠ Failed to load config for {algo_name}: {e}")
 
