@@ -350,7 +350,7 @@ python3 export_results.py \
 
 CANDOR-Bench 侧提供了一个最小 gamma experiment path，用于迁移 DynaGraph gamma workflow 中与算法无关的部分：gamma sweep 配置、operation sequence 生成、benchmark orchestration、标准 CSV 输出和基础图表。第一版不修改 `algorithms_impl/GammaFresh` 的 GammaFresh internals。
 
-默认 smoke 配置使用 `dummy` index，避免依赖本地 C++ bindings。Gamma sweep 已接入原生 `sage-bench` 入口：
+默认 smoke 配置使用 `dummy` 和 `dummy2` index，避免依赖本地 C++ bindings，同时覆盖多曲线 plot 生成。Gamma sweep 已接入原生 `sage-bench` 入口：
 
 ```bash
 uv run sage-bench \
@@ -367,12 +367,14 @@ uv run sage-bench \
 |:-----|:-----|
 | `gamma_values` | 要 sweep 的 gamma 值，例如 `[0.01, 1.0, 100.0]` |
 | `indices` / `algorithms` | 要运行的 CANDOR-Bench algorithm registry 名称，例如 `dummy`、`gammafresh`、`faiss_HNSW` |
-| `dataset_size` / `dim` | 使用 synthetic vectors 时的数据规模和维度；传入 `--dataset` 时，`dataset_size` 表示取数据集前 N 条，`dim` 由数据集覆盖 |
+| `dataset_size` / `dim` | 使用 synthetic vectors 时的数据规模和维度；传入 `--dataset` 时，`dataset_size` 表示取数据集前 N 条，`dim` 由数据集覆盖。`dim` 可省略，默认 `32` |
 | `operations` | measurement phase 的操作数量，不含 prefill |
 | `prefill_ratio` | 初始插入比例 |
 | `zipf_alpha` | query target 的 Zipf skew，`0.0` 表示 uniform |
 | `delete_ratio` | write operation 中 delete 的目标比例 |
-| `threads` | 当前版本记录该字段但串行执行 |
+| `threads` | 可省略，默认 `1`；当前版本记录该字段但串行执行 |
+
+`algorithm_dataset_key` 通常不需要写入 runbook；默认是 `random-xs`，传入 `--dataset` 时会使用命令行指定的数据集名。
 
 输出目录为 `--output` 下的 timestamped 子目录，例如 `results/gamma_smoke/gamma_sweep_YYYYMMDD_HHMMSS/`：
 

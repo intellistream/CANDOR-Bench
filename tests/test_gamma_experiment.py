@@ -57,7 +57,6 @@ def test_gamma_config_accepts_algorithms_alias() -> None:
         {
             "dataset_size": 100,
             "operations": 10,
-            "dim": 4,
             "topk": 2,
             "gamma_values": [1.0],
             "algorithms": ["dummy"],
@@ -65,10 +64,11 @@ def test_gamma_config_accepts_algorithms_alias() -> None:
             "prefill_ratio": 0.5,
             "zipf_alpha": 0.0,
             "delete_ratio": 0.5,
-            "threads": 1,
         }
     )
     assert cfg.indices == ["dummy"]
+    assert cfg.dim == 32
+    assert cfg.threads == 1
 
 
 def test_gamma_operation_sequence_is_deterministic() -> None:
