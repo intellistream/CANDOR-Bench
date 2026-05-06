@@ -111,11 +111,59 @@ def test_benchmark_runner_executes_generated_operation_sequence() -> None:
         vectors,
         run_id="unit-run",
         index_name="dummy",
+        compute_recall=True,
     )
 
     assert result["op_counts"] == {"insert": 1, "delete": 1, "query": 1}
     assert result["final_live_count"] == 1
+    assert result["recall"] == 1.0
     assert len(result["timeseries"]) == 4
+
+
+def test_benchmark_runner_batches_prefill_initial_load() -> None:
+    class InitialLoadTrackingANN(DummyStreamingANN):
+        def __init__(self):
+            super().__init__()
+            self.initial_load_sizes = []
+
+        def initial_load(self, X, ids):
+            self.initial_load_sizes.append(len(ids))
+            return super().initial_load(X, ids)
+
+    vectors = np.asarray(
+        [
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+        ],
+        dtype="float32",
+    )
+    dataset = _GammaVectorDataset(vectors, "unit-gamma-prefill")
+    algorithm = InitialLoadTrackingANN()
+    runner = BenchmarkRunner(
+        algorithm=algorithm,
+        dataset=dataset,
+        k=2,
+        save_timestamps=False,
+        use_worker=False,
+    )
+
+    result = runner.run_operation_sequence(
+        [
+            {"type": "insert", "target_id": 0, "phase": "prefill"},
+            {"type": "insert", "target_id": 1, "phase": "prefill"},
+            {"type": "query", "target_id": 0, "phase": "measurement"},
+        ],
+        vectors,
+        run_id="unit-prefill-run",
+        index_name="dummy",
+    )
+
+    assert algorithm.initial_load_sizes == [2]
+    assert result["op_counts"] == {"insert": 0, "delete": 0, "query": 1}
+    assert result["final_live_count"] == 2
+    assert len(result["timeseries"]) == 3
 
 
 def test_gamma_sweep_writes_standard_outputs_and_plots(tmp_path: Path) -> None:
@@ -138,10 +186,18 @@ def test_gamma_sweep_writes_standard_outputs_and_plots(tmp_path: Path) -> None:
     timeseries = pd.read_csv(data_dir / "timeseries.csv")
 
     assert len(runs) == len(cfg.gamma_values) * len(cfg.indices)
+    assert runs["recall"].notna().all()
+    assert (runs["recall"] == 1.0).all()
     assert {"query_latency", "insert_latency", "delete_latency"} & set(latencies["op_type"])
     assert not timeseries.empty
 
     plot_outputs = plot_gamma_sweep(run_dir)
-    assert plot_outputs
+    assert {path.name for path in plot_outputs} == {
+        "gamma_vs_throughput.png",
+        "gamma_vs_recall_adjusted_throughput.png",
+        "gamma_vs_query_latency.png",
+        "gamma_vs_insert_latency.png",
+        "gamma_vs_delete_latency.png",
+    }
     for path in plot_outputs:
         assert path.exists(), path

@@ -27,7 +27,13 @@ class SiftSmallDataset(Dataset):
     def prepare(self, skip_data: bool = False):
         os.makedirs(self.basedir, exist_ok=True)
         if not skip_data:
-            download_dataset("sift-small", self.basedir)
+            ok = download_dataset("sift-small", self.basedir)
+            if not ok and not os.path.exists(self.get_dataset_fn()):
+                raise RuntimeError(
+                    f"Failed to prepare SIFT-small dataset. "
+                    f"Please install gdown (pip install gdown) and retry, "
+                    f"or manually place data files under: {self.basedir}"
+                )
 
     def get_dataset_fn(self):
         # Try both possible filenames
@@ -88,8 +94,17 @@ class SiftDataset(Dataset):
 
     def prepare(self, skip_data: bool = False):
         os.makedirs(self.basedir, exist_ok=True)
-        if not skip_data:
-            download_dataset("sift", self.basedir)
+        if skip_data:
+            return
+        if os.path.exists(self.get_dataset_fn()):
+            return  # Already downloaded
+        ok = download_dataset("sift", self.basedir)
+        if not ok and not os.path.exists(self.get_dataset_fn()):
+            raise RuntimeError(
+                f"Failed to prepare SIFT dataset. "
+                f"Please install gdown (pip install gdown) and retry, "
+                f"or manually place data files under: {self.basedir}"
+            )
 
     def get_dataset_fn(self):
         candidates = [
@@ -148,7 +163,13 @@ class OpenImagesDataset(Dataset):
     def prepare(self, skip_data: bool = False):
         os.makedirs(self.basedir, exist_ok=True)
         if not skip_data:
-            download_dataset("openimages", self.basedir)
+            ok = download_dataset("openimages", self.basedir)
+            if not ok and not os.path.exists(self.get_dataset_fn()):
+                raise RuntimeError(
+                    f"Failed to prepare openimages dataset. "
+                    f"Please install gdown (pip install gdown) and retry, "
+                    f"or manually place data files under: {self.basedir}"
+                )
 
     def get_dataset_fn(self):
         candidates = [
@@ -203,7 +224,13 @@ class SunDataset(Dataset):
     def prepare(self, skip_data: bool = False):
         os.makedirs(self.basedir, exist_ok=True)
         if not skip_data:
-            download_dataset("sun", self.basedir)
+            ok = download_dataset("sun", self.basedir)
+            if not ok and not os.path.exists(self.get_dataset_fn()):
+                raise RuntimeError(
+                    f"Failed to prepare sun dataset. "
+                    f"Please install gdown (pip install gdown) and retry, "
+                    f"or manually place data files under: {self.basedir}"
+                )
 
     def get_dataset_fn(self):
         candidates = [
@@ -258,7 +285,13 @@ class CocoDataset(Dataset):
     def prepare(self, skip_data: bool = False):
         os.makedirs(self.basedir, exist_ok=True)
         if not skip_data:
-            download_dataset("coco", self.basedir)
+            ok = download_dataset("coco", self.basedir)
+            if not ok and not os.path.exists(self.get_dataset_fn()):
+                raise RuntimeError(
+                    f"Failed to prepare coco dataset. "
+                    f"Please install gdown (pip install gdown) and retry, "
+                    f"or manually place data files under: {self.basedir}"
+                )
 
     def get_dataset_fn(self):
         candidates = [
@@ -313,7 +346,13 @@ class GloveDataset(Dataset):
     def prepare(self, skip_data: bool = False):
         os.makedirs(self.basedir, exist_ok=True)
         if not skip_data:
-            download_dataset("glove", self.basedir)
+            ok = download_dataset("glove", self.basedir)
+            if not ok and not os.path.exists(self.get_dataset_fn()):
+                raise RuntimeError(
+                    f"Failed to prepare glove dataset. "
+                    f"Please install gdown (pip install gdown) and retry, "
+                    f"or manually place data files under: {self.basedir}"
+                )
 
     def get_dataset_fn(self):
         candidates = [
@@ -368,7 +407,13 @@ class MSongDataset(Dataset):
     def prepare(self, skip_data: bool = False):
         os.makedirs(self.basedir, exist_ok=True)
         if not skip_data:
-            download_dataset("msong", self.basedir)
+            ok = download_dataset("msong", self.basedir)
+            if not ok and not os.path.exists(self.get_dataset_fn()):
+                raise RuntimeError(
+                    f"Failed to prepare msong dataset. "
+                    f"Please install gdown (pip install gdown) and retry, "
+                    f"or manually place data files under: {self.basedir}"
+                )
 
     def get_dataset_fn(self):
         candidates = [
@@ -487,7 +532,13 @@ class WTEDataset(Dataset):
         os.makedirs(self.basedir, exist_ok=True)
         if not skip_data:
             dataset_name = f"wte-{self.drift_rate}"
-            download_dataset(dataset_name, self.basedir)
+            ok = download_dataset(dataset_name, self.basedir)
+            if not ok and not os.path.exists(self.get_dataset_fn()):
+                raise RuntimeError(
+                    f"Failed to prepare {dataset_name} dataset. "
+                    f"Please install gdown (pip install gdown) and retry, "
+                    f"or manually place data files under: {self.basedir}"
+                )
 
     def get_dataset_fn(self):
         candidates = [
@@ -550,7 +601,13 @@ class COCODriftDataset(Dataset):
         os.makedirs(self.basedir, exist_ok=True)
         if not skip_data:
             dataset_name = f"coco-{self.drift_rate}"
-            download_dataset(dataset_name, self.basedir)
+            ok = download_dataset(dataset_name, self.basedir)
+            if not ok and not os.path.exists(self.get_dataset_fn()):
+                raise RuntimeError(
+                    f"Failed to prepare {dataset_name} dataset. "
+                    f"Please install gdown (pip install gdown) and retry, "
+                    f"or manually place data files under: {self.basedir}"
+                )
 
     def get_dataset_fn(self):
         candidates = [
