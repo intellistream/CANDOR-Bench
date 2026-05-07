@@ -46,6 +46,7 @@ class GammaSweepConfig:
     zipf_alpha: float
     delete_ratio: float
     threads: int
+    compute_recall: bool = True
     algorithm_dataset_key: str = "random-xs"
 
     @classmethod
@@ -79,6 +80,7 @@ class GammaSweepConfig:
             zipf_alpha=float(data["zipf_alpha"]),
             delete_ratio=float(data["delete_ratio"]),
             threads=int(data.get("threads", DEFAULT_GAMMA_THREADS)),
+            compute_recall=bool(data.get("compute_recall", True)),
             algorithm_dataset_key=str(data.get("algorithm_dataset_key", "random-xs")),
         )
         cfg.validate()
@@ -452,7 +454,7 @@ def _run_one_index_gamma(
         vectors,
         run_id=run_id,
         index_name=index_name,
-        compute_recall=True,
+        compute_recall=cfg.compute_recall,
     )
 
     duration = float(sequence_result["duration_sec"])
@@ -475,6 +477,7 @@ def _run_one_index_gamma(
         "zipf": cfg.zipf_alpha,
         "delete_ratio": cfg.delete_ratio,
         "threads": cfg.threads,
+        "compute_recall": cfg.compute_recall,
         "random_seed": cfg.random_seed,
         "total_duration_sec": duration,
         "total_operations": total_measurement_ops,
@@ -634,13 +637,18 @@ def _write_manifest(
             "zipf_alpha": cfg.zipf_alpha,
             "delete_ratio": cfg.delete_ratio,
             "threads": cfg.threads,
+            "compute_recall": cfg.compute_recall,
             "algorithm_dataset_key": cfg.algorithm_dataset_key,
         },
         "notes": [
             "This CANDOR-Bench runner uses the algorithm registry and BaseStreamingANN API.",
             "GammaFresh internals are not modified by this experiment path.",
             "threads is recorded in this first version; execution is serial.",
-            "recall is exact dynamic Recall@k against the live vector set at each measurement query.",
+            (
+                "recall is exact dynamic Recall@k against the live vector set at each measurement query."
+                if cfg.compute_recall
+                else "recall computation is disabled; recall fields are NaN and query latency excludes exact recall."
+            ),
         ],
     }
     write_manifest_json(run_dir, manifest)
@@ -660,6 +668,7 @@ BENCHMARK_RUN_FIELDS = [
     "zipf",
     "delete_ratio",
     "threads",
+    "compute_recall",
     "random_seed",
     "total_duration_sec",
     "total_operations",
