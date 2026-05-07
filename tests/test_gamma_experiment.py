@@ -69,6 +69,25 @@ def test_gamma_config_accepts_algorithms_alias() -> None:
     assert cfg.indices == ["dummy"]
     assert cfg.dim == 32
     assert cfg.threads == 1
+    assert cfg.compute_recall is True
+
+
+def test_gamma_config_can_disable_recall() -> None:
+    cfg = GammaSweepConfig.from_dict(
+        {
+            "dataset_size": 100,
+            "operations": 10,
+            "topk": 2,
+            "gamma_values": [1.0],
+            "algorithms": ["dummy"],
+            "random_seed": 1,
+            "prefill_ratio": 0.5,
+            "zipf_alpha": 0.0,
+            "delete_ratio": 0.5,
+            "compute_recall": False,
+        }
+    )
+    assert cfg.compute_recall is False
 
 
 def test_gamma_operation_sequence_is_deterministic() -> None:
@@ -186,6 +205,7 @@ def test_gamma_sweep_writes_standard_outputs_and_plots(tmp_path: Path) -> None:
     timeseries = pd.read_csv(data_dir / "timeseries.csv")
 
     assert len(runs) == len(cfg.gamma_values) * len(cfg.indices)
+    assert runs["compute_recall"].eq(True).all()
     assert runs["recall"].notna().all()
     assert (runs["recall"] == 1.0).all()
     assert {"query_latency", "insert_latency", "delete_latency"} & set(latencies["op_type"])
@@ -201,3 +221,25 @@ def test_gamma_sweep_writes_standard_outputs_and_plots(tmp_path: Path) -> None:
     }
     for path in plot_outputs:
         assert path.exists(), path
+
+
+def test_gamma_sweep_can_skip_exact_recall(tmp_path: Path) -> None:
+    cfg = GammaSweepConfig(
+        dataset_size=32,
+        operations=12,
+        dim=4,
+        topk=2,
+        gamma_values=[1.0],
+        indices=["dummy"],
+        random_seed=3,
+        prefill_ratio=0.5,
+        zipf_alpha=0.0,
+        delete_ratio=0.5,
+        threads=1,
+        compute_recall=False,
+    )
+    run_dir = run_gamma_sweep(cfg, tmp_path, make_plots=False)
+    runs = pd.read_csv(run_dir / "data" / "benchmark_runs.csv")
+
+    assert runs["compute_recall"].eq(False).all()
+    assert runs["recall"].isna().all()
