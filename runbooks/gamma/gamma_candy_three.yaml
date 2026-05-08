@@ -1,0 +1,11 @@
+gamma_sweep:
+  dataset_size: 10000
+  operations: 10000
+  topk: 10
+  gamma_values: [0.01, 1.0, 100.0]
+  algorithms: [gammafresh, faiss_hnsw_candy, ada_ivf_candy]
+  random_seed: 42
+  prefill_ratio: 0.5
+  zipf_alpha: 0.0
+  delete_ratio: 0.5
+  compute_recall: true
