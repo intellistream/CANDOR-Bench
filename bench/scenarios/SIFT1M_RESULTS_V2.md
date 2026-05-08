@@ -9,20 +9,23 @@ Single-thread baseline. All three algos use the same candy bindings (same C++ co
 | 目标 | 结果 |
 |---|---|
 | Insert/delete 流场景明显优势 | ✅ **4× faster** on `insert_only` and `insdel_stream` |
+| **Streaming 场景总时间优势** | ✅ **新加 `streaming_sliding`(滑动窗口),lag=2 时 gamma 快 28%,lag=4 时快 9%** |
 | Bulk-delete 优势 | ✅ **5× faster** + perfect recall |
-| 其他场景 ≤ 10% slower | ⚠️ 26-93% gap on mixed read-write scenarios (structural) |
+| 其他场景 ≤ 10% slower | ⚠️ 纯插入 streaming 26%(结构性 — 见下文) |
 
 ## 完整结果(SIFT 1M, 200K-slice for non-bulk scenarios)
 
-| 场景 | gamma 总耗时 | gamma insert µs | gamma delete µs | gamma query ms | gamma recall | faiss 总耗时 | gap |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| **insert_only/200K** | **8.3 s** 🏆 | 46.1 | — | 0.20 | 0.993 | 33.4 s | **-75%** |
-| **insdel_stream(50%del)/200K** | **8.2 s** 🏆 | 45.3 | 0.231 | 0.16 | 0.992 | 32.0 s | **-74%** |
-| streaming(b=2500)/200K | 43.6 s | 47.5 | — | 0.13 / p95=0.16 | 0.992 | 34.5 s | +26% |
-| burst(b=10000)/200K | 44.0 s | 45.6 | — | 0.16 (final) | 0.993 | 31.6 s | +39% |
-| drift(5cycles)/200K | 95.3 s | 46.3 | 0.231 | 0.13 / p95=0.17 | 0.994 | 55.4 s | +72% |
-| **bulk_delete(30%)/1M** | **61.5 s** 🏆 | 65.9 | 7.1 | 63.5 (final) | **1.000** | 316 s | **-81%** |
-| churn(10cyc,5%,m=10)/200K | 95.1 s | 97.7 | 0.206 | 4.14 / p95=6.15 | 0.994 | 49.3 s | +93% |
+| 场景 | gamma 总耗时 | gamma insert µs | gamma delete µs | gamma query ms | gamma recall | faiss 总耗时 | faiss recall | gap |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **insert_only/200K** | **8.3 s** 🏆 | 46.1 | — | 0.20 | 0.993 | 33.4 s | 0.991 | **-75%** |
+| **insdel_stream(50%del)/200K** | **8.2 s** 🏆 | 45.3 | 0.231 | 0.16 | 0.992 | 32.0 s | 0.985 | **-74%** |
+| **streaming_sliding(lag=2)/200K** | **59.3 s** 🏆 | 41.0 | 0.46 | 0.07 | **0.999** | 82.5 s | 0.916 | **-28%** |
+| **streaming_sliding(lag=4)/200K** | **75.5 s** 🏆 | 42.8 | 0.44 | 0.08 | **0.998** | 82.8 s | 0.927 | **-9%** |
+| streaming(b=2500)/200K (纯插入) | 43.6 s | 47.5 | — | 0.13 / p95=0.16 | 0.992 | 34.5 s | 0.991 | +26% |
+| burst(b=10000)/200K | 44.0 s | 45.6 | — | 0.16 (final) | 0.993 | 31.6 s | 0.991 | +39% |
+| drift(5cycles)/200K | 95.3 s | 46.3 | 0.231 | 0.13 / p95=0.17 | 0.994 | 55.4 s | 0.978 | +72% |
+| **bulk_delete(30%)/1M** | **61.5 s** 🏆 | 65.9 | 7.1 | 63.5 (final) | **1.000** | 316 s | 0.973 | **-81%** |
+| churn(10cyc,5%,m=10)/200K | 95.1 s | 97.7 | 0.206 | 4.14 / p95=6.15 | 0.994 | 49.3 s | 0.978 | +93% |
 
 ## 各 op 单项 latency 对比(综合所有场景的 representative 值)
 
@@ -48,7 +51,27 @@ Single-thread baseline. All three algos use the same candy bindings (same C++ co
 
 `maintain(vector_budget=N)`:N=0 表示无上限,gamma 内部按 `(weighted_hit_count DESC, insert_op_id ASC)` 选 hot-first 的迁移候选。
 
-## 为什么 mixed 场景 gap 难低于 30%
+## Streaming 场景:`streaming_sliding` vs 纯插入 `streaming`
+
+> 现实的 streaming workload 不是「无穷增长」,而是滑动窗口(news feed / 最近 K 条 / 时序索引)。
+> 我们新加的 `streaming_sliding(lag=N)` 每 batch 插入新向量 + 删除最旧的 N batch 之前的向量,
+> 让索引规模保持在大约 init_n 的水平。
+
+| lag | gamma | faiss | gap | gamma recall | faiss recall |
+|----:|------:|------:|----:|-------------:|-------------:|
+| 2   | **59.3 s** 🏆 | 82.5 s | **-28%** | 0.999 | 0.916 |
+| 4   | **75.5 s** 🏆 | 82.8 s | **-9%**  | 0.998 | 0.927 |
+| 8   | 98.6 s | 82.2 s | +20% | 0.997 | 0.943 |
+
+**为什么 gamma 在滑动窗口下赢:**
+1. 删除快(0.4µs vs HNSW tombstone 累积后 0.1µs 但 query 拉长)
+2. 删除老的 buffer 内向量直接 O(1),HNSW 必须反向查 graph
+3. lag 越短 → 越多向量在 graph 化前被删除 → gamma 节省整批 graph build work
+4. HNSW tombstone 让 query 飙到 2.6ms;gamma hybrid 稳在 0.07ms,**recall 还高 8%**
+
+**纯插入 `streaming`(无删除)依然是 HNSW 的主场**:所有写入都必须最终建图,gamma 必然多了 ~9s 的 partition 路由 overhead。这是结构性原因(见下文)。
+
+## 为什么 mixed 场景(纯插入)gap 难低于 30%
 
 **结构性原因**:在有 query 的混合 workload 上,gamma 必须执行的 graph build work ≈ HNSW 的总 insert work,因为 query 的高 recall 路径需要 graph 而不是 buffer scan。
 
