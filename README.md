@@ -346,6 +346,82 @@ python3 export_results.py \
 | `query_latency_ms` | 延迟统计 |
 | `cache_misses` | 缓存未命中（可选） |
 
+### Gamma Sweep Smoke Test
+
+CANDOR-Bench 侧提供了一个最小 gamma experiment path，用于迁移 DynaGraph gamma workflow 中与算法无关的部分：gamma sweep 配置、operation sequence 生成、benchmark orchestration、标准 CSV 输出和基础图表。第一版不修改 `algorithms_impl/GammaFresh` 的 GammaFresh internals。
+
+默认 smoke 配置使用 `dummy` 和 `dummy2` index，避免依赖本地 C++ bindings，同时覆盖多曲线 plot 生成。Gamma sweep 已接入原生 `sage-bench` 入口：
+
+```bash
+uv run sage-bench \
+  --experiment gamma_sweep \
+  --dataset random-xs \
+  --runbook gamma_smoke \
+  --output results/gamma_smoke \
+  --plot
+```
+
+`--runbook gamma_smoke` 会通过 CANDOR-Bench 的 runbook lookup 找到 `runbooks/gamma/gamma_smoke.yaml`；也可以直接用 `--config runbooks/gamma/gamma_smoke.yaml`。`--dataset random-xs` 会通过 CANDOR-Bench 的 dataset registry 加载数据；如果省略 `--dataset`，gamma runner 会回退到 synthetic vectors。gamma 生成的 insert/delete/query sequence 由原生 `BenchmarkRunner.run_operation_sequence()` 执行，experiment 模块不再直接调用算法读写接口。配置位于 `runbooks/gamma/gamma_smoke.yaml` 的 `gamma_sweep` section。常用字段：
+
+| 字段 | 说明 |
+|:-----|:-----|
+| `gamma_values` | 要 sweep 的 gamma 值，例如 `[0.01, 1.0, 100.0]` |
+| `indices` / `algorithms` | 要运行的 CANDOR-Bench algorithm registry 名称，例如 `dummy`、`gammafresh`、`faiss_HNSW` |
+| `dataset_size` / `dim` | 使用 synthetic vectors 时的数据规模和维度；传入 `--dataset` 时，`dataset_size` 表示取数据集前 N 条，`dim` 由数据集覆盖。`dim` 可省略，默认 `32` |
+| `operations` | measurement phase 的操作数量，不含 prefill |
+| `prefill_ratio` | 初始插入比例 |
+| `zipf_alpha` | query target 的 Zipf skew，`0.0` 表示 uniform |
+| `delete_ratio` | write operation 中 delete 的目标比例 |
+| `threads` | 可省略，默认 `1`；当前版本记录该字段但串行执行 |
+
+`algorithm_dataset_key` 通常不需要写入 runbook；默认是 `random-xs`，传入 `--dataset` 时会使用命令行指定的数据集名。
+
+输出目录为 `--output` 下的 timestamped 子目录，例如 `results/gamma_smoke/gamma_sweep_YYYYMMDD_HHMMSS/`：
+
+| 文件 | 内容 |
+|:-----|:-----|
+| `data/benchmark_runs.csv` | 每个 `(index, gamma)` run 的汇总指标 |
+| `data/benchmark_latencies.csv` | insert/delete/query 延迟摘要 |
+| `data/timeseries.csv` | 每个 operation 的细粒度延迟序列 |
+| `data/custom_metrics.csv` | operation count、prefill count、final live count 等 |
+| `data/operation_sequence_gamma_*.csv` | 每个 gamma 的确定性 operation sequence |
+| `manifest.json` | 本次 gamma run 的配置和产物说明 |
+| `figures/main/gamma_vs_throughput.png` | gamma vs mixed measurement throughput，口径为 `(insert + delete + query) / duration` |
+| `figures/main/gamma_vs_recall_adjusted_throughput.png` | gamma vs recall-adjusted throughput，口径为 `system_ops_per_sec * recall`；`recall` 为 measurement query 时刻 live set 上的 exact Recall@k |
+| `figures/main/gamma_vs_query_latency.png` | gamma vs query latency |
+| `figures/main/gamma_vs_insert_latency.png` | gamma vs insert latency |
+| `figures/main/gamma_vs_delete_latency.png` | gamma vs delete latency |
+
+可以用命令行覆盖 sweep 范围：
+
+```bash
+uv run sage-bench \
+  --experiment gamma_sweep \
+  --dataset random-xs \
+  --runbook gamma_smoke \
+  --output results/gamma \
+  --plot
+```
+
+如需改变算法或 gamma values，直接修改 `runbooks/gamma/gamma_smoke.yaml` 中的 `indices`/`algorithms` 和 `gamma_values`。
+
+#### Gamma 统一接口边界
+
+迁移后的 gamma sweep 不再维护独立的数据读取和算法读写路径，而是复用 CANDOR-Bench 本体接口：
+
+| 阶段 | 现在使用的 CANDOR-Bench 接口 | 说明 |
+|:-----|:-----|:-----|
+| 数据读取 | `datasets.registry.get_dataset()` / `Dataset.get_dataset()` | 传入 `--dataset random-xs` 时，从原生 dataset registry 加载向量；未传 `--dataset` 时使用 synthetic fallback |
+| 数据适配 | `_GammaVectorDataset` | 将 synthetic vectors 或 dataset slice 包装成 `datasets.base.Dataset`，让 runner 看到统一的数据接口 |
+| workload 生成 | `generate_gamma_operation_sequence()` | 根据 `gamma_values`、`prefill_ratio`、`delete_ratio`、`zipf_alpha` 生成 deterministic `insert/delete/query` sequence |
+| 读写查询执行 | `BenchmarkRunner.run_operation_sequence()` | 统一调用 algorithm 的 `setup()`、`insert()`、`delete()`、`query()`，gamma experiment 不再直接调用算法方法 |
+| 算法选择 | `bench.algorithms.registry.get_algorithm()` | `indices` / `algorithms` 填 CANDOR-Bench algorithm registry 名称 |
+| 结果输出 | `bench.io_utils.create_timestamped_output_dir()` / `write_rows_csv()` / `write_manifest_json()` | 输出到 `results/.../gamma_sweep_*/data/` 和 `figures/main/`，gamma experiment 不再维护独立 CSV/manifest writer |
+
+这样 gamma module 只负责 experiment-level orchestration：解析 gamma config、生成 operation sequence、组织 `(algorithm, gamma)` sweep 和画图；底层数据读取、operation execution、CSV/JSON 写入由 CANDOR-Bench 原生接口负责。
+
+已迁移并接入原生入口：workload/operation sequence generation、gamma sweep orchestration、CANDOR-Bench dataset registry、`BenchmarkRunner` 读写查询执行接口、`bench.io_utils` CSV/manifest 输出、标准 result artifacts、基础 gamma plot。后续待接入：DynaGraph `_candy.run_gamma_fresh_benchmark` 子进程路径、`RecallKnn`/offline recall 计算、并行 `threads` 执行、GammaFresh internal verification/video plots。
+
 ---
 
 ## 🐳 部署与 CI/CD

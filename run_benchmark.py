@@ -789,6 +789,67 @@ def print_results_summary(metrics):
     print("=" * 80 + "\n")
 
 
+def run_gamma_sweep_from_args(args):
+    """Run gamma sweep through the native sage-bench entrypoint."""
+    from bench.gamma_experiment import load_gamma_sweep_config, run_gamma_sweep
+
+    gamma_config_path = None
+    if args.config:
+        gamma_config_path = Path(args.config)
+    elif args.runbook:
+        gamma_config_path = find_runbook_path(args.runbook)
+
+    if not gamma_config_path:
+        print("错误: gamma_sweep 需要 --config 或 --runbook 指向 gamma 配置")
+        print("示例: uv run sage-bench --experiment gamma_sweep --config runbooks/gamma/gamma_smoke.yaml")
+        sys.exit(1)
+
+    if not gamma_config_path.exists():
+        print(f"错误: 找不到 gamma 配置: {gamma_config_path}")
+        sys.exit(1)
+
+    dataset = None
+    dataset_name = None
+    if args.dataset:
+        try:
+            dataset = get_dataset(args.dataset)
+            dataset_name = args.dataset
+            dataset.prepare()
+            print(f"✓ 数据集加载成功: {dataset.short_name()}")
+            print(f"  - 距离度量: {dataset.distance()}")
+            print(f"  - 向量维度: {dataset.d}")
+        except Exception as e:
+            print(f"✗ 数据集加载失败: {e}")
+            sys.exit(1)
+
+    try:
+        cfg = load_gamma_sweep_config(gamma_config_path)
+    except Exception as e:
+        print(f"✗ Gamma 配置加载失败: {e}")
+        traceback.print_exc()
+        sys.exit(1)
+
+    print("\n" + "=" * 80)
+    print("CANDOR-Bench Gamma Sweep")
+    print("=" * 80)
+    print(f"配置: {gamma_config_path}")
+    print(f"数据集: {dataset_name or 'synthetic'}")
+    print(f"算法: {', '.join(cfg.indices)}")
+    print(f"Gamma values: {cfg.gamma_values}")
+    print(f"输出目录: {args.output}")
+    print("=" * 80 + "\n")
+
+    run_dir = run_gamma_sweep(
+        cfg,
+        args.output,
+        config_path=gamma_config_path,
+        dataset=dataset,
+        dataset_name=dataset_name,
+        make_plots=args.plot,
+    )
+    print(f"\nGamma sweep results: {run_dir}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='benchmark_anns - 流式索引基准测试主程序',
@@ -814,6 +875,10 @@ def main():
   python run_benchmark.py --list-algorithms
   python run_benchmark.py --list-datasets
   python run_benchmark.py --list-runbooks
+
+  # Gamma sweep 实验（统一入口）
+  python run_benchmark.py --experiment gamma_sweep --config runbooks/gamma/gamma_smoke.yaml \
+      --dataset random-xs --output results/gamma_smoke --plot
         """
     )
     
@@ -826,6 +891,11 @@ def main():
                        help='列出所有可用的 runbooks')
     
     # 主要参数
+    parser.add_argument('--experiment', type=str, default='runbook',
+                       choices=['runbook', 'gamma_sweep'],
+                       help='实验类型（默认: runbook）')
+    parser.add_argument('--config', type=str,
+                       help='实验配置文件。gamma_sweep 模式下可替代 --runbook')
     parser.add_argument('--algorithm', type=str,
                        help='算法名称（如: faiss_hnsw, candy_lshapg）')
     parser.add_argument('--dataset', type=str,
@@ -842,6 +912,8 @@ def main():
                        help='运行次数，取最佳结果（默认: 1）')
     parser.add_argument('--output', type=str, default='results',
                        help='输出目录（默认: results）')
+    parser.add_argument('--plot', action='store_true',
+                       help='生成实验图表（当前用于 gamma_sweep）')
     parser.add_argument('--rebuild', action='store_true',
                        help='强制重建索引（即使索引文件存在）')
     parser.add_argument('--enable-cache-profiling', action='store_true',
@@ -862,6 +934,10 @@ def main():
     
     if args.list_runbooks:
         list_runbooks()
+        return
+
+    if args.experiment == 'gamma_sweep':
+        run_gamma_sweep_from_args(args)
         return
     
     # 验证必需参数
