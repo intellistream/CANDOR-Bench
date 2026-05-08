@@ -245,6 +245,62 @@ def scenario_streaming(idx, data, queries, gt, init_n, algo_name, batch=2500, qs
     }
 
 
+def scenario_streaming_sliding(idx, data, queries, gt, init_n, algo_name,
+                                batch=2500, qstride=10000, lag=4):
+    """Sliding-window streaming: each batch inserts new vectors AND deletes
+    the oldest live vectors so index size stays roughly constant.
+    `lag` = how many batches to wait before starting deletion (lets the
+    initial window fill).  This is the realistic streaming workload (news
+    feeds, recent-items index) where index size is bounded.
+    Periodic query every qstride inserts; maint before each query batch.
+    """
+    idx.initial_load(np.arange(init_n, dtype=np.uint64),
+                     np.ascontiguousarray(data[:init_n]))
+    n = len(data)
+    insert_lat, delete_lat, query_lat = [], [], []
+    deleted_so_far = 0
+    batch_idx = 0
+    t = time.perf_counter()
+    for lo in range(init_n, n, batch):
+        hi = min(lo + batch, n)
+        ti = time.perf_counter()
+        idx.add(np.arange(lo, hi, dtype=np.uint64), np.ascontiguousarray(data[lo:hi]))
+        insert_lat.append((time.perf_counter() - ti) / (hi - lo))
+        # delete oldest equal-volume after lag, until we'd remove init_n vectors
+        if batch_idx >= lag:
+            n_del = hi - lo
+            if deleted_so_far + n_del <= init_n + (lo - init_n):
+                td = time.perf_counter()
+                idx.delete(np.arange(deleted_so_far, deleted_so_far + n_del, dtype=np.uint64))
+                delete_lat.append((time.perf_counter() - td) / n_del)
+                deleted_so_far += n_del
+        if (lo - init_n) % qstride == 0:
+            maintain(idx, algo_name)
+            tq = time.perf_counter()
+            idx.search(np.ascontiguousarray(queries), 10)
+            query_lat.append((time.perf_counter() - tq) / len(queries))
+        batch_idx += 1
+    maintain(idx, algo_name)
+    surviving = data[deleted_so_far:]
+    surviving_gt = compute_gt(surviving, queries, 10)
+    surviving_gt = (surviving_gt + deleted_so_far).astype(np.uint32)
+    tq = time.perf_counter()
+    nbrs, _ = idx.search(np.ascontiguousarray(queries), 10)
+    query_lat.append((time.perf_counter() - tq) / len(queries))
+    total = time.perf_counter() - t
+    return {
+        "total_s": total,
+        "n_insert": n - init_n,
+        "n_delete": deleted_so_far,
+        "n_query": len(queries) * len(query_lat),
+        "insert_latency_us_avg": float(np.mean(insert_lat)) * 1e6,
+        "delete_latency_us_avg": float(np.mean(delete_lat)) * 1e6 if delete_lat else 0.0,
+        "query_latency_ms_avg": float(np.mean(query_lat)) * 1000,
+        "query_latency_ms_p95": percentile(query_lat, 95),
+        "recall": recall_at_k(nbrs.astype(np.uint32), surviving_gt),
+    }
+
+
 def scenario_burst(idx, data, queries, gt, init_n, algo_name, burst=10000):
     idx.initial_load(np.arange(init_n, dtype=np.uint64),
                      np.ascontiguousarray(data[:init_n]))
@@ -427,6 +483,8 @@ def main():
         ("insdel_stream(50%del)/200K", data_200k, gt_200k, 20000, scenario_insdel_stream, dict(batch=2500, delete_ratio=0.5)),
         # Mixed
         ("streaming(b=2500)/200K", data_200k, gt_200k, 20000, scenario_streaming,      dict(batch=2500, qstride=10000)),
+        ("streaming_sliding(lag=2)/200K", data_200k, gt_200k, 20000, scenario_streaming_sliding, dict(batch=2500, qstride=10000, lag=2)),
+        ("streaming_sliding(lag=4)/200K", data_200k, gt_200k, 20000, scenario_streaming_sliding, dict(batch=2500, qstride=10000, lag=4)),
         ("burst(b=10000)/200K",    data_200k, gt_200k, 20000, scenario_burst,          dict(burst=10000)),
         ("drift(5cycles)/200K",    data_200k, gt_200k, 20000, scenario_drift,          dict(drift_chunks=5)),
         ("bulk_delete(30%)/1M",    data_full, gt_full, 100000, scenario_bulk_delete,   dict(delete_frac=0.3)),
