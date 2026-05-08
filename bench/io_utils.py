@@ -1,15 +1,88 @@
 """
 IO Utils - 结果保存工具
 
-提供将测评结果保存为 HDF5 和 CSV 文件的工具函数
+提供将测评结果保存为 HDF5、CSV 和 JSON 文件的工具函数
 """
 
+import csv
+import json
 import h5py
 import numpy as np
 import pandas as pd
+from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Iterable
 from .metrics import BenchmarkMetrics
+
+
+def create_timestamped_output_dir(
+    base_dir: str | Path,
+    experiment_name: str,
+    subdirs: Iterable[str | Path] = (),
+) -> Path:
+    """
+    创建带时间戳的 experiment 输出目录。
+
+    Args:
+        base_dir: 输出根目录
+        experiment_name: experiment 名称，用于目录前缀
+        subdirs: 需要在 run 目录下预创建的子目录
+
+    Returns:
+        本次 run 的输出目录
+    """
+    root = Path(base_dir)
+    root.mkdir(parents=True, exist_ok=True)
+
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    candidate = root / f"{experiment_name}_{stamp}"
+    suffix = 1
+    while candidate.exists():
+        candidate = root / f"{experiment_name}_{stamp}_{suffix:02d}"
+        suffix += 1
+
+    candidate.mkdir(parents=True, exist_ok=True)
+    for subdir in subdirs:
+        (candidate / subdir).mkdir(parents=True, exist_ok=True)
+    return candidate
+
+
+def write_rows_csv(
+    csv_file: str | Path,
+    rows: List[Dict[str, Any]],
+    fieldnames: List[str],
+) -> Path:
+    """
+    将 dict rows 按固定 schema 写入 CSV。
+
+    extrasaction="ignore" 用于让 experiment-level row 能带额外字段，同时保持输出 schema 稳定。
+    """
+    path = Path(csv_file)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+    return path
+
+
+def write_json_file(json_file: str | Path, payload: Dict[str, Any]) -> Path:
+    """将 dict payload 写入 JSON 文件。"""
+    path = Path(json_file)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2)
+    return path
+
+
+def write_manifest_json(
+    run_dir: str | Path,
+    manifest: Dict[str, Any],
+    filename: str = "manifest.json",
+) -> Path:
+    """将 experiment manifest 写入 run 目录。"""
+    return write_json_file(Path(run_dir) / filename, manifest)
 
 
 def save_run_results(

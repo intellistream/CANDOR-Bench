@@ -129,6 +129,61 @@ class RunbookEntry:
     params: dict    # 操作参数
 
 
+_MISSING = object()
+
+
+def _operation_field(operation: Any, *names: str, default: Any = _MISSING) -> Any:
+    """Read a generated operation field from either a dict or dataclass-like object."""
+    for name in names:
+        if isinstance(operation, dict) and name in operation:
+            return operation[name]
+        if hasattr(operation, name):
+            return getattr(operation, name)
+    if default is not _MISSING:
+        return default
+    raise ValueError(f"operation missing required field: {' or '.join(names)}")
+
+
+def _exact_dynamic_recall(
+    *,
+    vectors: np.ndarray,
+    query_vector: np.ndarray,
+    predicted_ids: Any,
+    live_ids: set[int],
+    k: int,
+    metric: str,
+) -> float:
+    if not live_ids:
+        return float("nan")
+
+    live_id_array = np.fromiter(live_ids, dtype=np.int64, count=len(live_ids))
+    k_actual = min(int(k), live_id_array.size)
+    live_vectors = vectors[live_id_array]
+
+    if metric == "ip":
+        scores = live_vectors @ query_vector
+        candidate_positions = np.argpartition(-scores, k_actual - 1)[:k_actual]
+        exact_ids = live_id_array[candidate_positions[np.argsort(-scores[candidate_positions])]]
+    elif metric == "angular":
+        live_norms = np.linalg.norm(live_vectors, axis=1)
+        query_norm = float(np.linalg.norm(query_vector))
+        denom = np.maximum(live_norms * query_norm, 1e-12)
+        scores = (live_vectors @ query_vector) / denom
+        candidate_positions = np.argpartition(-scores, k_actual - 1)[:k_actual]
+        exact_ids = live_id_array[candidate_positions[np.argsort(-scores[candidate_positions])]]
+    else:
+        distances = np.sum((live_vectors - query_vector) ** 2, axis=1)
+        candidate_positions = np.argpartition(distances, k_actual - 1)[:k_actual]
+        exact_ids = live_id_array[candidate_positions[np.argsort(distances[candidate_positions])]]
+
+    predicted = np.asarray(predicted_ids).reshape(-1)
+    if predicted.size == 0:
+        return 0.0
+    predicted = predicted[:k_actual]
+    predicted = predicted[predicted >= 0]
+    return len(set(int(v) for v in predicted) & set(int(v) for v in exact_ids)) / float(k_actual)
+
+
 class BenchmarkRunner:
     """
     测评流程执行器
@@ -254,6 +309,210 @@ class BenchmarkRunner:
             'delete': 0,
             'search': 0,
             'maintenance_rebuild': 0,
+        }
+
+    def run_operation_sequence(
+        self,
+        operations: List[Any],
+        vectors: np.ndarray,
+        *,
+        run_id: str = "",
+        index_name: Optional[str] = None,
+        setup_algorithm: bool = True,
+        compute_recall: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Execute a fine-grained insert/delete/query operation sequence.
+
+        This is the common execution surface for generated workloads such as
+        gamma_dynamic. It keeps generated workload handling inside the native
+        BenchmarkRunner instead of having experiment modules call algorithm
+        methods directly.
+        """
+        if self.use_worker:
+            raise ValueError("run_operation_sequence requires use_worker=False")
+        if vectors.ndim != 2:
+            raise ValueError("vectors must be a 2D array")
+
+        vectors = np.ascontiguousarray(vectors, dtype=np.float32)
+        if setup_algorithm and hasattr(self.algo, 'setup'):
+            dtype = getattr(self.dataset, 'dtype', 'float32')
+            self.algo.setup(dtype, int(vectors.shape[0]), int(vectors.shape[1]))
+
+        resolved_index_name = index_name or self.metrics.algorithm_name
+        live_ids: set[int] = set()
+        timeseries: List[Dict[str, Any]] = []
+        op_latencies: Dict[str, List[float]] = {
+            "insert_latency": [],
+            "delete_latency": [],
+            "query_latency": [],
+            "recall_eval_latency": [],
+        }
+        op_counts = {"insert": 0, "delete": 0, "query": 0}
+        query_recalls: List[float] = []
+
+        measurement_start: Optional[float] = None
+        measurement_end: Optional[float] = None
+        run_start = time.perf_counter()
+
+        op_index = 0
+        while op_index < len(operations):
+            seq_idx = op_index + 1
+            operation = operations[op_index]
+            op_type = _operation_field(operation, "op_type", "type")
+            target_id = int(_operation_field(operation, "target_id"))
+            phase = str(_operation_field(operation, "phase", default="measurement"))
+
+            if target_id < 0 or target_id >= vectors.shape[0]:
+                raise ValueError(f"operation target_id out of range: {target_id}")
+
+            if op_type == "insert" and phase == "prefill":
+                batch_ids = []
+                batch_start_seq = seq_idx
+                while op_index < len(operations):
+                    prefill_operation = operations[op_index]
+                    prefill_op_type = _operation_field(prefill_operation, "op_type", "type")
+                    prefill_phase = str(_operation_field(prefill_operation, "phase", default="measurement"))
+                    if prefill_op_type != "insert" or prefill_phase != "prefill":
+                        break
+                    prefill_target_id = int(_operation_field(prefill_operation, "target_id"))
+                    if prefill_target_id < 0 or prefill_target_id >= vectors.shape[0]:
+                        raise ValueError(f"operation target_id out of range: {prefill_target_id}")
+                    batch_ids.append(prefill_target_id)
+                    op_index += 1
+
+                ids_array = np.asarray(batch_ids, dtype=np.uint32)
+                start = time.perf_counter()
+                self.algo.initial_load(vectors[ids_array], ids_array)
+                elapsed_ms = (time.perf_counter() - start) * 1000.0
+                per_item_elapsed_ms = elapsed_ms / len(batch_ids) if batch_ids else 0.0
+
+                for offset, prefill_target_id in enumerate(batch_ids):
+                    live_ids.add(prefill_target_id)
+                    timeseries.append(
+                        {
+                            "run_id": run_id,
+                            "timestamp_sec": time.perf_counter() - run_start,
+                            "index_type": resolved_index_name,
+                            "op_type": "insert_latency",
+                            "latency_ms": per_item_elapsed_ms,
+                            "current_size": len(live_ids),
+                            "workload_op_seq": batch_start_seq + offset,
+                            "target_id": prefill_target_id,
+                            "phase": "prefill",
+                        }
+                    )
+                continue
+
+            if phase == "measurement" and measurement_start is None:
+                measurement_start = time.perf_counter()
+
+            start = time.perf_counter()
+            recall_elapsed_ms: Optional[float] = None
+            if op_type == "insert":
+                self.algo.insert(
+                    vectors[target_id:target_id + 1],
+                    np.array([target_id], dtype=np.uint32),
+                )
+                live_ids.add(target_id)
+                metric_type = "insert_latency"
+                elapsed_ms = (time.perf_counter() - start) * 1000.0
+            elif op_type == "delete":
+                self.algo.delete(np.array([target_id], dtype=np.uint32))
+                live_ids.discard(target_id)
+                metric_type = "delete_latency"
+                elapsed_ms = (time.perf_counter() - start) * 1000.0
+            elif op_type == "query":
+                result = self.algo.query(vectors[target_id:target_id + 1], self.k)
+                elapsed_ms = (time.perf_counter() - start) * 1000.0
+                if isinstance(result, tuple):
+                    result = result[0]
+                if result is not None:
+                    self.all_results.append(result[0] if len(result) else np.array([]))
+                    if compute_recall and phase == "measurement":
+                        metric = self.dataset.distance() if hasattr(self.dataset, "distance") else "euclidean"
+                        recall_start = time.perf_counter()
+                        query_recalls.append(
+                            _exact_dynamic_recall(
+                                vectors=vectors,
+                                query_vector=vectors[target_id],
+                                predicted_ids=result[0] if len(result) else np.array([]),
+                                live_ids=live_ids,
+                                k=self.k,
+                                metric=metric,
+                            )
+                        )
+                        recall_elapsed_ms = (time.perf_counter() - recall_start) * 1000.0
+                metric_type = "query_latency"
+            else:
+                raise ValueError(f"unknown operation type: {op_type}")
+
+            if phase == "measurement":
+                op_counts[op_type] += 1
+                op_latencies[metric_type].append(elapsed_ms)
+                if recall_elapsed_ms is not None:
+                    op_latencies["recall_eval_latency"].append(recall_elapsed_ms)
+                measurement_end = time.perf_counter()
+
+            timeseries.append(
+                {
+                    "run_id": run_id,
+                    "timestamp_sec": time.perf_counter() - run_start,
+                    "index_type": resolved_index_name,
+                    "op_type": metric_type,
+                    "latency_ms": elapsed_ms,
+                    "current_size": len(live_ids),
+                    "workload_op_seq": seq_idx,
+                    "target_id": target_id,
+                    "phase": phase,
+                }
+            )
+            if recall_elapsed_ms is not None:
+                timeseries.append(
+                    {
+                        "run_id": run_id,
+                        "timestamp_sec": time.perf_counter() - run_start,
+                        "index_type": resolved_index_name,
+                        "op_type": "recall_eval_latency",
+                        "latency_ms": recall_elapsed_ms,
+                        "current_size": len(live_ids),
+                        "workload_op_seq": seq_idx,
+                        "target_id": target_id,
+                        "phase": phase,
+                    }
+                )
+            op_index += 1
+
+        wall_duration_sec = 0.0
+        if measurement_start is not None and measurement_end is not None:
+            wall_duration_sec = max(0.0, measurement_end - measurement_start)
+        algorithm_duration_sec = (
+            sum(op_latencies["insert_latency"])
+            + sum(op_latencies["delete_latency"])
+            + sum(op_latencies["query_latency"])
+        ) / 1000.0
+        recall_eval_duration_sec = sum(op_latencies["recall_eval_latency"]) / 1000.0
+
+        self.counts["insert"] += op_counts["insert"]
+        self.counts["delete"] += op_counts["delete"]
+        self.counts["search"] += op_counts["query"]
+        self.attrs["latencyInsert"].extend([v * 1000.0 for v in op_latencies["insert_latency"]])
+        self.attrs["latencyDelete"].extend([v * 1000.0 for v in op_latencies["delete_latency"]])
+        self.attrs["latencyQuery"].extend([v / 1000.0 for v in op_latencies["query_latency"]])
+
+        finite_recalls = [value for value in query_recalls if not np.isnan(value)]
+
+        return {
+            "timeseries": timeseries,
+            "op_latencies": op_latencies,
+            "op_counts": op_counts,
+            "duration_sec": algorithm_duration_sec,
+            "algorithm_duration_sec": algorithm_duration_sec,
+            "wall_duration_sec": wall_duration_sec,
+            "recall_eval_duration_sec": recall_eval_duration_sec,
+            "final_live_count": len(live_ids),
+            "recall": float(np.mean(finite_recalls)) if finite_recalls else float("nan"),
+            "query_recalls": query_recalls,
         }
     
     def run_runbook(self, runbook: Dict, dataset_name: str = None) -> BenchmarkMetrics:
