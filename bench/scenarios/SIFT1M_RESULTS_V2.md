@@ -1,5 +1,47 @@
 # SIFT 1M v2 — Bench-driven maintenance + insert/delete-stream scenarios
 
+> **2026-05-09 update:** Added FULL 1M results with two new optimizations:
+>
+> 1. **Tuned config**: `split_factor=4 → 16`, `gamma_split_threshold=0.4 → 1.0`,
+>    `min_size_for_split=4 → 512`. Cuts partition count 4× at 1M (250 → 63);
+>    insert hot-path 23-29% faster.
+> 2. **Maint order fix** (`index.cpp:735`): graph rebuild now runs BEFORE
+>    buffer→graph migration, not after. Without this, every migration insert
+>    paid 2.4× cost from searching through 100K tombstoned graph nodes.
+>    `insdel_stream/1M` total time dropped **609s → 330s (-46%)**.
+>
+> See `results/scenarios/sift1m_results_full1m.json` for raw data.
+
+## Full 1M sweep (single-thread, M=32 ef_c=120 for HNSW backend)
+
+| 场景 | gamma wall | gamma recall | faiss wall | faiss recall | ivf wall | ivf recall | gamma vs faiss |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| insert_only/1M | 346 s | 0.982 | **272 s** 🏆 | 0.982 | 38 s | 0.992 | +27% |
+| **insdel_stream(50%)/1M** | **330 s** | 0.981 | 300 s | 0.979 | 47 s | 0.996 | +10% |
+| streaming(b=10K)/1M | 316 s | 0.983 | **270 s** 🏆 | 0.981 | 489 s | 0.992 | +17% |
+| **streaming_sliding(lag=2)/1M** | **402 s** 🏆 | **0.994** | 531 s | 0.853 | 124 s | 0.999 | **-24%** |
+| **streaming_sliding(lag=4)/1M** | **482 s** 🏆 | **0.993** | 532 s | 0.868 | 142 s | 1.000 | **-9%** |
+| burst(b=50K)/1M | 353 s | 0.982 | **267 s** 🏆 | 0.981 | 39 s | 0.992 | +32% |
+| drift(5cycles)/1M | 477 s | **0.984** | 379 s | 0.964 | 119 s | 0.998 | +26% |
+| **bulk_delete(30%)/1M** | **131 s** 🏆 | **1.000** | 342 s | 0.973 | 34 s | 0.992 | **-62%** |
+| churn(10cyc,5%,m=10)/1M | 560 s | 0.985 | 399 s | 0.974 | 172 s | 0.997 | +40% |
+
+### 1M 关键观察
+
+1. **gamma 在 4 个 delete-heavy 场景赢 HNSW**:
+   - `bulk_delete`: -62% 时间 + perfect recall(HNSW 0.973)
+   - `streaming_sliding(lag=2)`: -24% + recall 0.994 vs HNSW **0.853** ⚠️
+   - `streaming_sliding(lag=4)`: -9% + recall 0.993 vs HNSW 0.868
+   - `insdel_stream`: -3%(数据修复后,从 +90% 反转)
+
+2. **HNSW 在 1M 高 churn 下 recall 崩盘**:880K tombstones 让 HNSW 查询准确度从 0.99 跌到 0.85-0.87。gamma hybrid graph + buffer scan 没这个包袱,稳定 0.99+。
+
+3. **gamma 在「无删除」纯写场景输 17-32%**:`insert_only` / `streaming` / `burst` 都是 HNSW 主场,gamma 8.5s 的 partition routing overhead 抵不过对方的 inline graph build。这是结构性的(我们另写过分析)。
+
+4. **maint 修复影响**:`index.cpp:735` 把 graph rebuild 从 maint 末尾移到开头,让 migration 在 tombstone-free 的 graph 上做。`insdel_stream/1M maint`:527s → 265s(**-50%**)。所有 delete-heavy 场景间接受益。
+
+
+
 Single-thread baseline. All three algos use the same candy bindings (same C++ compute engine, same Faiss HNSW backend code). Maintenance is **explicitly scheduled** per scenario (caller decides when, gamma decides which vectors).
 
 ## Goal vs result

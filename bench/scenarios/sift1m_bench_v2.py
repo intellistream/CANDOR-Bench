@@ -67,9 +67,14 @@ def compute_gt(data: np.ndarray, queries: np.ndarray, k: int = 10) -> np.ndarray
 
 
 def make_gamma(dim, **ovr):
+    # Tuned for 1M+ scale: split_factor=16 keeps partition count ~ sqrt(N)/16
+    # (≈ 63 partitions at 1M vs the old 250) so per-cycle maint overhead
+    # (decay + split planning + merge planning + migration setup) stays bounded.
+    # min_size_for_split=512 prevents expensive BIC k-means on small partitions.
     base = {
         "backend": "FaissHNSW",
-        "split_factor": 4.0, "gamma_split_threshold": 0.4,
+        "split_factor": 16.0, "gamma_split_threshold": 1.0,
+        "min_size_for_split": 512,
         "candidate_reserve_size": 8,
         "maintenance_interval": 4, "maintenance_query_interval": 4,
         "maintenance_query_threshold_scale": 0.5,
