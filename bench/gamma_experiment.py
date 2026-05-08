@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from bench.algorithms.registry import get_algorithm
+from bench.algorithms.registry import get_algorithm, get_algorithm_params_from_config
 from bench.io_utils import (
     create_timestamped_output_dir,
     write_manifest_json,
@@ -437,7 +437,21 @@ def _run_one_index_gamma(
     dataset_label: str,
     sequence: list[GammaOperation],
 ) -> dict[str, list[dict[str, Any]] | dict[str, Any]]:
-    algorithm = get_algorithm(index_name, dataset=cfg.algorithm_dataset_key)
+    algorithm_params = get_algorithm_params_from_config(
+        index_name,
+        dataset=cfg.algorithm_dataset_key,
+    )
+    build_params = algorithm_params.get("build_params", {}) if algorithm_params else {}
+    query_params = algorithm_params.get("query_params", {}) if algorithm_params else {}
+
+    algorithm_kwargs = {"index_params": build_params} if build_params else {}
+    algorithm = get_algorithm(
+        index_name,
+        dataset=cfg.algorithm_dataset_key,
+        **algorithm_kwargs,
+    )
+    if query_params and hasattr(algorithm, "set_query_arguments"):
+        algorithm.set_query_arguments(query_params)
     run_id = f"{index_name}__gamma_{_gamma_label(gamma)}__seed_{cfg.random_seed}"
 
     runner = BenchmarkRunner(

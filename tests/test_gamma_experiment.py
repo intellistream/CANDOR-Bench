@@ -243,3 +243,67 @@ def test_gamma_sweep_can_skip_exact_recall(tmp_path: Path) -> None:
 
     assert runs["compute_recall"].eq(False).all()
     assert runs["recall"].isna().all()
+
+
+def test_gamma_sweep_applies_algorithm_query_arguments(tmp_path: Path, monkeypatch) -> None:
+    class QueryArgTrackingANN(DummyStreamingANN):
+        def __init__(self):
+            super().__init__()
+            self.query_args = None
+
+        def set_query_arguments(self, query_args):
+            self.query_args = dict(query_args)
+
+    created = []
+
+    def fake_get_algorithm(name, dataset="random-xs", **kwargs):
+        algorithm = QueryArgTrackingANN()
+        created.append(
+            {
+                "name": name,
+                "dataset": dataset,
+                "kwargs": kwargs,
+                "algorithm": algorithm,
+            }
+        )
+        return algorithm
+
+    def fake_get_algorithm_params_from_config(name, dataset="random-xs"):
+        return {
+            "build_params": {"indexkey": "unit-index"},
+            "query_params": {"ef": 123},
+        }
+
+    monkeypatch.setattr("bench.gamma_experiment.get_algorithm", fake_get_algorithm)
+    monkeypatch.setattr(
+        "bench.gamma_experiment.get_algorithm_params_from_config",
+        fake_get_algorithm_params_from_config,
+    )
+
+    cfg = GammaSweepConfig(
+        dataset_size=16,
+        operations=8,
+        dim=4,
+        topk=2,
+        gamma_values=[1.0],
+        indices=["unit_algo"],
+        random_seed=11,
+        prefill_ratio=0.5,
+        zipf_alpha=0.0,
+        delete_ratio=0.5,
+        threads=1,
+        compute_recall=False,
+        algorithm_dataset_key="unit-dataset",
+    )
+
+    run_gamma_sweep(cfg, tmp_path, make_plots=False)
+
+    assert created == [
+        {
+            "name": "unit_algo",
+            "dataset": "unit-dataset",
+            "kwargs": {"index_params": {"indexkey": "unit-index"}},
+            "algorithm": created[0]["algorithm"],
+        }
+    ]
+    assert created[0]["algorithm"].query_args == {"ef": 123}
