@@ -72,8 +72,11 @@ def build_index(name, dim):
 
 
 def maintain(idx, name, vector_budget=0):
-    """Call maintain on indexes that support it (no-op otherwise). Bench-driven
-    maintenance: insert/query stay pure ops, maintenance runs at scheduled points."""
+    """Call maintain on indexes that support it (no-op otherwise). Bench-driven:
+    bench picks WHEN and HOW MUCH (vector_budget); the algorithm picks WHICH
+    vectors (cold-and-old first, hot/recent stay in buffer for hybrid scan).
+    vector_budget=0 means unbounded — drain everything migratable.
+    """
     if name == "gamma":
         idx.maintain(int(vector_budget), 0, False)
 
@@ -200,8 +203,11 @@ def scenario_churn(idx, data, queries, gt, init_n, algo_name, cycles=20, churn_p
                 np.ascontiguousarray(data[cur_lo:cur_lo + chunk]))
         cur_lo += chunk
         ops += chunk
-        # bench-driven maint at end of each churn cycle, before the read phase
-        maintain(idx, algo_name)
+        # Bench picks the budget — half a chunk per cycle drains stable vectors
+        # incrementally without paying for a full HNSW rebuild every cycle. The
+        # algorithm picks WHICH vectors (cold-and-old first); freshly inserted
+        # hot vectors stay in buffer so query's hybrid scan still finds them.
+        maintain(idx, algo_name, vector_budget=chunk // 2)
         # query
         idx.search(np.ascontiguousarray(queries), 10)
         ops += len(queries)
