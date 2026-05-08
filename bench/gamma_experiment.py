@@ -471,7 +471,9 @@ def _run_one_index_gamma(
         compute_recall=cfg.compute_recall,
     )
 
-    duration = float(sequence_result["duration_sec"])
+    duration = float(sequence_result["algorithm_duration_sec"])
+    wall_duration = float(sequence_result.get("wall_duration_sec", duration))
+    recall_eval_duration = float(sequence_result.get("recall_eval_duration_sec", 0.0))
     op_counts = sequence_result["op_counts"]
     op_latencies = sequence_result["op_latencies"]
     total_measurement_ops = sum(op_counts.values())
@@ -494,6 +496,8 @@ def _run_one_index_gamma(
         "compute_recall": cfg.compute_recall,
         "random_seed": cfg.random_seed,
         "total_duration_sec": duration,
+        "wall_duration_sec": wall_duration,
+        "recall_eval_duration_sec": recall_eval_duration,
         "total_operations": total_measurement_ops,
         "insert_count": op_counts["insert"],
         "delete_count": op_counts["delete"],
@@ -514,6 +518,9 @@ def _run_one_index_gamma(
         {"run_id": run_id, "key": "measurement_query_count", "value": op_counts["query"]},
         {"run_id": run_id, "key": "final_live_count", "value": sequence_result["final_live_count"]},
         {"run_id": run_id, "key": "mean_recall", "value": sequence_result["recall"]},
+        {"run_id": run_id, "key": "algorithm_duration_sec", "value": duration},
+        {"run_id": run_id, "key": "wall_duration_sec", "value": wall_duration},
+        {"run_id": run_id, "key": "recall_eval_duration_sec", "value": recall_eval_duration},
     ]
 
     return {
@@ -659,7 +666,8 @@ def _write_manifest(
             "GammaFresh internals are not modified by this experiment path.",
             "threads is recorded in this first version; execution is serial.",
             (
-                "recall is exact dynamic Recall@k against the live vector set at each measurement query."
+                "recall is exact dynamic Recall@k against the live vector set at each measurement query; "
+                "recall evaluation time is reported separately and excluded from throughput."
                 if cfg.compute_recall
                 else "recall computation is disabled; recall fields are NaN and query latency excludes exact recall."
             ),
@@ -685,6 +693,8 @@ BENCHMARK_RUN_FIELDS = [
     "compute_recall",
     "random_seed",
     "total_duration_sec",
+    "wall_duration_sec",
+    "recall_eval_duration_sec",
     "total_operations",
     "insert_count",
     "delete_count",
