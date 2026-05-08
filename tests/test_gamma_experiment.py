@@ -136,7 +136,9 @@ def test_benchmark_runner_executes_generated_operation_sequence() -> None:
     assert result["op_counts"] == {"insert": 1, "delete": 1, "query": 1}
     assert result["final_live_count"] == 1
     assert result["recall"] == 1.0
-    assert len(result["timeseries"]) == 4
+    # 2 inserts (prefill + measurement) + 1 query + 1 recall_eval + 1 delete
+    # = 5 timeseries entries (recall_eval split was added in commit 0c0dc625)
+    assert len(result["timeseries"]) == 5
 
 
 def test_benchmark_runner_records_recall_eval_latency_separately(monkeypatch) -> None:
