@@ -330,13 +330,21 @@ class CongestionDropWorker(AbstractThread):
     
     def waitPendingOperations(self) -> bool:
         """
-        等待所有待处理的操作完成
-        通过获取和释放锁来确保队列被处理
+        等待所有待处理的操作完成。
+        持锁后再次检查所有队列是否都为空——worker 在 inline_main 的两段持锁之间会
+        释放锁,如果只 acquire/release 一次就返回,刚释放的窗口里队列里仍可能有未处理的 pair,
+        从而让后续 search 阶段在不完整的 index 上跑(recall 塌方)。
         """
-        while not self.m_mut.acquire(blocking=False):
-            pass
-        self.m_mut.release()
-        return True
+        while True:
+            while not self.m_mut.acquire(blocking=False):
+                pass
+            try:
+                if (self.initial_load_queue.empty()
+                        and self.insert_queue.empty()
+                        and self.delete_queue.empty()):
+                    return True
+            finally:
+                self.m_mut.release()
     
     def reset_state(self, dtype: str, max_pts: int, ndim: int):
         """
@@ -366,8 +374,14 @@ class CongestionDropWorker(AbstractThread):
             # 单 worker 优化：直接加载
             while not self.m_mut.acquire(blocking=False):
                 pass
-            print(f"[DEBUG] initial_load 直接调用: 插入 {X.shape[0]} 条")
-            self.my_index_algo.insert(X, ids)
+            # GammaFresh 等算法在 initial_load() 路径上跳过 heat/分区决策,不能用 insert() 顶替
+            bootstrap = getattr(self.my_index_algo, 'initial_load', None)
+            if callable(bootstrap):
+                print(f"[DEBUG] initial_load 直接调用: 插入 {X.shape[0]} 条 (bootstrap path)")
+                bootstrap(X, ids)
+            else:
+                print(f"[DEBUG] initial_load 直接调用: 插入 {X.shape[0]} 条")
+                self.my_index_algo.insert(X, ids)
             self.m_mut.release()
     
     def insert(self, X: np.ndarray, ids: np.ndarray, arrival_time: Optional[float] = None):

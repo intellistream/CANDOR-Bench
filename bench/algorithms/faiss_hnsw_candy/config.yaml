@@ -1,0 +1,35 @@
+random-xs:
+  faiss_hnsw_candy:
+    module: benchmark_anns.bench.algorithms.faiss_hnsw_candy.faiss_hnsw_candy
+    constructor: FaissHnswCandy
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"m": 24, "ef_construction": 100, "ef_search": 64}]
+        query-args: |
+          [{}]
+
+sift-small:
+  faiss_hnsw_candy:
+    module: benchmark_anns.bench.algorithms.faiss_hnsw_candy.faiss_hnsw_candy
+    constructor: FaissHnswCandy
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"m": 24, "ef_construction": 100, "ef_search": 64}]
+        query-args: |
+          [{}]
+
+sift:
+  faiss_hnsw_candy:
+    module: benchmark_anns.bench.algorithms.faiss_hnsw_candy.faiss_hnsw_candy
+    constructor: FaissHnswCandy
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"m": 32, "ef_construction": 120, "ef_search": 80}]
+        query-args: |
+          [{}]

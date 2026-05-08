@@ -13,8 +13,8 @@ random-xs:
               "split_factor": 4.0,
               "gamma_split_threshold": 0.4,
               "candidate_reserve_size": 8,
-              "maintenance_interval": 32,
-              "maintenance_query_interval": 32,
+              "maintenance_interval": 4,
+              "maintenance_query_interval": 4,
               "maintenance_query_threshold_scale": 0.5
             }
           }]
@@ -36,8 +36,8 @@ sift-small:
               "split_factor": 4.0,
               "gamma_split_threshold": 0.4,
               "candidate_reserve_size": 8,
-              "maintenance_interval": 32,
-              "maintenance_query_interval": 32,
+              "maintenance_interval": 4,
+              "maintenance_query_interval": 4,
               "maintenance_query_threshold_scale": 0.5
             }
           }]
@@ -59,8 +59,8 @@ sift:
               "split_factor": 4.0,
               "gamma_split_threshold": 0.4,
               "candidate_reserve_size": 8,
-              "maintenance_interval": 32,
-              "maintenance_query_interval": 32,
+              "maintenance_interval": 4,
+              "maintenance_query_interval": 4,
               "maintenance_query_threshold_scale": 0.5
             }
           }]
