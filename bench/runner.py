@@ -346,6 +346,7 @@ class BenchmarkRunner:
             "insert_latency": [],
             "delete_latency": [],
             "query_latency": [],
+            "recall_eval_latency": [],
         }
         op_counts = {"insert": 0, "delete": 0, "query": 0}
         query_recalls: List[float] = []
@@ -407,6 +408,7 @@ class BenchmarkRunner:
                 measurement_start = time.perf_counter()
 
             start = time.perf_counter()
+            recall_elapsed_ms: Optional[float] = None
             if op_type == "insert":
                 self.algo.insert(
                     vectors[target_id:target_id + 1],
@@ -414,18 +416,22 @@ class BenchmarkRunner:
                 )
                 live_ids.add(target_id)
                 metric_type = "insert_latency"
+                elapsed_ms = (time.perf_counter() - start) * 1000.0
             elif op_type == "delete":
                 self.algo.delete(np.array([target_id], dtype=np.uint32))
                 live_ids.discard(target_id)
                 metric_type = "delete_latency"
+                elapsed_ms = (time.perf_counter() - start) * 1000.0
             elif op_type == "query":
                 result = self.algo.query(vectors[target_id:target_id + 1], self.k)
+                elapsed_ms = (time.perf_counter() - start) * 1000.0
                 if isinstance(result, tuple):
                     result = result[0]
                 if result is not None:
                     self.all_results.append(result[0] if len(result) else np.array([]))
                     if compute_recall and phase == "measurement":
                         metric = self.dataset.distance() if hasattr(self.dataset, "distance") else "euclidean"
+                        recall_start = time.perf_counter()
                         query_recalls.append(
                             _exact_dynamic_recall(
                                 vectors=vectors,
@@ -436,14 +442,16 @@ class BenchmarkRunner:
                                 metric=metric,
                             )
                         )
+                        recall_elapsed_ms = (time.perf_counter() - recall_start) * 1000.0
                 metric_type = "query_latency"
             else:
                 raise ValueError(f"unknown operation type: {op_type}")
 
-            elapsed_ms = (time.perf_counter() - start) * 1000.0
             if phase == "measurement":
                 op_counts[op_type] += 1
                 op_latencies[metric_type].append(elapsed_ms)
+                if recall_elapsed_ms is not None:
+                    op_latencies["recall_eval_latency"].append(recall_elapsed_ms)
                 measurement_end = time.perf_counter()
 
             timeseries.append(
@@ -459,11 +467,31 @@ class BenchmarkRunner:
                     "phase": phase,
                 }
             )
+            if recall_elapsed_ms is not None:
+                timeseries.append(
+                    {
+                        "run_id": run_id,
+                        "timestamp_sec": time.perf_counter() - run_start,
+                        "index_type": resolved_index_name,
+                        "op_type": "recall_eval_latency",
+                        "latency_ms": recall_elapsed_ms,
+                        "current_size": len(live_ids),
+                        "workload_op_seq": seq_idx,
+                        "target_id": target_id,
+                        "phase": phase,
+                    }
+                )
             op_index += 1
 
-        duration_sec = 0.0
+        wall_duration_sec = 0.0
         if measurement_start is not None and measurement_end is not None:
-            duration_sec = max(0.0, measurement_end - measurement_start)
+            wall_duration_sec = max(0.0, measurement_end - measurement_start)
+        algorithm_duration_sec = (
+            sum(op_latencies["insert_latency"])
+            + sum(op_latencies["delete_latency"])
+            + sum(op_latencies["query_latency"])
+        ) / 1000.0
+        recall_eval_duration_sec = sum(op_latencies["recall_eval_latency"]) / 1000.0
 
         self.counts["insert"] += op_counts["insert"]
         self.counts["delete"] += op_counts["delete"]
@@ -478,7 +506,10 @@ class BenchmarkRunner:
             "timeseries": timeseries,
             "op_latencies": op_latencies,
             "op_counts": op_counts,
-            "duration_sec": duration_sec,
+            "duration_sec": algorithm_duration_sec,
+            "algorithm_duration_sec": algorithm_duration_sec,
+            "wall_duration_sec": wall_duration_sec,
+            "recall_eval_duration_sec": recall_eval_duration_sec,
             "final_live_count": len(live_ids),
             "recall": float(np.mean(finite_recalls)) if finite_recalls else float("nan"),
             "query_recalls": query_recalls,

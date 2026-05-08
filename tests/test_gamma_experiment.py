@@ -139,6 +139,52 @@ def test_benchmark_runner_executes_generated_operation_sequence() -> None:
     assert len(result["timeseries"]) == 4
 
 
+def test_benchmark_runner_records_recall_eval_latency_separately(monkeypatch) -> None:
+    import time
+
+    def slow_recall(**kwargs):
+        time.sleep(0.03)
+        return 1.0
+
+    monkeypatch.setattr("bench.runner._exact_dynamic_recall", slow_recall)
+
+    vectors = np.asarray(
+        [
+            [0.0, 0.0],
+            [1.0, 0.0],
+        ],
+        dtype="float32",
+    )
+    dataset = _GammaVectorDataset(vectors, "unit-gamma-recall")
+    runner = BenchmarkRunner(
+        algorithm=DummyStreamingANN(),
+        dataset=dataset,
+        k=1,
+        save_timestamps=False,
+        use_worker=False,
+    )
+
+    result = runner.run_operation_sequence(
+        [
+            {"type": "insert", "target_id": 0, "phase": "prefill"},
+            {"type": "query", "target_id": 0, "phase": "measurement"},
+        ],
+        vectors,
+        run_id="unit-recall-timing",
+        index_name="dummy",
+        compute_recall=True,
+    )
+
+    query_latency = result["op_latencies"]["query_latency"][0]
+    recall_latency = result["op_latencies"]["recall_eval_latency"][0]
+
+    assert result["recall"] == 1.0
+    assert recall_latency >= 25.0
+    assert query_latency < recall_latency
+    assert result["duration_sec"] < result["wall_duration_sec"]
+    assert any(row["op_type"] == "recall_eval_latency" for row in result["timeseries"])
+
+
 def test_benchmark_runner_batches_prefill_initial_load() -> None:
     class InitialLoadTrackingANN(DummyStreamingANN):
         def __init__(self):
