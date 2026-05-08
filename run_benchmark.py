@@ -26,6 +26,12 @@ benchmark_anns Main Runner
 """
 
 import os
+# Bench 设计就是单线程跑;强制 BLAS/OpenMP 单线程必须发生在导入 numpy/faiss/candy 这类
+# 会在 import 时初始化线程池的 C 扩展之前,否则 setdefault 也无效。
+for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
+           "BLIS_NUM_THREADS", "VECLIB_MAXIMUM_THREADS", "NUMEXPR_NUM_THREADS"):
+    os.environ.setdefault(_v, "1")
+
 import sys
 import argparse
 import json

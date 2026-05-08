@@ -168,3 +168,12 @@ class Gammafresh(BaseStreamingANN):
 
     def get_results(self):
         return self.res
+
+    def maintain(self, vector_budget: int = 0, time_budget_ms: int = 0, force: bool = True):
+        """Bench-driven incremental maintenance: drain partition buffers into the graph,
+        run BIC splits / merges, etc. With ``vector_budget=0`` the call is unbounded.
+        ``force=True`` bypasses the internal counter-due check so callers always
+        get the work they ask for (the counter-due check is for the deprecated
+        auto-trigger codepath)."""
+        assert self.index is not None
+        return self.index.maintain(int(vector_budget), int(time_budget_ms), bool(force))

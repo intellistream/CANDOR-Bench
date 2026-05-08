@@ -1,0 +1,39 @@
+random-xs:
+  ada_ivf_candy:
+    module: benchmark_anns.bench.algorithms.ada_ivf_candy.ada_ivf_candy
+    constructor: AdaIvfCandy
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"target_posting_size": 64, "min_nprobe": 4, "max_nprobe": 64,
+            "min_clusters": 16, "brute_force_threshold": 1000, "recluster_min_vectors": 5000,
+            "max_training_points": 10000}]
+        query-args: |
+          [{}]
+
+sift-small:
+  ada_ivf_candy:
+    module: benchmark_anns.bench.algorithms.ada_ivf_candy.ada_ivf_candy
+    constructor: AdaIvfCandy
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"target_posting_size": 64, "min_nprobe": 4, "max_nprobe": 64,
+            "min_clusters": 16, "brute_force_threshold": 1000, "recluster_min_vectors": 5000,
+            "max_training_points": 10000}]
+        query-args: |
+          [{}]
+
+sift:
+  ada_ivf_candy:
+    module: benchmark_anns.bench.algorithms.ada_ivf_candy.ada_ivf_candy
+    constructor: AdaIvfCandy
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{}]
+        query-args: |
+          [{}]
