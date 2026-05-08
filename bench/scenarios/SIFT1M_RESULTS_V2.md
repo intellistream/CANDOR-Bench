@@ -51,6 +51,31 @@ Single-thread baseline. All three algos use the same candy bindings (same C++ co
 
 `maintain(vector_budget=N)`:N=0 表示无上限,gamma 内部按 `(weighted_hit_count DESC, insert_op_id ASC)` 选 hot-first 的迁移候选。
 
+## 智能路由的价值:buffer-resident query 场景
+
+> gamma 的 `choose_owner_partition` 在每次 insert 时扫所有 partition 算 normalized
+> distance + scale 选 best fit。我们设了 `GAMMA_DUMB_ROUTING=1` 环境变量做 A/B
+> 对照(把 routing 换成 round-robin),量化 cost vs benefit。
+
+**SIFT 1M / 200K, buffer-resident query workload(无 maint),`candidate_reserve_size=999`(纯几何剪枝):**
+
+| mode | insert | query | total | recall |
+|---|---:|---:|---:|---:|
+| **SMART** | 9.59 s | **30.5 s (15.3 ms/q)** | **40.1 s** 🏆 | 1.000 |
+| **DUMB** (round-robin) | 8.25 s | 48.2 s (24.1 ms/q) | 56.4 s | 1.000 |
+
+**SMART 在同样 recall=1.0 下,query 快 1.6×,总时间快 29%。**
+
+**机制:** SMART 让 partition 内部紧凑(radius 小)→ `near_edge ≤ search_radius` 几何剪枝把多数 partition 剔掉 → query 只扫少数候选;DUMB 让 partition 内容随机(radius 巨大)→ 剪枝失效 → 必须扫全部 partition。SMART 多花的 1.3 s 路由成本被 query 节省的 17.6 s 抵消有余。
+
+**反例:在「频繁 maint 把 buffer 排空」的工作流(streaming/insert_only)里,partition coherence 在 buffer 阶段没机会生效,智能路由的 2.4 s 路由成本就是净 overhead。** 所以智能路由的价值场景非常具体:
+- ✅ **buffer-resident query**(数据来不及 maint 就被查询)
+- ✅ **high partition count + 紧 candidate budget**(剪枝是主导)
+- ❌ **以 graph 为查询主路径**(graph 自己 routing,partition coherence 没用)
+- ❌ **频繁 drain buffer**(partition 没机会建立 coherence)
+
+复现:`python bench/scenarios/smart_routing_ab.py`
+
 ## Streaming 场景:`streaming_sliding` vs 纯插入 `streaming`
 
 > 现实的 streaming workload 不是「无穷增长」,而是滑动窗口(news feed / 最近 K 条 / 时序索引)。

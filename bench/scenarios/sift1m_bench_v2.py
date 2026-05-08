@@ -301,6 +301,42 @@ def scenario_streaming_sliding(idx, data, queries, gt, init_n, algo_name,
     }
 
 
+def scenario_buffer_resident_query(idx, data, queries, gt, init_n, algo_name):
+    """Buffer-only query workload (no maint during stream).
+    All data lives in partition buffers; query relies entirely on partition
+    candidate selection + geometric pruning.
+
+    This scenario exists to demonstrate the value of gamma's smart partition
+    routing.  Set GAMMA_DUMB_ROUTING=1 in the env to A/B against round-robin
+    routing — SMART achieves the same recall with significantly fewer
+    partitions scanned because tight (low-radius) partitions get pruned more
+    aggressively by `near_edge ≤ search_radius`.
+
+    Recommended config: candidate_reserve_size=999 so geometric pruning is the
+    sole budget control (no top-K trim).
+    """
+    idx.initial_load(np.arange(init_n, dtype=np.uint64),
+                     np.ascontiguousarray(data[:init_n]))
+    n = len(data)
+    ti = time.perf_counter()
+    idx.add(np.arange(init_n, n, dtype=np.uint64),
+            np.ascontiguousarray(data[init_n:n]))
+    t_ins = time.perf_counter() - ti
+    tq = time.perf_counter()
+    nbrs, _ = idx.search(np.ascontiguousarray(queries), 10)
+    t_qry = time.perf_counter() - tq
+    recall = recall_at_k(nbrs.astype(np.uint32), gt)
+    return {
+        "total_s": t_ins + t_qry,
+        "n_insert": n - init_n,
+        "insert_total_s": t_ins,
+        "insert_latency_us_avg": (t_ins / (n - init_n)) * 1e6,
+        "query_total_s": t_qry,
+        "query_latency_ms_avg": (t_qry / len(queries)) * 1000,
+        "recall": recall,
+    }
+
+
 def scenario_burst(idx, data, queries, gt, init_n, algo_name, burst=10000):
     idx.initial_load(np.arange(init_n, dtype=np.uint64),
                      np.ascontiguousarray(data[:init_n]))
