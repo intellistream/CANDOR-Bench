@@ -89,5 +89,44 @@
     "n_alive": 22500,
     "query_latency_ms_p95": 1.0878628617152573,
     "recall": 0.5098
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "k_partitions": 4,
+    "search_partitions": 2,
+    "routing": "round_robin",
+    "name": "gamma_spatial(K=4/M=2/round_robin)",
+    "total_s": 147.615069180727,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.9410133452154696,
+    "recall": 0.4898
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "k_partitions": 8,
+    "search_partitions": 4,
+    "routing": "round_robin",
+    "name": "gamma_spatial(K=8/M=4/round_robin)",
+    "total_s": 112.114935901016,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 2.9672275725752115,
+    "recall": 0.5167999999999999
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "k_partitions": 16,
+    "search_partitions": 8,
+    "routing": "round_robin",
+    "name": "gamma_spatial(K=16/M=8/round_robin)",
+    "total_s": 84.8855801615864,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 4.496733280271291,
+    "recall": 0.5156000000000001
   }
 ]
