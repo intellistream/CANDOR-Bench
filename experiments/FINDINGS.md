@@ -178,9 +178,25 @@ The 1M cluster / random / partial_reset all match the 200K finding (-20 to -28%)
 from the 200K result (-7%). At larger graph size with FIFO delete, hnswlib's
 mark_deleted scales better than gamma's maintenance flush; the per-batch
 maintenance has an absolute cost that doesn't shrink with index size while
-hnswlib's tombstone bookkeeping is per-element. **The paper has to be
-honest about this**: gamma's ratio-of-payoff regime is non-sequential
-delete + scale ≤ 1M; sequential at large scale is a wash or loss.
+hnswlib's tombstone bookkeeping is per-element.
+
+**Cross-dataset confirms this scaling story:**
+
+| dataset | scale | sequential gamma+hnswlib | sequential hnswlib direct | Δ% |
+|---|---|---|---|---|
+| sift | 200K | 195.3s | 209.2s | -7% |
+| sift | 1M | 2231s | 1602s | **+39%** |
+| msong | 200K | 692.6s | 566.2s | +22% |
+| msong | 1M | 4313s | 2096s | **+106%** |
+| glove | 200K | 507.4s | 447.8s | +13% |
+| glove | 1M | 3738s | 1739s | **+115%** |
+
+**The paper has to be honest about this**: gamma's ratio-of-payoff regime
+is **non-sequential delete patterns**. Sequential delete is hnswlib's
+tombstone-friendly best case and gamma's maintenance-overhead worst case.
+At small scale (200K) the costs are roughly balanced; at large scale,
+gamma loses sequential by 40-115% across all 3 datasets. Position the
+paper around delete-pattern *robustness* rather than universal speedup.
 
 ---
 
