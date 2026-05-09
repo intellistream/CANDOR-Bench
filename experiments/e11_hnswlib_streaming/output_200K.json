@@ -1,0 +1,26 @@
+[
+  {
+    "algo": "gamma",
+    "total_s": 34.37311232998036,
+    "n_delete": 175000,
+    "query_latency_ms_avg": 0.0617191198721735,
+    "query_latency_ms_p95": 0.0679254503105767,
+    "recall": 0.9986
+  },
+  {
+    "algo": "hnswlib",
+    "total_s": 11.503537314012647,
+    "n_delete": 175000,
+    "query_latency_ms_avg": 0.0445774898916069,
+    "query_latency_ms_p95": 0.09496386437676847,
+    "recall": 0.998
+  },
+  {
+    "algo": "hnswlib+rebuild_every_4",
+    "total_s": 3.4630408929660916,
+    "n_delete": 175000,
+    "query_latency_ms_avg": 0.004567154236913969,
+    "query_latency_ms_p95": 0.0048174092895351345,
+    "recall": 0.9984000000000001
+  }
+]
