@@ -1,8 +1,19 @@
-"""e02 — Sweep delete_frac, measure recall + query latency for each algo."""
-import os, sys, time, json
+"""e02 — Sweep delete_frac across multiple datasets,
+measure recall + query latency for each algo.
+
+The thesis "buffer absorbs short-lived vectors" should hold across datasets
+of different dim and distribution. Run on:
+  - sift     (1M × 128d, image features)
+  - msong    (992K × 420d, audio timbre — high-dim)
+  - random-m (100K × 128d, synthetic uniform)
+
+If gamma's recall stability + query latency invariance holds across all 3,
+the thesis is dataset-independent.
+"""
+import os, sys, time, json, argparse
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import _shared
-from _shared import build, load_sift, compute_gt, recall_at_k, percentile_ms, maintain
+from _shared import build, load_dataset, compute_gt, recall_at_k, percentile_ms, maintain
 import numpy as np
 
 
@@ -54,23 +65,43 @@ def run_churn(name, data, queries, init_n, batch, delete_frac, qstride):
     }
 
 
+DATASET_CONFIGS = {
+    # name      slice_n  init_n  batch  qstride n_queries
+    "sift":     (200_000, 20_000, 2_500, 10_000, 500),
+    "msong":    (100_000, 10_000, 2_500, 10_000, 200),  # 420d -> smaller slice
+    "random-m": (100_000, 10_000, 2_500, 10_000, 500),
+}
+
+
 def main():
-    data, queries = load_sift(n_queries=500, slice_n=200_000)
-    init_n, batch, qstride = 20_000, 2_500, 10_000
-    delete_fracs = [0.0, 0.25, 0.5, 0.75, 0.9]
+    p = argparse.ArgumentParser()
+    p.add_argument("--datasets", nargs="+",
+                   default=["sift", "msong", "random-m"],
+                   help="datasets to sweep")
+    p.add_argument("--delete-fracs", nargs="+", type=float,
+                   default=[0.0, 0.25, 0.5, 0.75, 0.9])
+    args = p.parse_args()
+
     rows = []
-    for df in delete_fracs:
-        print(f"\n========== delete_frac = {df:.2f} ==========", flush=True)
-        for algo in ["gamma", "faiss", "ivf"]:
-            row = run_churn(algo, data, queries, init_n, batch, df, qstride)
-            rows.append(row)
-            print(f"  {algo:6s}  total={row['total_s']:6.1f}s  "
-                  f"recall={row['recall']:.4f}  "
-                  f"qry_avg={row['query_latency_ms_avg']:.3f}ms  "
-                  f"qry_p95={row['query_latency_ms_p95']:.3f}ms", flush=True)
-            out = os.path.join(os.path.dirname(__file__), "output.json")
-            with open(out, "w") as f:
-                json.dump(rows, f, indent=2)
+    for ds_name in args.datasets:
+        slice_n, init_n, batch, qstride, n_queries = DATASET_CONFIGS[ds_name]
+        print(f"\n##### dataset = {ds_name} (slice {slice_n}, init {init_n}) #####",
+              flush=True)
+        data, queries = load_dataset(ds_name, n_queries=n_queries, slice_n=slice_n)
+        for df in args.delete_fracs:
+            print(f"\n  delete_frac = {df:.2f}", flush=True)
+            for algo in ["gamma", "faiss", "ivf"]:
+                row = run_churn(algo, data, queries, init_n, batch, df, qstride)
+                row["dataset"] = ds_name
+                row["dim"] = int(data.shape[1])
+                rows.append(row)
+                print(f"    {algo:6s}  total={row['total_s']:6.1f}s  "
+                      f"recall={row['recall']:.4f}  "
+                      f"qry_avg={row['query_latency_ms_avg']:.3f}ms  "
+                      f"qry_p95={row['query_latency_ms_p95']:.3f}ms", flush=True)
+                out = os.path.join(os.path.dirname(__file__), "output.json")
+                with open(out, "w") as f:
+                    json.dump(rows, f, indent=2)
     print(f"\n✓ saved {out}")
 
 

@@ -1,17 +1,41 @@
-"""SIFT dataset loading + ground-truth computation with /tmp caching."""
+"""Dataset loading + ground-truth computation with /tmp caching.
+
+Supported datasets (verified working):
+  - 'sift'     : 1M × 128d    image features (INRIA Texmex)
+  - 'msong'    : 992K × 420d  music timbre features
+  - 'random-m' : 100K × 128d  synthetic uniform (sanity check)
+  - 'random-s' : 10K  × 128d  synthetic uniform (smoke test)
+"""
 import os
 import numpy as np
-from datasets.registry import get_dataset
+from datasets.loaders import prepare_dataset
 
 
-def load_sift(n_queries: int = 1000, slice_n: int | None = None):
-    """Load SIFT 1M dataset. Optionally slice to first `slice_n` vectors."""
-    ds = get_dataset("sift")
+# (dataset name, full-N, dim, default n_queries)
+DATASETS_INFO = {
+    "sift":     {"n": 1_000_000, "dim": 128, "default_q": 1000, "domain": "image"},
+    "msong":    {"n":   992_272, "dim": 420, "default_q": 200,  "domain": "audio"},
+    "random-m": {"n":   100_000, "dim": 128, "default_q": 1000, "domain": "synthetic"},
+    "random-s": {"n":    10_000, "dim": 128, "default_q":  100, "domain": "synthetic"},
+}
+
+
+def load_dataset(name: str, n_queries: int | None = None, slice_n: int | None = None):
+    """Generic dataset loader. Returns (data, queries) as float32 contiguous."""
+    if name not in DATASETS_INFO:
+        raise ValueError(f"unknown dataset: {name}; supported: {list(DATASETS_INFO)}")
+    ds = prepare_dataset(name)
     data = np.asarray(ds.get_dataset(), dtype=np.float32)
     if slice_n is not None:
         data = data[:slice_n]
-    queries = np.asarray(ds.get_queries(), dtype=np.float32)[:n_queries]
+    nq = n_queries if n_queries is not None else DATASETS_INFO[name]["default_q"]
+    queries = np.asarray(ds.get_queries(), dtype=np.float32)[:nq]
     return data, queries
+
+
+# Back-compat alias used by existing experiments
+def load_sift(n_queries: int = 1000, slice_n: int | None = None):
+    return load_dataset("sift", n_queries=n_queries, slice_n=slice_n)
 
 
 def compute_gt(data: np.ndarray, queries: np.ndarray, k: int = 10) -> np.ndarray:
@@ -47,8 +71,9 @@ def compute_gt(data: np.ndarray, queries: np.ndarray, k: int = 10) -> np.ndarray
 
 
 def cached_gt(data: np.ndarray, queries: np.ndarray, k: int = 10, tag: str = "default"):
-    """Compute GT once, cache in /tmp keyed by `tag` + sizes."""
-    cache = f"/tmp/sift_gt_{tag}_n{len(data)}_q{len(queries)}_k{k}.npy"
+    """Compute GT once, cache in /tmp keyed by `tag` + sizes + dim.
+    `tag` should include dataset name so different datasets don't collide."""
+    cache = f"/tmp/gt_{tag}_n{len(data)}_q{len(queries)}_d{data.shape[1]}_k{k}.npy"
     if os.path.exists(cache):
         return np.load(cache)
     gt = compute_gt(data, queries, k)
