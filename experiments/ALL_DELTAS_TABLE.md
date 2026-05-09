@@ -89,6 +89,7 @@
 | e23_multi_seed_variance |  | 200K | cluster |  | 101.8 | 129.9 | -21.6% | 0.9990 | 0.9994 |
 | e23_multi_seed_variance |  | 200K | cluster |  | 104.7 | 133.5 | -21.6% | 0.9996 | 0.9994 |
 | e20_router_component_ablation | sift | 200K | cluster |  | 187.3 | 237.5 | -21.1% | 0.9992 | 0.9994 |
+| e16_cross_dataset | glove | 1M | partial_reset |  | 1082.4 | 1371.7 | -21.1% | 0.8655 | 0.8725 |
 | e15_delete_pattern_matrix |  | 1M | cluster |  | 542.7 | 686.5 | -20.9% | 0.9876 | 0.9892 |
 | e17_churn_rate_sweep |  | 200K | partial_reset | ratio=1.0 | 130.5 | 164.6 | -20.7% | 0.9988 | 0.9994 |
 | e20_router_component_ablation | sift | 200K | cluster |  | 188.7 | 237.5 | -20.6% | 0.9992 | 0.9994 |
@@ -106,6 +107,7 @@
 | e20_router_component_ablation | sift | 200K | random |  | 186.8 | 230.7 | -19.0% | 0.9996 | 0.9990 |
 | e23_multi_seed_variance |  | 200K | random |  | 123.6 | 150.9 | -18.1% | 0.9990 | 0.9988 |
 | e23_multi_seed_variance |  | 200K | cluster |  | 115.3 | 140.7 | -18.0% | 0.9992 | 0.9992 |
+| e16_cross_dataset | msong | 1M | random |  | 372.5 | 451.4 | -17.5% | 0.9325 | 0.9190 |
 | e23_multi_seed_variance |  | 200K | random |  | 110.6 | 133.5 | -17.2% | 0.9994 | 0.9992 |
 | e20_router_component_ablation | glove | 200K | partial_reset |  | 268.6 | 322.7 | -16.8% | 0.9230 | 0.9230 |
 | e16_cross_dataset | msong | 200K | partial_reset |  | 228.2 | 273.9 | -16.7% | 0.9945 | 0.9970 |
@@ -119,6 +121,7 @@
 | e20_router_component_ablation | msong | 200K | partial_reset |  | 392.5 | 451.9 | -13.1% | 0.9970 | 0.9970 |
 | e23_multi_seed_variance |  | 200K | random |  | 110.6 | 126.5 | -12.6% | 0.9994 | 0.9996 |
 | e23_multi_seed_variance |  | 200K | random |  | 110.6 | 125.9 | -12.2% | 0.9994 | 0.9990 |
+| e16_cross_dataset | glove | 1M | partial_reset |  | 246.8 | 280.1 | -11.9% | 0.6685 | 0.6575 |
 | e20_router_component_ablation | msong | 200K | sequential |  | 509.9 | 577.7 | -11.7% | 0.9985 | 0.9990 |
 | e22_cpp_tuned |  | 200K | sequential |  | 50.9 | 57.4 | -11.2% | 1.0000 | 0.9030 |
 | e23_multi_seed_variance |  | 200K | cluster |  | 115.3 | 129.9 | -11.2% | 0.9992 | 0.9994 |

@@ -397,9 +397,39 @@ SIFT 200K. The amortized cost of periodic full rebuilds is more than
 recovered by the lower per-search work on a cleaner graph. Higher
 threshold variants pending.
 
-### e26 adaptive maintenance + e27 cost-model admit — in flight
+### e26 adaptive maintenance — null result under current workload
 
-Results streaming. Will be added once they land.
+`auto_maint_count=0` across all thresholds {0.1, 0.25, 0.5, 0.8} in all
+patterns. The qstride-driven maint at every 4 batches keeps buffer
+fullness below the auto-maint threshold (0.1 × buf_capacity = 12500 vs
+qstride-flush at every 10000 inserts). Variant gives essentially the
+same result as gamma_v2 (within ~10s noise). The adaptive trigger
+needs a different experimental setup (no qstride-driven flush) to
+show its value. Not pursued further.
+
+### e27 cost-model admit — *adapts to pattern*, picks the right strategy
+
+| pattern | gamma_v2 (always buffer) | cost_admit best | best threshold | cost_admit win |
+|---|---|---|---|---|
+| cluster | 143.7s | 126.8s | th=1e9 (= always buffer) | -12% noise |
+| random | 143.3s | 127.9s | th=1e9 | -11% noise |
+| sequential | **236.6s** | **169.7s** | **th=5000 (= always direct)** | **-28%** |
+| partial_reset | 117.6s | 107.7s | th=100K | -8% noise |
+
+**Headline**: on sequential, cost_admit *learns* (after a few batches of
+observed long lifetimes) that the buffer is wasted overhead and routes
+new vectors directly to the graph. -28% vs gamma_v2. On the other
+patterns it converges to "always buffer" within noise of gamma_v2.
+
+**This is the adaptive admit decision the C++ placement_controller is
+trying to do.** Our Python implementation reaches it with a 30-line
+rolling-mean predictor — confirming the C++ design is sound; the
+problem with C++ is its multi-partition wrapper around it (e21).
+
+For the paper, two complementary modules:
+- **e25 tombstone-rebuild** wins MORE on sequential (-56% vs -28% for
+  cost_admit), so it's the recommended sequential fix.
+- e27 is a cheaper alternative if rebuild's amortized cost is unwanted.
 
 ---
 

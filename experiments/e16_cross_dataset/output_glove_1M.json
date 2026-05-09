@@ -130,5 +130,49 @@
     "n_alive": 555000,
     "query_latency_ms_p95": 0.6343279054854065,
     "recall": 0.764
+  },
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "partial_reset",
+    "name": "gamma_v2+hnswlib",
+    "total_s": 1082.436843868345,
+    "n_delete": 880000,
+    "n_alive": 120000,
+    "query_latency_ms_p95": 1.7523076683282848,
+    "recall": 0.8655000000000002
+  },
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "partial_reset",
+    "name": "hnswlib direct",
+    "total_s": 1371.6686734706163,
+    "n_delete": 880000,
+    "n_alive": 120000,
+    "query_latency_ms_p95": 1.6362011879682539,
+    "recall": 0.8725
+  },
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "partial_reset",
+    "name": "gamma_v2+faiss_hnsw",
+    "total_s": 246.84146560635418,
+    "n_delete": 880000,
+    "n_alive": 120000,
+    "query_latency_ms_p95": 0.6445196198765187,
+    "recall": 0.6685
+  },
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "partial_reset",
+    "name": "faiss_hnsw direct",
+    "total_s": 280.1126143084839,
+    "n_delete": 880000,
+    "n_alive": 120000,
+    "query_latency_ms_p95": 0.6883411810267717,
+    "recall": 0.6575
   }
 ]

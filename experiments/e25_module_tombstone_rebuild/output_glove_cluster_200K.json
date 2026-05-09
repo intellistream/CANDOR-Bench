@@ -1,0 +1,48 @@
+[
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "rebuild_threshold": null,
+    "name": "gamma_v2 (no rebuild)",
+    "total_s": 335.0817890400067,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 2.4735737273003906,
+    "recall": 0.9530000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "rebuild_threshold": -1,
+    "name": "hnswlib direct",
+    "total_s": 434.91143122315407,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 3.1953034289181232,
+    "recall": 0.963
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "rebuild_threshold": 0.5,
+    "rebuild_count": 4,
+    "name": "gamma_rebuild(th=0.5)",
+    "total_s": 76.80547700356692,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.34163292380981136,
+    "recall": 0.9515
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "rebuild_threshold": 1.1,
+    "rebuild_count": 0,
+    "name": "gamma_rebuild(th=1.1)",
+    "total_s": 275.9749819971621,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.9977444377727804,
+    "recall": 0.9530000000000001
+  }
+]
