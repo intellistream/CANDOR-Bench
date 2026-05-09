@@ -1,0 +1,26 @@
+[
+  {
+    "algo": "gamma",
+    "op_total_s": 224.43846715101972,
+    "final_query_latency_ms": 0.22055258497130126,
+    "recall": 0.9836
+  },
+  {
+    "algo": "hnswlib(M=32,ef=80)",
+    "op_total_s": 52.74504646100104,
+    "final_query_latency_ms": 0.02921692398376763,
+    "recall": 0.9836
+  },
+  {
+    "algo": "scann",
+    "op_total_s": 3.1491234789718874,
+    "final_query_latency_ms": 0.037671049998607486,
+    "recall": 0.8723000000000002
+  },
+  {
+    "algo": "annoy(50trees)",
+    "op_total_s": 5.610319406026974,
+    "final_query_latency_ms": 0.09219755203230307,
+    "recall": 0.5405
+  }
+]
