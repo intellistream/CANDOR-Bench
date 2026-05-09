@@ -1,162 +1,178 @@
 [
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "sequential",
     "name": "gamma_v2+hnswlib",
-    "total_s": 195.3447513114661,
+    "total_s": 692.5679532950744,
     "n_delete": 177500,
     "n_alive": 22500,
-    "query_latency_ms_p95": 1.4968671849928796,
-    "recall": 0.999
+    "query_latency_ms_p95": 3.84855088382028,
+    "recall": 0.9984999999999999
   },
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "sequential",
     "name": "hnswlib direct",
-    "total_s": 209.2257953742519,
+    "total_s": 566.1804591305554,
     "n_delete": 177500,
     "n_alive": 22500,
-    "query_latency_ms_p95": 1.5096436209976671,
-    "recall": 0.9984
+    "query_latency_ms_p95": 4.0008832681924105,
+    "recall": 0.9990000000000001
   },
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "sequential",
     "name": "gamma_v2+faiss_hnsw",
-    "total_s": 60.64092770498246,
+    "total_s": 100.7865362977609,
     "n_delete": 177500,
     "n_alive": 22500,
-    "query_latency_ms_p95": 0.42536149863153694,
-    "recall": 0.904
+    "query_latency_ms_p95": 0.6482615852728486,
+    "recall": 0.9419999999999998
   },
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "sequential",
     "name": "faiss_hnsw direct",
-    "total_s": 61.50070148706436,
+    "total_s": 99.72453364357352,
     "n_delete": 177500,
     "n_alive": 22500,
-    "query_latency_ms_p95": 0.4714609805494547,
-    "recall": 0.9030000000000001
+    "query_latency_ms_p95": 0.6170622389763594,
+    "recall": 0.9420000000000002
   },
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "random",
     "name": "gamma_v2+hnswlib",
-    "total_s": 159.55557162780315,
+    "total_s": 388.1024791728705,
     "n_delete": 177500,
     "n_alive": 22500,
-    "query_latency_ms_p95": 1.209781110007316,
-    "recall": 0.9996
+    "query_latency_ms_p95": 2.6231317224446684,
+    "recall": 0.9984999999999999
   },
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "random",
     "name": "hnswlib direct",
-    "total_s": 217.60154117643833,
+    "total_s": 488.42214685026556,
     "n_delete": 177500,
     "n_alive": 22500,
-    "query_latency_ms_p95": 1.6220226701349019,
-    "recall": 0.999
+    "query_latency_ms_p95": 3.287573681445792,
+    "recall": 0.9990000000000001
   },
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "random",
     "name": "gamma_v2+faiss_hnsw",
-    "total_s": 53.8190596383065,
+    "total_s": 69.94555071275681,
     "n_delete": 177500,
     "n_alive": 22500,
-    "query_latency_ms_p95": 0.44830145966261625,
-    "recall": 0.9268
+    "query_latency_ms_p95": 0.5417654127813876,
+    "recall": 0.9565
   },
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "random",
     "name": "faiss_hnsw direct",
-    "total_s": 69.39492336381227,
+    "total_s": 91.9165607681498,
     "n_delete": 177500,
     "n_alive": 22500,
-    "query_latency_ms_p95": 0.5060511378571391,
-    "recall": 0.9042
+    "query_latency_ms_p95": 0.6248255548998713,
+    "recall": 0.9420000000000001
   },
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "cluster",
     "name": "gamma_v2+hnswlib",
-    "total_s": 186.43185599334538,
+    "total_s": 411.1499968264252,
     "n_delete": 177500,
     "n_alive": 22500,
-    "query_latency_ms_p95": 1.351512586697936,
-    "recall": 0.9992000000000001
+    "query_latency_ms_p95": 3.0095299715176216,
+    "recall": 0.9995
   },
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "cluster",
     "name": "hnswlib direct",
-    "total_s": 241.63839842006564,
+    "total_s": 574.2300108512864,
     "n_delete": 177500,
     "n_alive": 22500,
-    "query_latency_ms_p95": 1.6828501656651496,
-    "recall": 0.9994000000000001
+    "query_latency_ms_p95": 3.7666399264708157,
+    "recall": 0.9995
   },
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "cluster",
     "name": "gamma_v2+faiss_hnsw",
-    "total_s": 52.89077446144074,
+    "total_s": 54.01814066339284,
     "n_delete": 177500,
     "n_alive": 22500,
-    "query_latency_ms_p95": 0.44696580432355404,
-    "recall": 0.9286
+    "query_latency_ms_p95": 0.4762034376617521,
+    "recall": 0.9005000000000001
   },
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "cluster",
     "name": "faiss_hnsw direct",
-    "total_s": 67.79970292001963,
+    "total_s": 79.71717540547252,
     "n_delete": 177500,
     "n_alive": 22500,
-    "query_latency_ms_p95": 0.49085870208218696,
-    "recall": 0.9104000000000001
+    "query_latency_ms_p95": 0.5467918794602156,
+    "recall": 0.866
   },
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "partial_reset",
     "name": "gamma_v2+hnswlib",
-    "total_s": 149.22848975099623,
+    "total_s": 228.23271268978715,
     "n_delete": 160000,
     "n_alive": 40000,
-    "query_latency_ms_p95": 1.235403508786112,
-    "recall": 0.9987999999999999
+    "query_latency_ms_p95": 1.7105814670212565,
+    "recall": 0.9944999999999999
   },
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "partial_reset",
     "name": "hnswlib direct",
-    "total_s": 192.82202501315624,
+    "total_s": 273.91919636074454,
     "n_delete": 160000,
     "n_alive": 40000,
-    "query_latency_ms_p95": 1.5245899211615321,
-    "recall": 0.9994
+    "query_latency_ms_p95": 1.9959664575289933,
+    "recall": 0.9969999999999999
   },
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "partial_reset",
     "name": "gamma_v2+faiss_hnsw",
-    "total_s": 54.06690940447152,
+    "total_s": 47.07916209846735,
     "n_delete": 160000,
     "n_alive": 40000,
-    "query_latency_ms_p95": 0.4284999390132725,
-    "recall": 0.9588000000000001
+    "query_latency_ms_p95": 0.36009291373193264,
+    "recall": 0.9765
   },
   {
+    "dataset": "msong",
     "scale": "200K",
     "pattern": "partial_reset",
     "name": "faiss_hnsw direct",
-    "total_s": 76.75022671651095,
+    "total_s": 62.16987214423716,
     "n_delete": 160000,
     "n_alive": 40000,
-    "query_latency_ms_p95": 0.480422091204673,
-    "recall": 0.9454000000000001
+    "query_latency_ms_p95": 0.39819835848174984,
+    "recall": 0.9735
   }
 ]

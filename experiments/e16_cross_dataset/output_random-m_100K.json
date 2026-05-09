@@ -1,0 +1,178 @@
+[
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "sequential",
+    "name": "gamma_v2+hnswlib",
+    "total_s": 321.6040558498353,
+    "n_delete": 88750,
+    "n_alive": 11250,
+    "query_latency_ms_p95": 3.624756746925413,
+    "recall": 0.9292
+  },
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "sequential",
+    "name": "hnswlib direct",
+    "total_s": 282.58418737817556,
+    "n_delete": 88750,
+    "n_alive": 11250,
+    "query_latency_ms_p95": 3.697936739120632,
+    "recall": 0.9352
+  },
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "sequential",
+    "name": "gamma_v2+faiss_hnsw",
+    "total_s": 88.28590190503746,
+    "n_delete": 88750,
+    "n_alive": 11250,
+    "query_latency_ms_p95": 0.7261662513017654,
+    "recall": 0.5538
+  },
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "sequential",
+    "name": "faiss_hnsw direct",
+    "total_s": 94.42658867314458,
+    "n_delete": 88750,
+    "n_alive": 11250,
+    "query_latency_ms_p95": 0.778162029851228,
+    "recall": 0.5535999999999999
+  },
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "random",
+    "name": "gamma_v2+hnswlib",
+    "total_s": 228.4152596211061,
+    "n_delete": 88750,
+    "n_alive": 11250,
+    "query_latency_ms_p95": 3.0358392763882875,
+    "recall": 0.9258000000000001
+  },
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "random",
+    "name": "hnswlib direct",
+    "total_s": 299.1549822669476,
+    "n_delete": 88750,
+    "n_alive": 11250,
+    "query_latency_ms_p95": 3.6376465531066056,
+    "recall": 0.9376000000000001
+  },
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "random",
+    "name": "gamma_v2+faiss_hnsw",
+    "total_s": 68.47749394923449,
+    "n_delete": 88750,
+    "n_alive": 11250,
+    "query_latency_ms_p95": 0.7448132376186549,
+    "recall": 0.5882000000000001
+  },
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "random",
+    "name": "faiss_hnsw direct",
+    "total_s": 97.32263687066734,
+    "n_delete": 88750,
+    "n_alive": 11250,
+    "query_latency_ms_p95": 0.795869992300868,
+    "recall": 0.541
+  },
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "cluster",
+    "name": "gamma_v2+hnswlib",
+    "total_s": 347.5159696461633,
+    "n_delete": 88750,
+    "n_alive": 11250,
+    "query_latency_ms_p95": 5.307885157223791,
+    "recall": 0.9568000000000001
+  },
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "cluster",
+    "name": "hnswlib direct",
+    "total_s": 543.866935774684,
+    "n_delete": 88750,
+    "n_alive": 11250,
+    "query_latency_ms_p95": 7.635150490514934,
+    "recall": 0.9728000000000001
+  },
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "cluster",
+    "name": "gamma_v2+faiss_hnsw",
+    "total_s": 57.03023291938007,
+    "n_delete": 88750,
+    "n_alive": 11250,
+    "query_latency_ms_p95": 0.6855311437509953,
+    "recall": 0.49939999999999996
+  },
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "cluster",
+    "name": "faiss_hnsw direct",
+    "total_s": 89.5742160435766,
+    "n_delete": 88750,
+    "n_alive": 11250,
+    "query_latency_ms_p95": 0.8094350749626755,
+    "recall": 0.3796
+  },
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "partial_reset",
+    "name": "gamma_v2+hnswlib",
+    "total_s": 171.45042439177632,
+    "n_delete": 80000,
+    "n_alive": 20000,
+    "query_latency_ms_p95": 2.412257209792733,
+    "recall": 0.8738000000000001
+  },
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "partial_reset",
+    "name": "hnswlib direct",
+    "total_s": 223.80948434676975,
+    "n_delete": 80000,
+    "n_alive": 20000,
+    "query_latency_ms_p95": 3.0235297155566507,
+    "recall": 0.8766000000000002
+  },
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "partial_reset",
+    "name": "gamma_v2+faiss_hnsw",
+    "total_s": 68.37239725049585,
+    "n_delete": 80000,
+    "n_alive": 20000,
+    "query_latency_ms_p95": 0.6557237261906266,
+    "recall": 0.6303999999999998
+  },
+  {
+    "dataset": "random-m",
+    "scale": "100K",
+    "pattern": "partial_reset",
+    "name": "faiss_hnsw direct",
+    "total_s": 89.35974992159754,
+    "n_delete": 80000,
+    "n_alive": 20000,
+    "query_latency_ms_p95": 0.7150769301690161,
+    "recall": 0.6016
+  }
+]

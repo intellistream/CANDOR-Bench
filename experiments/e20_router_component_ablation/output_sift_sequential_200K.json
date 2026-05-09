@@ -1,0 +1,87 @@
+[
+  {
+    "dataset": "sift",
+    "scale": "200K",
+    "pattern": "sequential",
+    "variant": "(hnswlib direct)",
+    "name": "hnswlib direct",
+    "total_s": 245.64332462847233,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.830344780348241,
+    "recall": 0.9984
+  },
+  {
+    "dataset": "sift",
+    "scale": "200K",
+    "pattern": "sequential",
+    "variant": "full",
+    "kwargs": {},
+    "name": "gamma_v3(full)+hnswlib",
+    "total_s": 310.3677846780047,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.7635759471915662,
+    "recall": 0.999
+  },
+  {
+    "dataset": "sift",
+    "scale": "200K",
+    "pattern": "sequential",
+    "variant": "no_buffer_scan",
+    "kwargs": {
+      "use_buffer_scan": false
+    },
+    "name": "gamma_v3(no_buffer_scan)+hnswlib",
+    "total_s": 304.70195959415287,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.674788143765181,
+    "recall": 0.999
+  },
+  {
+    "dataset": "sift",
+    "scale": "200K",
+    "pattern": "sequential",
+    "variant": "no_buffer_inserts",
+    "kwargs": {
+      "buffer_inserts": false
+    },
+    "name": "gamma_v3(no_buffer_inserts)+hnswlib",
+    "total_s": 250.85772435273975,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.8281482123769819,
+    "recall": 0.9984
+  },
+  {
+    "dataset": "sift",
+    "scale": "200K",
+    "pattern": "sequential",
+    "variant": "no_absorb_deletes",
+    "kwargs": {
+      "absorb_buffer_deletes": false
+    },
+    "name": "gamma_v3(no_absorb_deletes)+hnswlib",
+    "total_s": 308.97648071311414,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.710089910496026,
+    "recall": 0.999
+  },
+  {
+    "dataset": "sift",
+    "scale": "200K",
+    "pattern": "sequential",
+    "variant": "eager_maint",
+    "kwargs": {
+      "eager_maint": true
+    },
+    "name": "gamma_v3(eager_maint)+hnswlib",
+    "total_s": 231.14014964178205,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.6064575820229947,
+    "recall": 0.9984
+  }
+]

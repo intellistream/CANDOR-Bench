@@ -233,7 +233,109 @@ but adds overhead with no benefit over hnswlib (because hnswlib's tombstone is a
 - cluster: gamma -29% time + 1.3× faster query
 - partial_reset: gamma -28% time
 
-**Status:** 200K complete; 1M running.
+**Status:** 200K complete; 1M complete (re-run on this machine for fair single-thread).
+
+---
+
+## e16 — Cross-dataset replication of e15 ⭐
+
+**Intent:** Confirm e15 finding (gamma wins random/cluster/partial_reset) is
+not SIFT-specific. MSong is high-dim audio (420d). Random-m is synthetic
+uniform. GloVe is text embeddings (100d, angular).
+
+**Method:** Same matrix as e15 — 4 patterns × 2 backends × 2 architectures
+— but cycle through datasets + scales.
+
+**Status:** msong 200K + 1M running; random-m 100K running; glove pending.
+
+---
+
+## e17 — Churn-rate sweep on each pattern
+
+**Intent:** Does gamma's win grow, shrink, or invert as churn intensity
+(deletes-per-batch / insert-batch) ranges from light (0.25×) to heavy (3×)?
+
+**Method:** Each of the 4 delete patterns at SIFT 200K.
+Sweep `del_per_batch / batch ∈ {0.25, 0.5, 1.0, 1.5, 2.0, 3.0}`.
+gamma_v2+hnswlib vs hnswlib direct at each ratio.
+
+**Status:** All 4 patterns running.
+
+---
+
+## e18 — Buffer-capacity ablation
+
+**Intent:** How sensitive is gamma's win to the buffer capacity multiplier?
+Maps the operating range and the failure modes (too-small → flush overhead;
+too-large → buffer scan dominates query latency).
+
+**Method:** Each pattern at SIFT 200K. Sweep
+`buf_capacity = batch * mult` for `mult ∈ {5, 10, 25, 50, 100, 200, 400}`.
+
+**Status:** All 4 patterns running.
+
+---
+
+## e21 — C++ component ablation ⭐
+
+**Intent:** Same shape as e20 but for the *native* C++ index. The C++
+ships with extras (BIC-driven adaptive split, cost-model placement
+controller, spatial routing) — does each pay off?
+
+**Method:** `candy.Index("GammaFresh")` configured with one mechanism
+toggled to a degenerate value at a time: `no_spatial` (split_factor=1e9 →
+single partition), `no_split` (γ=1e9), `cost_off_admit/buffer`,
+`eager_maint`, `lazy_maint`. SIFT 200K, all 4 patterns.
+
+**Finding (preliminary):** the *default* C++ config performs poorly
+(2.6× slower than `no_spatial` on cluster/random; recall=0.006 on
+partial_reset; recall=0.89 on sequential). The simpler `no_spatial`
+variant works fine. Suggests the multi-partition machinery is mis-tuned
+at this workload size. Ablation continuing.
+
+---
+
+## e22 — Tuned C++ config sweep ⭐
+
+**Intent:** Can the C++ multi-partition design be saved by better tuning
+than the shipped defaults? Tests `e04_tuned` (split_factor=4, γ=0.4) and
+`large_split` (matches Python POC defaults: split_factor=16, γ=1.0)
+against `default_cpp`, `no_spatial`, gamma_v2+FaissHNSW (Python POC),
+and FaissHNSW direct.
+
+**Status:** Just launched on all 4 patterns at SIFT 200K.
+
+---
+
+## e20 — Router-component ablation ⭐
+
+**Intent:** Which mechanism of the simplified hybrid router actually pays off?
+- buffer scan in search?
+- buffer-admit on insert?
+- delete absorption (vs always passing to graph)?
+- lazy maintenance?
+
+**Method:** `gamma_py_v3` exposes 4 toggles. Run each variant (one toggle off
+at a time) on the 4 delete patterns (SIFT 200K), plus cross-dataset
+(MSong/GloVe at cluster/random). Compare against hnswlib direct.
+
+**Expected:** delete absorption is the load-bearing mechanism on cluster /
+partial_reset; lazy maint matters for amortizing flush cost; buffer scan
+adds recall on the most-recent inserts; buffer admit lets us be lazy.
+
+**Status:** Running 12 configurations (4 SIFT patterns + 4 msong/glove × cluster/random).
+
+---
+
+## e19 — hnswlib parameter sensitivity
+
+**Intent:** Can hnswlib close the gap to gamma on each pattern by tuning
+M, efC, efS — or is the gap architectural?
+
+**Method:** 12-config grid (M ∈ {16, 32, 64} × efC ∈ {120, 240} × efS ∈
+{80, 160}) for hnswlib direct vs gamma_v2+hnswlib at default params.
+
+**Status:** All 4 patterns running.
 
 ---
 

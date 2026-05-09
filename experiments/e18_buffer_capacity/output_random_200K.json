@@ -1,0 +1,90 @@
+[
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "buf_mult": null,
+    "name": "hnswlib direct",
+    "total_s": 194.24398766923696,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.381455925758928,
+    "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "buf_mult": 5,
+    "name": "gamma_v2+hnswlib(buf=5x)",
+    "total_s": 158.6510859299451,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.1975314639508725,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "buf_mult": 10,
+    "name": "gamma_v2+hnswlib(buf=10x)",
+    "total_s": 161.56187136098742,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.1821339125744998,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "buf_mult": 25,
+    "name": "gamma_v2+hnswlib(buf=25x)",
+    "total_s": 162.72995443455875,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.220351832360029,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "buf_mult": 50,
+    "name": "gamma_v2+hnswlib(buf=50x)",
+    "total_s": 181.38234029896557,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.388386403862387,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "buf_mult": 100,
+    "name": "gamma_v2+hnswlib(buf=100x)",
+    "total_s": 185.49862797558308,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.3910697614774108,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "buf_mult": 200,
+    "name": "gamma_v2+hnswlib(buf=200x)",
+    "total_s": 184.7519577657804,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.3628547577187418,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "buf_mult": 400,
+    "name": "gamma_v2+hnswlib(buf=400x)",
+    "total_s": 188.08573552966118,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.3961784266866744,
+    "recall": 0.9996
+  }
+]

@@ -49,12 +49,29 @@ graceful degradation under churn vs HNSW."
 (which has bad tombstone handling). hnswlib's mark_deleted is much better
 and beats gamma in most scenarios.
 
-**v3 thesis (CURRENT, after e14/e15):** "Gamma's hybrid architecture
-provides **robustness across delete patterns**. hnswlib handles sequential
-(FIFO/LRU) delete well but degrades on random / cluster / bursty patterns,
-where gamma wins by 26-47% in time at same recall."
+**v3 thesis (after e14/e15):** "Gamma's hybrid architecture provides
+**robustness across delete patterns**." hnswlib handles sequential
+(FIFO/LRU) delete well but degrades on random / cluster / bursty patterns;
+gamma wins by 22-30% in time at same recall on those patterns.
 
-This is the defensible claim now.
+**v4 thesis (CURRENT, after fair single-thread + e15-e21):**
+1. At fair single-thread (the only fair comparison — hnswlib defaults to ALL
+   76 cores via `set_num_threads(76)`!), **gamma wins on ALL 4 delete
+   patterns** including sequential (-7% even there).
+2. Gamma's win **grows monotonically with churn intensity** — at extreme
+   ratios (1.5×+), gamma wins 60-85% even on sequential because hnswlib's
+   tombstone bookkeeping starts dominating.
+3. Result generalizes across SIFT / MSong / GloVe / random-m, both 200K and
+   1M scales.
+4. **The load-bearing mechanism is buffer-admit + delete-absorption together
+   (e20 ablation)**. Buffer scan and the C++ "smart" multi-partition
+   routing add overhead with no benefit at these scales (e21 — C++ default
+   config is 2.6× slower than `no_spatial` (1 partition) at same recall).
+
+**Defensible paper claim**: simple hybrid (buffer + absorb-on-delete + lazy
+maint) is the algorithmic contribution; complex routing layers in the C++
+(γ-driven split, BIC, spatial routing, cost-model placement) need
+separate justification or should be downplayed.
 
 ## Key technical knowledge
 
@@ -152,12 +169,29 @@ Supported datasets verified working — see `experiments/_shared/data.py`.
 - Use `_shared/builders.py` for index construction (one source of truth for configs)
 - Use `_shared/data.py` for dataset loading (handles caching)
 
-## Open work
+## Open work / followups
 
-- **e15 1M scale** running in background (~40-60 min)
-- Need to test: extreme churn rate (95%+) — would gamma's lead grow?
-- Need to test: ID re-insertion patterns
-- Need to consider: multi-threaded benchmarks (out of scope but reviewer may ask)
+- e15 1M sequential pattern: still completing (~30-60 min more); other 3
+  patterns done with -21% to -28% gamma wins.
+- e16 cross-dataset 1M (msong + glove): in flight, ~1-2 hr.
+- e17 churn-rate sweeps at extreme ratios (2.0+) on partial_reset and
+  cluster: a few rows still pending.
+- e21 C++ component ablation: 4 of 7 variants done per pattern; remaining
+  cost_off_buffer, eager_maint, lazy_maint variants pending.
+- ID re-insertion patterns: not yet tested.
+- Multi-threaded benchmarks: out of scope but reviewer may ask.
+
+### Critical setup gotcha (you WILL hit this)
+
+`hnswlib.Index` defaults to `num_threads=cpu_count()` (76 here!). Failing to
+call `idx.set_num_threads(1)` makes any single-thread benchmark wildly
+unfair — hnswlib parallelism makes it look like the gamma router LOSES on
+sequential when in reality it wins. The patched `_shared/gamma_py.py`
+forces `num_threads=1` in `HnswlibBackend.__init__`. Do not remove it.
+
+Same for faiss: set `faiss.omp_set_num_threads(1)` in `FaissHnswBackend`,
+and pass `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1`
+on the command line for safety.
 
 ## Contact / blame
 

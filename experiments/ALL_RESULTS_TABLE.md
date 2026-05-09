@@ -1,174 +1,680 @@
-# 所有场景测试结果(汇总)
+# All experiment results (auto-generated)
 
-所有数据来自 `experiments/e0X/output.json` 实测,单线程(OMP=1)。
+Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **561**.
 
----
+## e01_write_throughput
 
-## 1. 写吞吐(纯 insert)
+| scale | recall |
+|---|---|
+| 200K | 0.9917 |
+| 200K | 0.9914 |
+| 200K | 0.9999 |
 
-### e01 SIFT 200K — insert 阶段(不含 final maint)
-| algo | stream_s | throughput | per-insert µs | recall |
-|---|---:|---:|---:|---:|
-| **gamma** | 6.7s | **27,000 ops/s** | 37.1 | 0.9917 |
-| faiss | 43.9s | 4,099 ops/s | 244.0 | 0.9914 |
-| ivf | 2.4s | **73,623 ops/s** | 13.6 | 0.9999 |
+## e02_churn_recall_latency
 
-**gamma 写吞吐 = 6.6× HNSW**(结构性,buffer-first)。IVF 最快但 query 后续慢 50×。
+| dataset | total_s | recall | query_latency_ms_p95 | n_delete |
+|---|---|---|---|---|
+| msong | 36.5 | 0.9930 | 0.253 | 0 |
+| msong | 28.5 | 0.9945 | 0.267 | 0 |
+| msong | 17.3 | 0.9995 | 7.551 | 0 |
+| msong | 108.3 | 0.9965 | 0.232 | 22500 |
+| msong | 29.1 | 0.9955 | 2.356 | 22500 |
+| msong | 7.8 | 1.0000 | 5.199 | 22500 |
+| msong | 71.2 | 0.9970 | 0.211 | 45000 |
+| msong | 28.8 | 0.9945 | 2.268 | 45000 |
+| msong | 6.5 | 1.0000 | 4.996 | 45000 |
+| msong | 40.9 | 0.9965 | 0.195 | 67500 |
+| msong | 30.3 | 0.9875 | 3.183 | 67500 |
+| msong | 3.9 | 1.0000 | 2.601 | 67500 |
+| msong | 26.0 | 0.9965 | 0.185 | 81000 |
+| msong | 28.4 | 0.9670 | 2.235 | 81000 |
+| msong | 2.3 | 1.0000 | 1.379 | 81000 |
+| random-m | 53.6 | 0.7066 | 0.324 | 0 |
+| random-m | 55.4 | 0.6988 | 0.388 | 0 |
+| random-m | 15.1 | 0.6178 | 3.756 | 0 |
+| random-m | 191.5 | 0.7366 | 0.368 | 22500 |
+| random-m | 66.3 | 0.6794 | 3.283 | 22500 |
+| random-m | 9.7 | 1.0000 | 2.833 | 22500 |
+| random-m | 120.9 | 0.7834 | 0.289 | 45000 |
+| random-m | 60.9 | 0.6554 | 3.093 | 45000 |
+| random-m | 5.7 | 1.0000 | 1.821 | 45000 |
+| random-m | 49.4 | 0.8446 | 0.191 | 67500 |
+| random-m | 58.0 | 0.6214 | 3.030 | 67500 |
+| random-m | 3.0 | 1.0000 | 0.887 | 67500 |
+| random-m | 27.5 | 0.9010 | 0.127 | 81000 |
+| random-m | 56.7 | 0.5930 | 3.023 | 81000 |
+| random-m | 1.5 | 1.0000 | 0.319 | 81000 |
+| sift | 47.0 | 0.9898 | 0.190 | 0 |
+| sift | 41.1 | 0.9916 | 0.197 | 0 |
+| sift | 63.1 | 1.0000 | 10.632 | 0 |
+| sift | 319.8 | 0.9944 | 0.214 | 45000 |
+| sift | 67.9 | 0.9886 | 4.491 | 45000 |
+| sift | 43.0 | 1.0000 | 7.889 | 45000 |
+| sift | 191.5 | 0.9936 | 0.169 | 90000 |
+| sift | 60.0 | 0.9832 | 4.415 | 90000 |
+| sift | 25.8 | 0.9998 | 4.587 | 90000 |
+| sift | 89.3 | 0.9968 | 0.125 | 135000 |
+| sift | 59.0 | 0.9646 | 4.492 | 135000 |
+| sift | 13.1 | 0.9998 | 2.182 | 135000 |
+| sift | 49.1 | 0.9980 | 0.095 | 162000 |
+| sift | 59.1 | 0.9428 | 4.398 | 162000 |
+| sift | 6.8 | 1.0000 | 1.000 | 162000 |
+|  | 42.6 | 0.9898 | 0.166 | 0 |
+|  | 35.1 | 0.9916 | 0.159 | 0 |
+|  | 51.9 | 1.0000 | 9.362 | 0 |
+|  | 157.9 | 0.9920 | 0.162 | 0 |
+|  | 258.6 | 0.9944 | 0.159 | 45000 |
+|  | 59.6 | 0.9886 | 4.495 | 45000 |
+|  | 38.6 | 1.0000 | 6.943 | 45000 |
+|  | 136.0 | 0.9934 | 3.536 | 45000 |
+|  | 172.4 | 0.9936 | 0.147 | 90000 |
+|  | 59.5 | 0.9832 | 4.463 | 90000 |
+|  | 26.4 | 0.9998 | 4.715 | 90000 |
+|  | 99.9 | 0.9944 | 2.735 | 90000 |
+|  | 90.8 | 0.9968 | 0.123 | 135000 |
+|  | 59.3 | 0.9646 | 4.492 | 135000 |
+|  | 13.5 | 0.9998 | 2.127 | 135000 |
+|  | 65.9 | 0.9952 | 1.896 | 135000 |
+|  | 50.1 | 0.9980 | 0.101 | 162000 |
+|  | 59.3 | 0.9428 | 4.524 | 162000 |
+|  | 6.8 | 1.0000 | 1.033 | 162000 |
+|  | 46.9 | 0.9980 | 1.518 | 162000 |
+| msong | 36.5 | 0.9930 | 0.253 | 0 |
+| msong | 28.5 | 0.9945 | 0.267 | 0 |
+| msong | 17.3 | 0.9995 | 7.551 | 0 |
+| msong | 108.3 | 0.9965 | 0.232 | 22500 |
+| msong | 29.1 | 0.9955 | 2.356 | 22500 |
+| msong | 7.8 | 1.0000 | 5.199 | 22500 |
+| msong | 71.2 | 0.9970 | 0.211 | 45000 |
+| msong | 28.8 | 0.9945 | 2.268 | 45000 |
+| msong | 6.5 | 1.0000 | 4.996 | 45000 |
+| msong | 40.9 | 0.9965 | 0.195 | 67500 |
+| msong | 30.3 | 0.9875 | 3.183 | 67500 |
+| msong | 3.9 | 1.0000 | 2.601 | 67500 |
+| msong | 26.0 | 0.9965 | 0.185 | 81000 |
+| msong | 28.4 | 0.9670 | 2.235 | 81000 |
+| msong | 2.3 | 1.0000 | 1.379 | 81000 |
+| random-m | 53.6 | 0.7066 | 0.324 | 0 |
+| random-m | 55.4 | 0.6988 | 0.388 | 0 |
+| random-m | 15.1 | 0.6178 | 3.756 | 0 |
+| random-m | 191.5 | 0.7366 | 0.368 | 22500 |
+| random-m | 66.3 | 0.6794 | 3.283 | 22500 |
+| random-m | 9.7 | 1.0000 | 2.833 | 22500 |
+| random-m | 120.9 | 0.7834 | 0.289 | 45000 |
+| random-m | 60.9 | 0.6554 | 3.093 | 45000 |
+| random-m | 5.7 | 1.0000 | 1.821 | 45000 |
+| random-m | 49.4 | 0.8446 | 0.191 | 67500 |
+| random-m | 58.0 | 0.6214 | 3.030 | 67500 |
+| random-m | 3.0 | 1.0000 | 0.887 | 67500 |
+| random-m | 27.5 | 0.9010 | 0.127 | 81000 |
+| random-m | 56.7 | 0.5930 | 3.023 | 81000 |
+| random-m | 1.5 | 1.0000 | 0.319 | 81000 |
+| sift | 47.0 | 0.9898 | 0.190 | 0 |
+| sift | 41.1 | 0.9916 | 0.197 | 0 |
+| sift | 63.1 | 1.0000 | 10.632 | 0 |
+| sift | 319.8 | 0.9944 | 0.214 | 45000 |
+| sift | 67.9 | 0.9886 | 4.491 | 45000 |
+| sift | 43.0 | 1.0000 | 7.889 | 45000 |
+| sift | 191.5 | 0.9936 | 0.169 | 90000 |
+| sift | 60.0 | 0.9832 | 4.415 | 90000 |
+| sift | 25.8 | 0.9998 | 4.587 | 90000 |
+| sift | 89.3 | 0.9968 | 0.125 | 135000 |
+| sift | 59.0 | 0.9646 | 4.492 | 135000 |
+| sift | 13.1 | 0.9998 | 2.182 | 135000 |
+| sift | 49.1 | 0.9980 | 0.095 | 162000 |
+| sift | 59.1 | 0.9428 | 4.398 | 162000 |
+| sift | 6.8 | 1.0000 | 1.000 | 162000 |
 
-### legacy 9-scenario(SIFT 200K, total 时间含 maint+final query)
-| 场景 | gamma total | faiss total | ivf total | gamma recall | faiss recall |
-|---|---:|---:|---:|---:|---:|
-| insert_only/200K | **8.1s** ⚡(写阶段)| 31.4s | **2.2s** | 0.9928 | 0.9913 |
-| insdel_stream(50%)/200K | **8.3s** ⚡ | 32.0s | **2.3s** | 0.9921 | 0.9895 |
-| streaming/200K | 43.6s | **34.5s** 🏆 | 98.1s | 0.9915 | 0.9914 |
-| burst/200K | 44.0s | 31.6s | **12.5s** 🏆 | 0.9928 | 0.9913 |
-| drift/200K | 95.3s | 55.4s | **26.3s** 🏆 | 0.9943 | 0.9823 |
-| **bulk_delete(30%)/1M** | **61.5s** 🏆 | 316s | **15.1s** | **0.9999** | 0.9728 |
-| churn/200K | 95.1s | **49.3s** 🏆 | 58.6s | 0.9942 | 0.9896 |
+## e03_hnsw_rebuild_ablation
 
----
+| total_s | recall | query_latency_ms_p95 | n_delete |
+|---|---|---|---|
+| 309.4 | 0.9944 | 0.206 | 45000 |
+| 63.4 | 0.9886 | 4.620 | 45000 |
+| 323.8 | 0.9934 | 0.173 | 45000 |
+| 324.8 | 0.9934 | 0.172 | 45000 |
+| 152.1 | 0.9934 | 3.591 | 45000 |
+| 192.3 | 0.9936 | 0.170 | 90000 |
+| 63.4 | 0.9832 | 4.511 | 90000 |
+| 217.9 | 0.9944 | 0.158 | 90000 |
+| 228.3 | 0.9944 | 0.158 | 90000 |
+| 113.7 | 0.9944 | 2.754 | 90000 |
+| 106.4 | 0.9968 | 0.141 | 135000 |
+| 63.8 | 0.9646 | 4.708 | 135000 |
+| 130.6 | 0.9952 | 0.140 | 135000 |
+| 127.3 | 0.9952 | 0.128 | 135000 |
+| 73.7 | 0.9952 | 1.887 | 135000 |
+| 56.1 | 0.9980 | 0.119 | 162000 |
+| 63.4 | 0.9428 | 4.888 | 162000 |
+| 74.6 | 0.9980 | 0.114 | 162000 |
+| 74.4 | 0.9980 | 0.095 | 162000 |
+| 53.8 | 0.9980 | 1.552 | 162000 |
 
-## 2. Churn 下 recall 退化(e02:3 数据集 × 5 删除比例)
+## e04_smart_routing
 
-### SIFT(1M × 128d)
-| df | gamma recall | HNSW recall | gamma p95 | HNSW p95 |
-|---:|---:|---:|---:|---:|
-| 0.00 | 0.9898 | 0.9916 | 0.19ms | 0.20ms |
-| 0.25 | 0.9944 | 0.9886 | 0.21ms | **4.49ms** ⚠️ |
-| 0.50 | 0.9936 | 0.9832 | 0.17ms | 4.42ms |
-| 0.75 | 0.9968 | 0.9646 | 0.13ms | 4.49ms |
-| 0.90 | **0.9980** | **0.9428** ⚠️ | **0.10ms** | 4.40ms |
+| total_s | recall |
+|---|---|
+| 45.0 | 1.0000 |
+| 63.3 | 1.0000 |
 
-### MSong(992K × 420d)
-| df | gamma recall | HNSW recall | gamma p95 | HNSW p95 |
-|---:|---:|---:|---:|---:|
-| 0.00 | 0.9930 | 0.9945 | 0.25ms | 0.27ms |
-| 0.25 | 0.9965 | 0.9955 | 0.23ms | **2.36ms** ⚠️ |
-| 0.50 | 0.9970 | 0.9945 | 0.21ms | 2.27ms |
-| 0.75 | 0.9965 | 0.9875 | 0.20ms | 3.18ms |
-| 0.90 | **0.9965** | **0.9670** ⚠️ | **0.18ms** | 2.24ms |
+## e05_sliding_window
 
-### Random-m(100K × 128d, 合成无聚类)
-| df | gamma recall | HNSW recall | gamma p95 | HNSW p95 |
-|---:|---:|---:|---:|---:|
-| 0.00 | 0.7066 | 0.6988 | 0.32ms | 0.39ms |
-| 0.25 | 0.7366 | 0.6794 | 0.37ms | **3.28ms** ⚠️ |
-| 0.50 | 0.7834 | 0.6554 | 0.29ms | 3.09ms |
-| 0.75 | 0.8446 | 0.6214 | 0.19ms | 3.03ms |
-| 0.90 | **0.9010** | **0.5930** ⚠️⚠️ | **0.13ms** | 3.02ms |
+| scale | total_s | recall | query_latency_ms_p95 | n_delete |
+|---|---|---|---|---|
+| 200K | 49.5 | 0.9979 | 0.103 | 175000 |
+| 200K | 100.0 | 0.9156 | 4.566 | 175000 |
+| 200K | 17.4 | 1.0000 | 0.956 | 175000 |
+| 200K | 56.5 | 0.9984 | 0.103 | 170000 |
+| 200K | 89.8 | 0.9274 | 4.518 | 170000 |
+| 200K | 16.2 | 1.0000 | 0.981 | 170000 |
+| 200K | 83.1 | 0.9979 | 0.120 | 160000 |
+| 200K | 90.2 | 0.9425 | 4.670 | 160000 |
+| 200K | 27.7 | 1.0000 | 1.565 | 160000 |
+| 1M | 416.1 | 0.9939 | 0.170 | 880000 |
+| 1M | 555.6 | 0.8530 | 23.972 | 880000 |
+| 1M | 134.9 | 0.9990 | 7.170 | 880000 |
+| 1M | 512.0 | 0.9931 | 0.184 | 860000 |
+| 1M | 552.0 | 0.8682 | 24.368 | 860000 |
+| 1M | 143.0 | 0.9998 | 8.044 | 860000 |
+| 1M | 609.7 | 0.9925 | 0.174 | 820000 |
+| 1M | 509.0 | 0.8892 | 23.275 | 820000 |
+| 1M | 177.5 | 0.9999 | 9.553 | 820000 |
 
-**HNSW recall 跨 3 数据集都跌**(SIFT -5%, MSong -3%, **Random -11%**),gamma 都稳。
+## e06_bulk_delete
 
----
+| recall | n_delete |
+|---|---|
+| 1.0000 | 300000 |
+| 0.9728 | 300000 |
+| 0.9921 | 300000 |
 
-## 3. HNSW + 周期 rebuild 能不能追上(e03,SIFT 200K)
+## e07_full_scenario_sweep
 
-| df | 算法 | total | recall | qry p95 |
-|---:|---|---:|---:|---:|
-| 0.50 | gamma | 192s | **0.994** | **0.17ms** |
-| 0.50 | faiss(无 rebuild) | 63s | 0.983 | 4.51ms |
-| 0.50 | faiss + rebuild 每 1 批 | 218s | 0.994 | 0.16ms |
-| 0.50 | faiss + rebuild 每 4 批 | 228s | 0.994 | 0.16ms |
-| 0.50 | faiss + rebuild 每 16 批 | **114s** | 0.994 | **2.75ms** ⚠️ |
-| 0.90 | gamma | 56s | 0.998 | 0.12ms |
-| 0.90 | faiss(无 rebuild) | 63s | 0.943 | 4.89ms |
-| 0.90 | faiss + rebuild 每 16 批 | **54s** | 0.998 | 1.55ms |
+| total_s | recall | query_latency_ms_p95 | n_delete |
+|---|---|---|---|
+| 8.1 | 0.9928 |  |  |
+| 31.4 | 0.9913 |  |  |
+| 2.2 | 0.9999 |  |  |
+| 8.3 | 0.9921 |  | 22500 |
+| 32.0 | 0.9895 |  | 22500 |
+| 2.3 | 0.9998 |  | 22500 |
+| 43.6 | 0.9915 | 0.157 |  |
+| 34.5 | 0.9914 | 0.158 |  |
+| 98.1 | 0.9999 | 9.782 |  |
+| 44.0 | 0.9928 |  |  |
+| 31.6 | 0.9913 |  |  |
+| 12.5 | 0.9999 |  |  |
+| 95.3 | 0.9943 | 0.170 | 90000 |
+| 55.4 | 0.9823 | 4.579 | 90000 |
+| 26.3 | 0.9998 | 5.870 | 90000 |
+| 61.5 | 0.9999 |  | 300000 |
+| 316.0 | 0.9728 |  | 300000 |
+| 15.1 | 0.9921 |  | 300000 |
+| 95.1 | 0.9942 | 6.152 |  |
+| 49.3 | 0.9896 | 3.802 |  |
+| 58.6 | 0.9998 | 5.317 |  |
 
-**HNSW + rebuild 能恢复 recall,但 query latency 始终 13-30× gamma**(rebuild 之间 graph 又脏)。
+## e08_recall_source_ablation
 
----
+| total_s | recall | query_latency_ms_p95 |
+|---|---|---|
+| 81.1 | 0.9944 | 9.825 |
+| 621.3 | 0.9936 | 0.139 |
+| 58.2 | 0.9832 | 4.393 |
+| 661.1 | 0.9944 | 0.135 |
+| 53.6 | 0.9962 | 6.321 |
+| 326.5 | 0.9962 | 0.125 |
+| 58.7 | 0.9646 | 4.422 |
+| 352.9 | 0.9952 | 0.113 |
+| 35.3 | 0.9984 | 3.609 |
+| 171.3 | 0.9980 | 0.091 |
+| 58.6 | 0.9428 | 4.387 |
+| 189.1 | 0.9980 | 0.085 |
 
-## 4. 滑动窗口 streaming(e05,2 scales × 3 lags × 3 algos)
+## e09_more_baselines
 
-### SIFT 200K
-| lag | algo | total | recall | qry p95 |
-|---:|---|---:|---:|---:|
-| 2 | **gamma** | **49.5s** 🏆 | **0.998** | **0.10ms** |
-| 2 | faiss | 100.0s | 0.916 | 4.57ms ⚠️ |
-| 2 | ivf | 17.4s | 1.000 | 0.96ms |
-| 4 | **gamma** | **56.5s** 🏆 | **0.998** | **0.10ms** |
-| 4 | faiss | 89.8s | 0.927 | 4.52ms ⚠️ |
-| 4 | ivf | 16.2s | 1.000 | 0.98ms |
-| 8 | **gamma** | **83.1s** 🏆 | **0.998** | **0.12ms** |
-| 8 | faiss | 90.2s | 0.943 | 4.67ms ⚠️ |
-| 8 | ivf | 27.7s | 1.000 | 1.57ms |
+| recall |
+|---|
+| 0.9912 |
+| 0.9944 |
+| 0.9904 |
+| 0.9986 |
+| 0.3652 |
+| 0.9836 |
+| 0.9831 |
+| 0.9795 |
+| 0.9992 |
+| 0.3140 |
+| 0.9912 |
+| 0.9944 |
+| 0.9904 |
+| 0.9986 |
+| 0.3652 |
 
-### SIFT 1M
-| lag | algo | total | recall | qry p95 |
-|---:|---|---:|---:|---:|
-| 2 | **gamma** | **416s** 🏆 | **0.994** | **0.17ms** |
-| 2 | faiss | 556s | **0.853** ⚠️ | 24.0ms ⚠️ |
-| 2 | ivf | 135s | 0.999 | 7.17ms |
-| 4 | **gamma** | **512s** 🏆 | **0.993** | **0.18ms** |
-| 4 | faiss | 552s | **0.868** ⚠️ | 24.4ms ⚠️ |
-| 4 | ivf | 143s | 1.000 | 8.04ms |
-| 8 | gamma | 610s | **0.992** | **0.17ms** |
-| 8 | **faiss** | **509s** | 0.889 | 23.3ms ⚠️ |
-| 8 | ivf | 178s | 1.000 | 9.55ms |
+## e10_external_baselines
 
-**lag=2/4 时 gamma 时间 + recall 双胜**;lag=8 gamma 输 +20% 时间(maint 工作量大),但 recall 仍 +10%。
+| recall |
+|---|
+| 0.9836 |
+| 0.9836 |
+| 0.8723 |
+| 0.5405 |
+| 0.9912 |
+| 0.9916 |
+| 0.9416 |
+| 0.6246 |
 
----
+## e11_hnswlib_streaming
 
-## 5. Bulk delete(e06,SIFT 1M)
+| total_s | recall | query_latency_ms_p95 | n_delete |
+|---|---|---|---|
+| 332.6 | 0.9939 | 0.134 | 880000 |
+| 125.2 | 0.9956 | 0.226 | 880000 |
+| 48.8 | 0.9941 | 0.020 | 880000 |
+| 34.4 | 0.9986 | 0.068 | 175000 |
+| 11.5 | 0.9980 | 0.095 | 175000 |
+| 3.5 | 0.9984 | 0.005 | 175000 |
 
-| algo | op_total | final query | recall |
-|---|---:|---:|---:|
-| **gamma** | **40.5s** 🏆 | 63.3ms | **1.0000** 🏆 |
-| faiss | 289.5s ⚠️ | 25.8ms | 0.9728 |
-| ivf | **15.7s** | 11.0ms | 0.9921 |
+## e12_gamma_with_hnswlib_backend
 
-**gamma op 时间 -86% vs HNSW + perfect recall**(legacy 数据 gamma 61.5s 是不同 scale 配置的旧 baseline)。
+| total_s | recall | query_latency_ms_p95 | n_delete |
+|---|---|---|---|
+| 14.6 | 0.9982 | 0.101 | 175000 |
+| 11.7 | 0.9980 | 0.104 | 175000 |
+| 34.4 | 0.9986 | 0.068 | 175000 |
 
----
+## e13_fair_backend_comparison
 
-## 6. 智能 partition routing 是否有用(e04)
+|  |
+||
+|  |
+|  |
+|  |
+|  |
+|  |
+|  |
 
-| 模式 | insert | query | total | recall |
-|---|---:|---:|---:|---:|
-| **SMART**(算距离选 partition) | 10.7s | 34.3s | **45.0s** | 1.0000 |
-| **DUMB**(round-robin) | 8.4s | **54.9s** ⚠️ | 63.3s | 1.0000 |
+## e14_optimized_buffer
 
-**同 recall=1.0 下 SMART query 1.6× 快、total -28%。** routing 设计有效。
+| name | pattern | total_s | recall | query_latency_ms_p95 | n_delete |
+|---|---|---|---|---|---|
+| gamma_v2+hnswlib | sequential | 15.5 | 0.9990 | 0.104 | 177500 |
+| hnswlib direct | sequential | 12.3 | 0.9984 | 0.105 | 177500 |
+| gamma_v2+faiss_hnsw | sequential | 23.4 | 0.9040 | 0.183 | 177500 |
+| faiss_hnsw direct | sequential | 23.5 | 0.9030 | 0.187 | 177500 |
+| gamma_v2+hnswlib | random | 8.8 | 0.9996 | 0.072 | 177500 |
+| hnswlib direct | random | 12.1 | 0.9992 | 0.096 | 177500 |
+| gamma_v2+faiss_hnsw | random | 17.9 | 0.9268 | 0.162 | 177500 |
+| faiss_hnsw direct | random | 23.7 | 0.9042 | 0.201 | 177500 |
+| gamma_v2+hnswlib | cluster | 10.7 | 0.9992 | 0.114 | 177500 |
+| hnswlib direct | cluster | 20.2 | 0.9996 | 0.185 | 177500 |
+| gamma_v2+faiss_hnsw | cluster | 17.0 | 0.7564 | 0.172 | 177500 |
+| faiss_hnsw direct | cluster | 23.5 | 0.7092 | 0.213 | 177500 |
 
----
+## e15_delete_pattern_matrix
 
-## 7. Recall 来自哪条路径(e08,关键 ablation)
+| name | scale | pattern | total_s | recall | query_latency_ms_p95 | n_alive | n_delete |
+|---|---|---|---|---|---|---|---|
+| gamma_v2+hnswlib | 1M | cluster | 542.7 | 0.9876 | 0.542 | 555000 | 445000 |
+| hnswlib direct | 1M | cluster | 686.5 | 0.9892 | 0.666 | 555000 | 445000 |
+| gamma_v2+faiss_hnsw | 1M | cluster | 456.3 | 0.9705 | 0.538 | 555000 | 445000 |
+| faiss_hnsw direct | 1M | cluster | 477.9 | 0.9673 | 0.541 | 555000 | 445000 |
+| gamma_v2+hnswlib | 1M | partial_reset | 1044.0 | 0.9968 | 1.764 | 120000 | 880000 |
+| hnswlib direct | 1M | partial_reset | 1380.8 | 0.9974 | 1.954 | 120000 | 880000 |
+| gamma_v2+faiss_hnsw | 1M | partial_reset | 359.1 | 0.8790 | 0.567 | 120000 | 880000 |
+| faiss_hnsw direct | 1M | partial_reset | 426.9 | 0.8691 | 0.602 | 120000 | 880000 |
+| gamma_v2+hnswlib | 1M | random | 1191.7 | 0.9958 | 2.137 | 110000 | 890000 |
+| hnswlib direct | 1M | random | 1645.9 | 0.9965 | 2.346 | 110000 | 890000 |
+| gamma_v2+faiss_hnsw | 1M | random | 332.2 | 0.8677 | 0.548 | 110000 | 890000 |
+| faiss_hnsw direct | 1M | random | 394.6 | 0.8512 | 0.629 | 110000 | 890000 |
+| gamma_v2+hnswlib | 1M | sequential | 2231.1 | 0.9952 | 3.108 | 110000 | 890000 |
+| hnswlib direct | 1M | sequential | 1602.6 | 0.9954 | 2.393 | 110000 | 890000 |
+| gamma_v2+faiss_hnsw | 1M | sequential | 369.6 | 0.8280 | 0.523 | 110000 | 890000 |
+| faiss_hnsw direct | 1M | sequential | 340.7 | 0.8274 | 0.507 | 110000 | 890000 |
+| gamma_v2+hnswlib | 200K | sequential | 195.3 | 0.9990 | 1.497 | 22500 | 177500 |
+| hnswlib direct | 200K | sequential | 209.2 | 0.9984 | 1.510 | 22500 | 177500 |
+| gamma_v2+faiss_hnsw | 200K | sequential | 60.6 | 0.9040 | 0.425 | 22500 | 177500 |
+| faiss_hnsw direct | 200K | sequential | 61.5 | 0.9030 | 0.471 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | random | 159.6 | 0.9996 | 1.210 | 22500 | 177500 |
+| hnswlib direct | 200K | random | 217.6 | 0.9990 | 1.622 | 22500 | 177500 |
+| gamma_v2+faiss_hnsw | 200K | random | 53.8 | 0.9268 | 0.448 | 22500 | 177500 |
+| faiss_hnsw direct | 200K | random | 69.4 | 0.9042 | 0.506 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | cluster | 186.4 | 0.9992 | 1.352 | 22500 | 177500 |
+| hnswlib direct | 200K | cluster | 241.6 | 0.9994 | 1.683 | 22500 | 177500 |
+| gamma_v2+faiss_hnsw | 200K | cluster | 52.9 | 0.9286 | 0.447 | 22500 | 177500 |
+| faiss_hnsw direct | 200K | cluster | 67.8 | 0.9104 | 0.491 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | partial_reset | 149.2 | 0.9988 | 1.235 | 40000 | 160000 |
+| hnswlib direct | 200K | partial_reset | 192.8 | 0.9994 | 1.525 | 40000 | 160000 |
+| gamma_v2+faiss_hnsw | 200K | partial_reset | 54.1 | 0.9588 | 0.428 | 40000 | 160000 |
+| faiss_hnsw direct | 200K | partial_reset | 76.8 | 0.9454 | 0.480 | 40000 | 160000 |
 
-| df | 模式 | total | recall | qry p95 |
-|---:|---|---:|---:|---:|
-| 0.50 | gamma 默认 | 81s | **0.994** | 9.83ms |
-| 0.50 | **gamma 强制 buffer 排空** | 621s | **0.994** | 0.14ms |
-| 0.50 | HNSW 无 rebuild | 58s | 0.983 | 4.39ms |
-| 0.50 | HNSW + 每批 rebuild | 661s | **0.994** | 0.14ms |
-| 0.90 | gamma 默认 | 35s | **0.998** | 3.61ms |
-| 0.90 | **gamma 强制 buffer 排空** | 171s | **0.998** | 0.09ms |
-| 0.90 | HNSW 无 rebuild | 59s | 0.943 | 4.39ms |
-| 0.90 | HNSW + 每批 rebuild | 189s | **0.998** | 0.09ms |
+## e16_cross_dataset
 
-**gamma full vs gamma graph_only 同 recall** → buffer scan 不是 recall 来源
-**HNSW 无 rebuild vs 有 rebuild 差 0.05** → HNSW 没有 fallback,gamma 有
+| name | scale | dataset | pattern | total_s | recall | query_latency_ms_p95 | n_alive | n_delete |
+|---|---|---|---|---|---|---|---|---|
+| gamma_v2+hnswlib | 200K | glove | sequential | 507.4 | 0.9340 | 2.633 | 22500 | 177500 |
+| hnswlib direct | 200K | glove | sequential | 447.8 | 0.9335 | 2.982 | 22500 | 177500 |
+| gamma_v2+faiss_hnsw | 200K | glove | sequential | 77.3 | 0.7110 | 0.551 | 22500 | 177500 |
+| faiss_hnsw direct | 200K | glove | sequential | 77.8 | 0.7185 | 0.538 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | glove | random | 303.6 | 0.9420 | 2.080 | 22500 | 177500 |
+| hnswlib direct | 200K | glove | random | 415.8 | 0.9430 | 2.756 | 22500 | 177500 |
+| gamma_v2+faiss_hnsw | 200K | glove | random | 56.3 | 0.7535 | 0.482 | 22500 | 177500 |
+| faiss_hnsw direct | 200K | glove | random | 74.4 | 0.7240 | 0.584 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | glove | cluster | 436.1 | 0.9530 | 3.203 | 22500 | 177500 |
+| hnswlib direct | 200K | glove | cluster | 643.1 | 0.9630 | 4.525 | 22500 | 177500 |
+| gamma_v2+faiss_hnsw | 200K | glove | cluster | 40.7 | 0.7160 | 0.435 | 22500 | 177500 |
+| faiss_hnsw direct | 200K | glove | cluster | 62.9 | 0.6485 | 0.558 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | glove | partial_reset | 190.2 | 0.9155 | 1.431 | 40000 | 160000 |
+| hnswlib direct | 200K | glove | partial_reset | 235.5 | 0.9230 | 1.740 | 40000 | 160000 |
+| gamma_v2+faiss_hnsw | 200K | glove | partial_reset | 49.2 | 0.7840 | 0.413 | 40000 | 160000 |
+| faiss_hnsw direct | 200K | glove | partial_reset | 60.8 | 0.7760 | 0.440 | 40000 | 160000 |
+| gamma_v2+hnswlib | 200K | msong | sequential | 692.6 | 0.9985 | 3.849 | 22500 | 177500 |
+| hnswlib direct | 200K | msong | sequential | 566.2 | 0.9990 | 4.001 | 22500 | 177500 |
+| gamma_v2+faiss_hnsw | 200K | msong | sequential | 100.8 | 0.9420 | 0.648 | 22500 | 177500 |
+| faiss_hnsw direct | 200K | msong | sequential | 99.7 | 0.9420 | 0.617 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | msong | random | 388.1 | 0.9985 | 2.623 | 22500 | 177500 |
+| hnswlib direct | 200K | msong | random | 488.4 | 0.9990 | 3.288 | 22500 | 177500 |
+| gamma_v2+faiss_hnsw | 200K | msong | random | 69.9 | 0.9565 | 0.542 | 22500 | 177500 |
+| faiss_hnsw direct | 200K | msong | random | 91.9 | 0.9420 | 0.625 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | msong | cluster | 411.1 | 0.9995 | 3.010 | 22500 | 177500 |
+| hnswlib direct | 200K | msong | cluster | 574.2 | 0.9995 | 3.767 | 22500 | 177500 |
+| gamma_v2+faiss_hnsw | 200K | msong | cluster | 54.0 | 0.9005 | 0.476 | 22500 | 177500 |
+| faiss_hnsw direct | 200K | msong | cluster | 79.7 | 0.8660 | 0.547 | 22500 | 177500 |
+| gamma_v2+hnswlib | 100K | random-m | sequential | 321.6 | 0.9292 | 3.625 | 11250 | 88750 |
+| hnswlib direct | 100K | random-m | sequential | 282.6 | 0.9352 | 3.698 | 11250 | 88750 |
+| gamma_v2+faiss_hnsw | 100K | random-m | sequential | 88.3 | 0.5538 | 0.726 | 11250 | 88750 |
+| faiss_hnsw direct | 100K | random-m | sequential | 94.4 | 0.5536 | 0.778 | 11250 | 88750 |
+| gamma_v2+hnswlib | 100K | random-m | random | 228.4 | 0.9258 | 3.036 | 11250 | 88750 |
+| hnswlib direct | 100K | random-m | random | 299.2 | 0.9376 | 3.638 | 11250 | 88750 |
+| gamma_v2+faiss_hnsw | 100K | random-m | random | 68.5 | 0.5882 | 0.745 | 11250 | 88750 |
+| faiss_hnsw direct | 100K | random-m | random | 97.3 | 0.5410 | 0.796 | 11250 | 88750 |
+| gamma_v2+hnswlib | 100K | random-m | cluster | 347.5 | 0.9568 | 5.308 | 11250 | 88750 |
+| hnswlib direct | 100K | random-m | cluster | 543.9 | 0.9728 | 7.635 | 11250 | 88750 |
+| gamma_v2+faiss_hnsw | 100K | random-m | cluster | 57.0 | 0.4994 | 0.686 | 11250 | 88750 |
+| faiss_hnsw direct | 100K | random-m | cluster | 89.6 | 0.3796 | 0.809 | 11250 | 88750 |
+| gamma_v2+hnswlib | 100K | random-m | partial_reset | 171.5 | 0.8738 | 2.412 | 20000 | 80000 |
+| hnswlib direct | 100K | random-m | partial_reset | 223.8 | 0.8766 | 3.024 | 20000 | 80000 |
+| gamma_v2+faiss_hnsw | 100K | random-m | partial_reset | 68.4 | 0.6304 | 0.656 | 20000 | 80000 |
+| faiss_hnsw direct | 100K | random-m | partial_reset | 89.4 | 0.6016 | 0.715 | 20000 | 80000 |
 
----
+## e17_churn_rate_sweep
 
-## 一表浓缩:每场景的 winner
+| name | scale | pattern | ratio | total_s | recall | query_latency_ms_p95 | n_alive | n_delete |
+|---|---|---|---|---|---|---|---|---|
+| gamma_v2+hnswlib | 200K | cluster | 0.25 | 74.3 | 0.9952 | 0.336 | 155625 | 44375 |
+| hnswlib direct | 200K | cluster | 0.25 | 75.5 | 0.9954 | 0.340 | 155625 | 44375 |
+| gamma_v2+hnswlib | 200K | cluster | 0.5 | 88.7 | 0.9968 | 0.445 | 111250 | 88750 |
+| hnswlib direct | 200K | cluster | 0.5 | 96.3 | 0.9970 | 0.472 | 111250 | 88750 |
+| gamma_v2+hnswlib | 200K | cluster | 1.0 | 162.1 | 0.9992 | 1.159 | 22500 | 177500 |
+| hnswlib direct | 200K | cluster | 1.0 | 213.3 | 0.9994 | 1.488 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | cluster | 1.5 | 329.2 | 0.9638 | 12.918 | 1250 | 198750 |
+| hnswlib direct | 200K | cluster | 1.5 | 2194.1 | 0.9994 | 32.555 | 1250 | 198750 |
+| gamma_v2+hnswlib | 200K | cluster | 2.0 | 178.9 | 0.9998 | 2.298 | 5000 | 195000 |
+| hnswlib direct | 200K | cluster | 2.0 | 631.4 | 1.0000 | 6.698 | 5000 | 195000 |
+| gamma_v2+hnswlib | 200K | partial_reset | 0.25 | 67.5 | 0.9932 | 0.299 | 160000 | 40000 |
+| hnswlib direct | 200K | partial_reset | 0.25 | 69.7 | 0.9926 | 0.309 | 160000 | 40000 |
+| gamma_v2+hnswlib | 200K | partial_reset | 0.5 | 75.9 | 0.9932 | 0.384 | 120000 | 80000 |
+| hnswlib direct | 200K | partial_reset | 0.5 | 83.9 | 0.9950 | 0.405 | 120000 | 80000 |
+| gamma_v2+hnswlib | 200K | partial_reset | 1.0 | 130.5 | 0.9988 | 1.044 | 40000 | 160000 |
+| hnswlib direct | 200K | partial_reset | 1.0 | 164.6 | 0.9994 | 1.291 | 40000 | 160000 |
+| gamma_v2+hnswlib | 200K | partial_reset | 1.5 | 674.5 | 0.9216 | 12.218 | 17500 | 182500 |
+| hnswlib direct | 200K | partial_reset | 1.5 | 2470.9 | 0.9982 | 20.148 | 17500 | 182500 |
+| gamma_v2+hnswlib | 200K | random | 0.25 | 69.4 | 0.9946 | 0.305 | 155625 | 44375 |
+| hnswlib direct | 200K | random | 0.25 | 71.1 | 0.9946 | 0.309 | 155625 | 44375 |
+| gamma_v2+hnswlib | 200K | random | 0.5 | 81.1 | 0.9940 | 0.398 | 111250 | 88750 |
+| hnswlib direct | 200K | random | 0.5 | 90.5 | 0.9948 | 0.416 | 111250 | 88750 |
+| gamma_v2+hnswlib | 200K | random | 1.0 | 161.1 | 0.9996 | 1.185 | 22500 | 177500 |
+| hnswlib direct | 200K | random | 1.0 | 206.2 | 0.9990 | 1.499 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | random | 1.5 | 279.1 | 1.0000 | 4.896 | 1250 | 198750 |
+| hnswlib direct | 200K | random | 1.5 | 991.9 | 1.0000 | 13.228 | 1250 | 198750 |
+| gamma_v2+hnswlib | 200K | random | 2.0 | 213.7 | 1.0000 | 2.778 | 5000 | 195000 |
+| hnswlib direct | 200K | random | 2.0 | 727.8 | 1.0000 | 7.694 | 5000 | 195000 |
+| gamma_v2+hnswlib | 200K | random | 3.0 | 256.2 | 1.0000 | 3.487 | 5000 | 195000 |
+| hnswlib direct | 200K | random | 3.0 | 569.6 | 1.0000 | 6.332 | 5000 | 195000 |
+| gamma_v2+hnswlib | 200K | sequential | 0.25 | 74.0 | 0.9928 | 0.328 | 155625 | 44375 |
+| hnswlib direct | 200K | sequential | 0.25 | 73.3 | 0.9928 | 0.331 | 155625 | 44375 |
+| gamma_v2+hnswlib | 200K | sequential | 0.5 | 92.7 | 0.9942 | 0.443 | 111250 | 88750 |
+| hnswlib direct | 200K | sequential | 0.5 | 91.3 | 0.9948 | 0.446 | 111250 | 88750 |
+| gamma_v2+hnswlib | 200K | sequential | 1.0 | 266.5 | 0.9990 | 1.551 | 22500 | 177500 |
+| hnswlib direct | 200K | sequential | 1.0 | 232.4 | 0.9984 | 1.809 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | sequential | 1.5 | 406.9 | 0.9892 | 9.664 | 1250 | 198750 |
+| hnswlib direct | 200K | sequential | 1.5 | 1002.1 | 1.0000 | 14.165 | 1250 | 198750 |
+| gamma_v2+hnswlib | 200K | sequential | 2.0 | 344.4 | 0.9998 | 8.683 | 5000 | 195000 |
+| hnswlib direct | 200K | sequential | 2.0 | 722.3 | 0.9998 | 7.801 | 5000 | 195000 |
+| gamma_v2+hnswlib | 200K | sequential | 3.0 | 372.6 | 0.7782 | 4.925 | 5000 | 195000 |
+| hnswlib direct | 200K | sequential | 3.0 | 529.9 | 0.9998 | 5.526 | 5000 | 195000 |
 
-| 场景 | 业务对应 | 数据规模 | gamma | faiss(HNSW)| ivf | 结论 |
-|---|---|---|:---:|:---:|:---:|---|
-| insert_only | 离线 ETL build | 200K | 8.1s | 31.4s | **2.2s** | IVF 主场,gamma 写超快但有 maint cost |
-| insdel_stream | Kafka log 摄入 | 200K | 8.3s | 32s | **2.3s** | IVF 主场 |
-| streaming | 在线索引 + 周期 query | 200K | 43.6s | **34.5s** | 98.1s | HNSW 主场(无 delete) |
-| **streaming_sliding(2)** | **news feed** | 200K/1M | **49s/416s** 🏆 | 100s/556s | 17s/135s | **gamma 时间 -25 ~ -50% + recall +9 ~ +14%** |
-| streaming_sliding(4) | 较长 retention | 200K/1M | **56s/512s** 🏆 | 90s/552s | 16s/143s | gamma -7 ~ -37% |
-| burst | 每日批量摄入 | 200K | 44s | 31.6s | **12.5s** | IVF/HNSW 主场 |
-| drift | 持续扩张+清理 | 200K | 95s | 55s | **26s** | trade-off,gamma recall 高 |
-| **bulk_delete** | **GDPR 删除** | 1M | **40.5s** 🏆 | 290s | 15.7s | **gamma -86% + recall 1.0** |
-| churn | cache eviction | 200K | 95s | **49s** | 58s | gamma maint 没配好就输 |
-| (ablation)smart routing | 设计验证 | 200K | SMART 28% 快 | — | — | 智能 routing 有效 |
-| (ablation)recall 来源 | 设计验证 | 200K | 双路径 | 单路径 | — | gamma graceful degradation |
+## e18_buffer_capacity
 
----
+| name | scale | pattern | buf_mult | total_s | recall | query_latency_ms_p95 | n_alive | n_delete |
+|---|---|---|---|---|---|---|---|---|
+| hnswlib direct | 200K | cluster | None | 200.2 | 0.9994 | 1.389 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=5x) | 200K | cluster | 5 | 159.8 | 0.9992 | 1.155 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=10x) | 200K | cluster | 10 | 161.9 | 0.9992 | 1.161 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=25x) | 200K | cluster | 25 | 164.9 | 0.9992 | 1.174 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=50x) | 200K | cluster | 50 | 181.4 | 0.9992 | 1.365 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=100x) | 200K | cluster | 100 | 186.9 | 0.9992 | 1.353 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=200x) | 200K | cluster | 200 | 184.8 | 0.9992 | 1.327 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=400x) | 200K | cluster | 400 | 186.9 | 0.9992 | 1.391 | 22500 | 177500 |
+| hnswlib direct | 200K | partial_reset | None | 156.3 | 0.9994 | 1.238 | 40000 | 160000 |
+| gamma_v2+hnswlib(buf=5x) | 200K | partial_reset | 5 | 126.9 | 0.9988 | 1.041 | 40000 | 160000 |
+| gamma_v2+hnswlib(buf=10x) | 200K | partial_reset | 10 | 130.5 | 0.9988 | 1.037 | 40000 | 160000 |
+| gamma_v2+hnswlib(buf=25x) | 200K | partial_reset | 25 | 129.3 | 0.9988 | 1.044 | 40000 | 160000 |
+| gamma_v2+hnswlib(buf=50x) | 200K | partial_reset | 50 | 131.7 | 0.9988 | 1.065 | 40000 | 160000 |
+| gamma_v2+hnswlib(buf=100x) | 200K | partial_reset | 100 | 145.8 | 0.9988 | 1.171 | 40000 | 160000 |
+| gamma_v2+hnswlib(buf=200x) | 200K | partial_reset | 200 | 150.6 | 0.9988 | 1.215 | 40000 | 160000 |
+| gamma_v2+hnswlib(buf=400x) | 200K | partial_reset | 400 | 152.7 | 0.9988 | 1.246 | 40000 | 160000 |
+| hnswlib direct | 200K | random | None | 194.2 | 0.9990 | 1.381 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=5x) | 200K | random | 5 | 158.7 | 0.9996 | 1.198 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=10x) | 200K | random | 10 | 161.6 | 0.9996 | 1.182 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=25x) | 200K | random | 25 | 162.7 | 0.9996 | 1.220 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=50x) | 200K | random | 50 | 181.4 | 0.9996 | 1.388 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=100x) | 200K | random | 100 | 185.5 | 0.9996 | 1.391 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=200x) | 200K | random | 200 | 184.8 | 0.9996 | 1.363 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=400x) | 200K | random | 400 | 188.1 | 0.9996 | 1.396 | 22500 | 177500 |
+| hnswlib direct | 200K | sequential | None | 204.6 | 0.9984 | 1.474 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=5x) | 200K | sequential | 5 | 272.7 | 0.9990 | 1.577 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=10x) | 200K | sequential | 10 | 277.4 | 0.9990 | 1.710 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=25x) | 200K | sequential | 25 | 309.6 | 0.9990 | 1.789 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=50x) | 200K | sequential | 50 | 307.9 | 0.9990 | 1.763 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=100x) | 200K | sequential | 100 | 303.1 | 0.9990 | 1.797 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=200x) | 200K | sequential | 200 | 315.4 | 0.9990 | 1.812 | 22500 | 177500 |
+| gamma_v2+hnswlib(buf=400x) | 200K | sequential | 400 | 292.1 | 0.9990 | 1.639 | 22500 | 177500 |
 
-## 一句话总结(数据全 back)
+## e19_hnswlib_param_sensitivity
 
-**gamma 在 2 个真实业务场景结构性赢**(滑动窗口 -25%、bulk_delete -86%)、**3 个数据集 query latency 全程稳 0.1ms**(HNSW 飙到 2-25ms)、**recall 跨数据集稳 0.99+**(HNSW 跌到 0.59-0.94)。**输的 3 个场景**(纯写、burst、churn 配错)是结构性 trade-off,认了。
+| name | scale | pattern | M | efC | efS | total_s | recall | query_latency_ms_p95 | n_alive | n_delete |
+|---|---|---|---|---|---|---|---|---|---|---|
+| gamma_v2+hnswlib | 200K | cluster | 32 | 120 | 80 | 154.1 | 0.9992 | 1.122 | 22500 | 177500 |
+| hnswlib(M=16/efC=120/efS=80) | 200K | cluster | 16 | 120 | 80 | 181.7 | 0.9988 | 1.198 | 22500 | 177500 |
+| hnswlib(M=16/efC=120/efS=160) | 200K | cluster | 16 | 120 | 160 | 192.8 | 0.9996 | 2.152 | 22500 | 177500 |
+| hnswlib(M=16/efC=240/efS=80) | 200K | cluster | 16 | 240 | 80 | 372.9 | 0.9990 | 1.523 | 22500 | 177500 |
+| hnswlib(M=16/efC=240/efS=160) | 200K | cluster | 16 | 240 | 160 | 400.4 | 0.9998 | 2.525 | 22500 | 177500 |
+| hnswlib(M=32/efC=120/efS=80) | 200K | cluster | 32 | 120 | 80 | 235.6 | 0.9994 | 1.594 | 22500 | 177500 |
+| hnswlib(M=32/efC=120/efS=160) | 200K | cluster | 32 | 120 | 160 | 253.3 | 0.9998 | 2.901 | 22500 | 177500 |
+| hnswlib(M=32/efC=240/efS=80) | 200K | cluster | 32 | 240 | 80 | 452.7 | 0.9998 | 1.763 | 22500 | 177500 |
+| hnswlib(M=32/efC=240/efS=160) | 200K | cluster | 32 | 240 | 160 | 415.2 | 1.0000 | 2.857 | 22500 | 177500 |
+| hnswlib(M=64/efC=120/efS=80) | 200K | cluster | 64 | 120 | 80 | 228.2 | 0.9994 | 1.607 | 22500 | 177500 |
+| hnswlib(M=64/efC=120/efS=160) | 200K | cluster | 64 | 120 | 160 | 229.3 | 0.9998 | 2.622 | 22500 | 177500 |
+| hnswlib(M=64/efC=240/efS=80) | 200K | cluster | 64 | 240 | 80 | 385.9 | 0.9998 | 1.578 | 22500 | 177500 |
+| hnswlib(M=64/efC=240/efS=160) | 200K | cluster | 64 | 240 | 160 | 380.1 | 1.0000 | 2.677 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | partial_reset | 32 | 120 | 80 | 124.8 | 0.9988 | 0.995 | 40000 | 160000 |
+| hnswlib(M=16/efC=120/efS=80) | 200K | partial_reset | 16 | 120 | 80 | 139.3 | 0.9974 | 1.082 | 40000 | 160000 |
+| hnswlib(M=16/efC=120/efS=160) | 200K | partial_reset | 16 | 120 | 160 | 148.5 | 0.9996 | 1.865 | 40000 | 160000 |
+| hnswlib(M=16/efC=240/efS=80) | 200K | partial_reset | 16 | 240 | 80 | 267.2 | 0.9972 | 1.160 | 40000 | 160000 |
+| hnswlib(M=16/efC=240/efS=160) | 200K | partial_reset | 16 | 240 | 160 | 308.4 | 0.9996 | 2.291 | 40000 | 160000 |
+| hnswlib(M=32/efC=120/efS=80) | 200K | partial_reset | 32 | 120 | 80 | 189.3 | 0.9994 | 1.504 | 40000 | 160000 |
+| hnswlib(M=32/efC=120/efS=160) | 200K | partial_reset | 32 | 120 | 160 | 195.9 | 1.0000 | 2.531 | 40000 | 160000 |
+| hnswlib(M=32/efC=240/efS=80) | 200K | partial_reset | 32 | 240 | 80 | 359.4 | 0.9996 | 1.711 | 40000 | 160000 |
+| hnswlib(M=32/efC=240/efS=160) | 200K | partial_reset | 32 | 240 | 160 | 369.3 | 0.9998 | 2.735 | 40000 | 160000 |
+| hnswlib(M=64/efC=120/efS=80) | 200K | partial_reset | 64 | 120 | 80 | 186.8 | 0.9994 | 1.562 | 40000 | 160000 |
+| hnswlib(M=64/efC=120/efS=160) | 200K | partial_reset | 64 | 120 | 160 | 183.3 | 1.0000 | 2.424 | 40000 | 160000 |
+| hnswlib(M=64/efC=240/efS=80) | 200K | partial_reset | 64 | 240 | 80 | 345.6 | 0.9996 | 1.645 | 40000 | 160000 |
+| hnswlib(M=64/efC=240/efS=160) | 200K | partial_reset | 64 | 240 | 160 | 341.8 | 1.0000 | 2.672 | 40000 | 160000 |
+| gamma_v2+hnswlib | 200K | random | 32 | 120 | 80 | 151.4 | 0.9996 | 1.133 | 22500 | 177500 |
+| hnswlib(M=16/efC=120/efS=80) | 200K | random | 16 | 120 | 80 | 179.1 | 0.9992 | 1.219 | 22500 | 177500 |
+| hnswlib(M=16/efC=120/efS=160) | 200K | random | 16 | 120 | 160 | 190.0 | 0.9996 | 2.141 | 22500 | 177500 |
+| hnswlib(M=16/efC=240/efS=80) | 200K | random | 16 | 240 | 80 | 357.6 | 0.9990 | 1.523 | 22500 | 177500 |
+| hnswlib(M=16/efC=240/efS=160) | 200K | random | 16 | 240 | 160 | 391.6 | 0.9996 | 2.580 | 22500 | 177500 |
+| hnswlib(M=32/efC=120/efS=80) | 200K | random | 32 | 120 | 80 | 231.1 | 0.9990 | 1.633 | 22500 | 177500 |
+| hnswlib(M=32/efC=120/efS=160) | 200K | random | 32 | 120 | 160 | 244.4 | 0.9996 | 2.972 | 22500 | 177500 |
+| hnswlib(M=32/efC=240/efS=80) | 200K | random | 32 | 240 | 80 | 438.3 | 0.9992 | 1.809 | 22500 | 177500 |
+| hnswlib(M=32/efC=240/efS=160) | 200K | random | 32 | 240 | 160 | 406.4 | 0.9996 | 2.812 | 22500 | 177500 |
+| hnswlib(M=64/efC=120/efS=80) | 200K | random | 64 | 120 | 80 | 223.2 | 0.9990 | 1.694 | 22500 | 177500 |
+| hnswlib(M=64/efC=120/efS=160) | 200K | random | 64 | 120 | 160 | 228.2 | 0.9996 | 2.783 | 22500 | 177500 |
+| hnswlib(M=64/efC=240/efS=80) | 200K | random | 64 | 240 | 80 | 393.6 | 0.9992 | 1.676 | 22500 | 177500 |
+| hnswlib(M=64/efC=240/efS=160) | 200K | random | 64 | 240 | 160 | 378.3 | 0.9996 | 2.851 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | sequential | 32 | 120 | 80 | 259.2 | 0.9990 | 1.548 | 22500 | 177500 |
+| hnswlib(M=16/efC=120/efS=80) | 200K | sequential | 16 | 120 | 80 | 195.5 | 0.9980 | 1.336 | 22500 | 177500 |
+| hnswlib(M=16/efC=120/efS=160) | 200K | sequential | 16 | 120 | 160 | 205.0 | 0.9998 | 2.346 | 22500 | 177500 |
+| hnswlib(M=16/efC=240/efS=80) | 200K | sequential | 16 | 240 | 80 | 402.4 | 0.9982 | 1.626 | 22500 | 177500 |
+| hnswlib(M=16/efC=240/efS=160) | 200K | sequential | 16 | 240 | 160 | 414.7 | 0.9998 | 2.752 | 22500 | 177500 |
+| hnswlib(M=32/efC=120/efS=80) | 200K | sequential | 32 | 120 | 80 | 244.8 | 0.9984 | 1.795 | 22500 | 177500 |
+| hnswlib(M=32/efC=120/efS=160) | 200K | sequential | 32 | 120 | 160 | 261.2 | 0.9998 | 3.022 | 22500 | 177500 |
+| hnswlib(M=32/efC=240/efS=80) | 200K | sequential | 32 | 240 | 80 | 433.1 | 0.9992 | 1.787 | 22500 | 177500 |
+| hnswlib(M=32/efC=240/efS=160) | 200K | sequential | 32 | 240 | 160 | 430.0 | 0.9998 | 3.044 | 22500 | 177500 |
+| hnswlib(M=64/efC=120/efS=80) | 200K | sequential | 64 | 120 | 80 | 225.2 | 0.9984 | 1.647 | 22500 | 177500 |
+| hnswlib(M=64/efC=120/efS=160) | 200K | sequential | 64 | 120 | 160 | 214.3 | 0.9998 | 2.483 | 22500 | 177500 |
+| hnswlib(M=64/efC=240/efS=80) | 200K | sequential | 64 | 240 | 80 | 373.6 | 0.9992 | 1.586 | 22500 | 177500 |
+| hnswlib(M=64/efC=240/efS=160) | 200K | sequential | 64 | 240 | 160 | 364.1 | 0.9998 | 2.441 | 22500 | 177500 |
+
+## e20_router_component_ablation
+
+| name | scale | dataset | pattern | total_s | recall | query_latency_ms_p95 | n_alive | n_delete |
+|---|---|---|---|---|---|---|---|---|
+| hnswlib direct | 200K | glove | cluster | 725.1 | 0.9630 | 5.243 | 22500 | 177500 |
+| gamma_v3(full)+hnswlib | 200K | glove | cluster | 496.6 | 0.9530 | 3.800 | 22500 | 177500 |
+| gamma_v3(no_buffer_scan)+hnswlib | 200K | glove | cluster | 450.8 | 0.9530 | 3.191 | 22500 | 177500 |
+| gamma_v3(no_buffer_inserts)+hnswlib | 200K | glove | cluster | 651.1 | 0.9630 | 4.713 | 22500 | 177500 |
+| gamma_v3(no_absorb_deletes)+hnswlib | 200K | glove | cluster | 793.9 | 0.9505 | 3.650 | 22500 | 177500 |
+| gamma_v3(eager_maint)+hnswlib | 200K | glove | cluster | 511.8 | 0.9630 | 3.668 | 22500 | 177500 |
+| hnswlib direct | 200K | glove | partial_reset | 322.7 | 0.9230 | 2.371 | 40000 | 160000 |
+| gamma_v3(full)+hnswlib | 200K | glove | partial_reset | 250.5 | 0.9155 | 1.789 | 40000 | 160000 |
+| gamma_v3(no_buffer_scan)+hnswlib | 200K | glove | partial_reset | 227.6 | 0.9155 | 1.767 | 40000 | 160000 |
+| gamma_v3(no_buffer_inserts)+hnswlib | 200K | glove | partial_reset | 274.3 | 0.9230 | 2.041 | 40000 | 160000 |
+| gamma_v3(no_absorb_deletes)+hnswlib | 200K | glove | partial_reset | 325.0 | 0.9130 | 1.960 | 40000 | 160000 |
+| gamma_v3(eager_maint)+hnswlib | 200K | glove | partial_reset | 268.6 | 0.9230 | 1.972 | 40000 | 160000 |
+| hnswlib direct | 200K | glove | random | 398.1 | 0.9430 | 2.581 | 22500 | 177500 |
+| gamma_v3(full)+hnswlib | 200K | glove | random | 306.0 | 0.9420 | 2.020 | 22500 | 177500 |
+| gamma_v3(no_buffer_scan)+hnswlib | 200K | glove | random | 310.4 | 0.9420 | 2.122 | 22500 | 177500 |
+| gamma_v3(no_buffer_inserts)+hnswlib | 200K | glove | random | 400.6 | 0.9430 | 2.409 | 22500 | 177500 |
+| gamma_v3(no_absorb_deletes)+hnswlib | 200K | glove | random | 413.4 | 0.9380 | 2.117 | 22500 | 177500 |
+| gamma_v3(eager_maint)+hnswlib | 200K | glove | random | 355.2 | 0.9430 | 2.264 | 22500 | 177500 |
+| hnswlib direct | 200K | glove | sequential | 454.0 | 0.9335 | 3.055 | 22500 | 177500 |
+| gamma_v3(full)+hnswlib | 200K | glove | sequential | 527.3 | 0.9340 | 2.632 | 22500 | 177500 |
+| gamma_v3(no_buffer_scan)+hnswlib | 200K | glove | sequential | 517.6 | 0.9340 | 2.726 | 22500 | 177500 |
+| gamma_v3(no_buffer_inserts)+hnswlib | 200K | glove | sequential | 367.2 | 0.9335 | 2.365 | 22500 | 177500 |
+| gamma_v3(no_absorb_deletes)+hnswlib | 200K | glove | sequential | 452.3 | 0.9340 | 2.503 | 22500 | 177500 |
+| gamma_v3(eager_maint)+hnswlib | 200K | glove | sequential | 321.4 | 0.9335 | 2.196 | 22500 | 177500 |
+| hnswlib direct | 200K | msong | cluster | 743.5 | 0.9995 | 5.129 | 22500 | 177500 |
+| gamma_v3(full)+hnswlib | 200K | msong | cluster | 509.3 | 0.9995 | 4.320 | 22500 | 177500 |
+| gamma_v3(no_buffer_scan)+hnswlib | 200K | msong | cluster | 477.4 | 0.9995 | 3.451 | 22500 | 177500 |
+| gamma_v3(no_buffer_inserts)+hnswlib | 200K | msong | cluster | 682.4 | 0.9995 | 4.516 | 22500 | 177500 |
+| gamma_v3(no_absorb_deletes)+hnswlib | 200K | msong | cluster | 777.5 | 0.9995 | 3.960 | 22500 | 177500 |
+| gamma_v3(eager_maint)+hnswlib | 200K | msong | cluster | 524.3 | 0.9995 | 3.506 | 22500 | 177500 |
+| hnswlib direct | 200K | msong | partial_reset | 451.9 | 0.9970 | 3.271 | 40000 | 160000 |
+| gamma_v3(full)+hnswlib | 200K | msong | partial_reset | 319.6 | 0.9945 | 2.430 | 40000 | 160000 |
+| gamma_v3(no_buffer_scan)+hnswlib | 200K | msong | partial_reset | 301.2 | 0.9945 | 2.278 | 40000 | 160000 |
+| gamma_v3(no_buffer_inserts)+hnswlib | 200K | msong | partial_reset | 392.5 | 0.9970 | 2.913 | 40000 | 160000 |
+| gamma_v3(no_absorb_deletes)+hnswlib | 200K | msong | partial_reset | 420.7 | 0.9950 | 2.530 | 40000 | 160000 |
+| gamma_v3(eager_maint)+hnswlib | 200K | msong | partial_reset | 341.5 | 0.9970 | 2.459 | 40000 | 160000 |
+| hnswlib direct | 200K | msong | random | 539.4 | 0.9990 | 3.578 | 22500 | 177500 |
+| gamma_v3(full)+hnswlib | 200K | msong | random | 412.4 | 0.9985 | 2.992 | 22500 | 177500 |
+| gamma_v3(no_buffer_scan)+hnswlib | 200K | msong | random | 420.9 | 0.9985 | 2.931 | 22500 | 177500 |
+| gamma_v3(no_buffer_inserts)+hnswlib | 200K | msong | random | 488.1 | 0.9990 | 3.258 | 22500 | 177500 |
+| gamma_v3(no_absorb_deletes)+hnswlib | 200K | msong | random | 570.2 | 0.9990 | 3.143 | 22500 | 177500 |
+| gamma_v3(eager_maint)+hnswlib | 200K | msong | random | 429.6 | 0.9990 | 2.845 | 22500 | 177500 |
+| hnswlib direct | 200K | msong | sequential | 577.7 | 0.9990 | 3.743 | 22500 | 177500 |
+| gamma_v3(full)+hnswlib | 200K | msong | sequential | 648.5 | 0.9985 | 3.514 | 22500 | 177500 |
+| gamma_v3(no_buffer_scan)+hnswlib | 200K | msong | sequential | 616.2 | 0.9985 | 3.101 | 22500 | 177500 |
+| gamma_v3(no_buffer_inserts)+hnswlib | 200K | msong | sequential | 447.8 | 0.9990 | 3.223 | 22500 | 177500 |
+| gamma_v3(no_absorb_deletes)+hnswlib | 200K | msong | sequential | 509.9 | 0.9985 | 2.731 | 22500 | 177500 |
+| hnswlib direct | 200K | sift | cluster | 237.5 | 0.9994 | 1.675 | 22500 | 177500 |
+| gamma_v3(full)+hnswlib | 200K | sift | cluster | 188.7 | 0.9992 | 1.412 | 22500 | 177500 |
+| gamma_v3(no_buffer_scan)+hnswlib | 200K | sift | cluster | 187.3 | 0.9992 | 1.414 | 22500 | 177500 |
+| gamma_v3(no_buffer_inserts)+hnswlib | 200K | sift | cluster | 236.2 | 0.9994 | 1.587 | 22500 | 177500 |
+| gamma_v3(no_absorb_deletes)+hnswlib | 200K | sift | cluster | 297.1 | 0.9992 | 1.697 | 22500 | 177500 |
+| gamma_v3(eager_maint)+hnswlib | 200K | sift | cluster | 244.7 | 0.9994 | 1.651 | 22500 | 177500 |
+| hnswlib direct | 200K | sift | partial_reset | 188.4 | 0.9994 | 1.526 | 40000 | 160000 |
+| gamma_v3(full)+hnswlib | 200K | sift | partial_reset | 151.4 | 0.9988 | 1.228 | 40000 | 160000 |
+| gamma_v3(no_buffer_scan)+hnswlib | 200K | sift | partial_reset | 149.8 | 0.9988 | 1.205 | 40000 | 160000 |
+| gamma_v3(no_buffer_inserts)+hnswlib | 200K | sift | partial_reset | 189.8 | 0.9994 | 1.503 | 40000 | 160000 |
+| gamma_v3(no_absorb_deletes)+hnswlib | 200K | sift | partial_reset | 222.7 | 0.9988 | 1.426 | 40000 | 160000 |
+| gamma_v3(eager_maint)+hnswlib | 200K | sift | partial_reset | 195.9 | 0.9994 | 1.556 | 40000 | 160000 |
+| hnswlib direct | 200K | sift | random | 230.7 | 0.9990 | 1.699 | 22500 | 177500 |
+| gamma_v3(full)+hnswlib | 200K | sift | random | 186.8 | 0.9996 | 1.387 | 22500 | 177500 |
+| gamma_v3(no_buffer_scan)+hnswlib | 200K | sift | random | 185.9 | 0.9996 | 1.430 | 22500 | 177500 |
+| gamma_v3(no_buffer_inserts)+hnswlib | 200K | sift | random | 230.1 | 0.9990 | 1.592 | 22500 | 177500 |
+| gamma_v3(no_absorb_deletes)+hnswlib | 200K | sift | random | 288.7 | 0.9996 | 1.695 | 22500 | 177500 |
+| gamma_v3(eager_maint)+hnswlib | 200K | sift | random | 239.6 | 0.9990 | 1.675 | 22500 | 177500 |
+| hnswlib direct | 200K | sift | sequential | 245.6 | 0.9984 | 1.830 | 22500 | 177500 |
+| gamma_v3(full)+hnswlib | 200K | sift | sequential | 310.4 | 0.9990 | 1.764 | 22500 | 177500 |
+| gamma_v3(no_buffer_scan)+hnswlib | 200K | sift | sequential | 304.7 | 0.9990 | 1.675 | 22500 | 177500 |
+| gamma_v3(no_buffer_inserts)+hnswlib | 200K | sift | sequential | 250.9 | 0.9984 | 1.828 | 22500 | 177500 |
+| gamma_v3(no_absorb_deletes)+hnswlib | 200K | sift | sequential | 309.0 | 0.9990 | 1.710 | 22500 | 177500 |
+| gamma_v3(eager_maint)+hnswlib | 200K | sift | sequential | 231.1 | 0.9984 | 1.606 | 22500 | 177500 |
+
+## e21_cpp_component_ablation
+
+| name | scale | pattern | total_s | recall | query_latency_ms_p95 | n_alive | n_delete |
+|---|---|---|---|---|---|---|---|
+| gamma_cpp[default] | 200K | cluster | 450.9 | 0.9986 | 20.519 | 22500 | 177500 |
+| gamma_cpp[no_spatial] | 200K | cluster | 170.5 | 0.9986 | 20.559 | 22500 | 177500 |
+| gamma_cpp[no_split] | 200K | cluster | 169.5 | 0.9986 | 20.779 | 22500 | 177500 |
+| gamma_cpp[cost_off_admit] | 200K | cluster | 423.0 | 0.9986 | 19.485 | 22500 | 177500 |
+| gamma_cpp[cost_off_buffer] | 200K | cluster | 364.6 | 0.5980 | 13.261 | 22500 | 177500 |
+| gamma_cpp[eager_maint] | 200K | cluster | 376.7 | 0.9986 | 17.671 | 22500 | 177500 |
+| gamma_cpp[lazy_maint] | 200K | cluster | 146.0 | 0.0028 | 5.521 | 22500 | 177500 |
+| gamma_cpp[default] | 200K | partial_reset | 577.2 | 0.0060 | 8.057 | 40000 | 160000 |
+| gamma_cpp[no_spatial] | 200K | partial_reset | 204.0 | 0.9946 | 30.009 | 40000 | 160000 |
+| gamma_cpp[no_split] | 200K | partial_reset | 197.8 | 0.9946 | 28.769 | 40000 | 160000 |
+| gamma_cpp[cost_off_admit] | 200K | partial_reset | 531.3 | 0.0060 | 7.196 | 40000 | 160000 |
+| gamma_cpp[cost_off_buffer] | 200K | partial_reset | 491.0 | 0.2284 | 11.883 | 40000 | 160000 |
+| gamma_cpp[eager_maint] | 200K | partial_reset | 458.9 | 0.0060 | 6.192 | 40000 | 160000 |
+| gamma_cpp[default] | 200K | random | 452.3 | 0.9996 | 20.745 | 22500 | 177500 |
+| gamma_cpp[no_spatial] | 200K | random | 172.7 | 0.9996 | 20.853 | 22500 | 177500 |
+| gamma_cpp[no_split] | 200K | random | 172.6 | 0.9996 | 21.364 | 22500 | 177500 |
+| gamma_cpp[cost_off_admit] | 200K | random | 427.1 | 0.9996 | 19.580 | 22500 | 177500 |
+| gamma_cpp[cost_off_buffer] | 200K | random | 394.9 | 0.9990 | 17.467 | 22500 | 177500 |
+| gamma_cpp[eager_maint] | 200K | random | 380.5 | 0.9996 | 16.956 | 22500 | 177500 |
+| gamma_cpp[lazy_maint] | 200K | random | 147.4 | 0.0010 | 5.797 | 22500 | 177500 |
+| gamma_cpp[default] | 200K | sequential | 460.3 | 0.8872 | 5.787 | 22500 | 177500 |
+| gamma_cpp[no_spatial] | 200K | sequential | 62.7 | 1.0000 | 7.304 | 22500 | 177500 |
+| gamma_cpp[no_split] | 200K | sequential | 60.7 | 1.0000 | 7.652 | 22500 | 177500 |
+| gamma_cpp[cost_off_admit] | 200K | sequential | 440.8 | 0.8780 | 5.476 | 22500 | 177500 |
+| gamma_cpp[cost_off_buffer] | 200K | sequential | 384.9 | 0.3556 | 5.350 | 22500 | 177500 |
+| gamma_cpp[eager_maint] | 200K | sequential | 379.9 | 0.8810 | 6.063 | 22500 | 177500 |
+| gamma_cpp[lazy_maint] | 200K | sequential | 54.8 | 1.0000 | 5.196 | 22500 | 177500 |
+
+## e22_cpp_tuned
+
+| name | scale | pattern | total_s | recall | query_latency_ms_p95 | n_alive | n_delete |
+|---|---|---|---|---|---|---|---|
+| python_poc_v2+FaissHNSW | 200K | cluster | 46.0 | 0.9286 | 0.374 | 22500 | 177500 |
+| FaissHNSW direct | 200K | cluster | 58.4 | 0.9104 | 0.429 | 22500 | 177500 |
+| gamma_cpp[default_cpp]+FaissHNSW | 200K | cluster | 366.1 | 0.9986 | 16.559 | 22500 | 177500 |
+| gamma_cpp[no_spatial]+FaissHNSW | 200K | cluster | 123.3 | 0.9986 | 14.647 | 22500 | 177500 |
+| gamma_cpp[e04_tuned]+FaissHNSW | 200K | cluster | 163.4 | 0.9886 | 14.477 | 22500 | 177500 |
+| python_poc_v2+FaissHNSW | 200K | partial_reset | 46.5 | 0.9588 | 0.355 | 40000 | 160000 |
+| FaissHNSW direct | 200K | partial_reset | 57.8 | 0.9454 | 0.385 | 40000 | 160000 |
+| gamma_cpp[default_cpp]+FaissHNSW | 200K | partial_reset | 484.1 | 0.0060 | 5.935 | 40000 | 160000 |
+| gamma_cpp[no_spatial]+FaissHNSW | 200K | partial_reset | 143.7 | 0.9946 | 20.547 | 40000 | 160000 |
+| python_poc_v2+FaissHNSW | 200K | random | 45.9 | 0.9268 | 0.376 | 22500 | 177500 |
+| FaissHNSW direct | 200K | random | 58.0 | 0.9042 | 0.435 | 22500 | 177500 |
+| gamma_cpp[default_cpp]+FaissHNSW | 200K | random | 367.8 | 0.9996 | 16.464 | 22500 | 177500 |
+| gamma_cpp[no_spatial]+FaissHNSW | 200K | random | 123.4 | 0.9996 | 14.733 | 22500 | 177500 |
+| python_poc_v2+FaissHNSW | 200K | sequential | 59.4 | 0.9040 | 0.418 | 22500 | 177500 |
+| FaissHNSW direct | 200K | sequential | 57.4 | 0.9030 | 0.392 | 22500 | 177500 |
+| gamma_cpp[default_cpp]+FaissHNSW | 200K | sequential | 288.0 | 0.6720 | 5.236 | 22500 | 177500 |
+| gamma_cpp[no_spatial]+FaissHNSW | 200K | sequential | 50.9 | 1.0000 | 5.850 | 22500 | 177500 |
+| gamma_cpp[e04_tuned]+FaissHNSW | 200K | sequential | 212.5 | 0.9858 | 2.542 | 22500 | 177500 |
+
+## e23_multi_seed_variance
+
+| name | scale | pattern | total_s | recall | query_latency_ms_p95 | n_alive | n_delete |
+|---|---|---|---|---|---|---|---|
+| gamma_v2+hnswlib | 200K | cluster | 142.2 | 0.9992 | 1.141 | 22500 | 177500 |
+| hnswlib direct | 200K | cluster | 168.2 | 0.9996 | 1.183 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | random | 138.9 | 0.9990 | 1.002 | 22500 | 177500 |
+| hnswlib direct | 200K | random | 161.6 | 0.9992 | 1.138 | 22500 | 177500 |
+

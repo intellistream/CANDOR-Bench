@@ -1,0 +1,42 @@
+[
+  {
+    "scale": "1M",
+    "pattern": "partial_reset",
+    "name": "gamma_v2+hnswlib",
+    "total_s": 1044.00578226801,
+    "n_delete": 880000,
+    "n_alive": 120000,
+    "query_latency_ms_p95": 1.764052568795159,
+    "recall": 0.9967999999999999
+  },
+  {
+    "scale": "1M",
+    "pattern": "partial_reset",
+    "name": "hnswlib direct",
+    "total_s": 1380.778733692132,
+    "n_delete": 880000,
+    "n_alive": 120000,
+    "query_latency_ms_p95": 1.9542777701281004,
+    "recall": 0.9974
+  },
+  {
+    "scale": "1M",
+    "pattern": "partial_reset",
+    "name": "gamma_v2+faiss_hnsw",
+    "total_s": 359.14055436104536,
+    "n_delete": 880000,
+    "n_alive": 120000,
+    "query_latency_ms_p95": 0.567301721824333,
+    "recall": 0.8790000000000001
+  },
+  {
+    "scale": "1M",
+    "pattern": "partial_reset",
+    "name": "faiss_hnsw direct",
+    "total_s": 426.8856931524351,
+    "n_delete": 880000,
+    "n_alive": 120000,
+    "query_latency_ms_p95": 0.601523778028786,
+    "recall": 0.8691
+  }
+]

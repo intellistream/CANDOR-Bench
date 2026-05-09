@@ -27,24 +27,51 @@ class GraphBackend(abc.ABC):
 
 
 class HnswlibBackend(GraphBackend):
-    """hnswlib (Qdrant/ChromaDB default backend)."""
-    def __init__(self, dim, max_elements, M=32, ef_c=120, ef_s=80):
+    """hnswlib (Qdrant/ChromaDB default backend).
+
+    Forces num_threads=1 — hnswlib defaults to all cores, which silently
+    eats every CPU when multiple experiments run in parallel.
+    """
+    def __init__(self, dim, max_elements, M=32, ef_c=120, ef_s=80, num_threads=1):
         import hnswlib
         self.idx = hnswlib.Index(space='l2', dim=dim)
         self.idx.init_index(max_elements=max_elements, ef_construction=ef_c, M=M)
         self.idx.set_ef(ef_s)
+        self.idx.set_num_threads(num_threads)
     def add(self, vectors, ids):
         self.idx.add_items(vectors, ids)
     def mark_deleted(self, vec_id):
         self.idx.mark_deleted(vec_id)
     def search(self, queries, k):
-        return self.idx.knn_query(queries, k=k)
+        # hnswlib raises RuntimeError ("ef or M too small") when fewer than k
+        # alive elements remain. Bump ef and retry; if still failing, pad the
+        # result with -1 sentinel labels so callers can still merge.
+        import numpy as _np
+        try:
+            return self.idx.knn_query(queries, k=k)
+        except RuntimeError:
+            old_ef = self.idx.ef
+            try:
+                self.idx.set_ef(max(old_ef * 4, 800))
+                return self.idx.knn_query(queries, k=k)
+            except RuntimeError:
+                Q = len(queries)
+                labels = _np.full((Q, k), -1, dtype=_np.int64)
+                dists = _np.full((Q, k), _np.inf, dtype=_np.float32)
+                return labels, dists
+            finally:
+                self.idx.set_ef(old_ef)
 
 
 class FaissHnswBackend(GraphBackend):
-    """Faiss HNSW (the original gamma backend)."""
-    def __init__(self, dim, max_elements, M=32, ef_c=120, ef_s=80):
+    """Faiss HNSW (the original gamma backend).
+
+    Forces faiss OMP threads to 1 — fair single-thread comparison and
+    safe for parallel-process invocation.
+    """
+    def __init__(self, dim, max_elements, M=32, ef_c=120, ef_s=80, num_threads=1):
         import faiss
+        faiss.omp_set_num_threads(num_threads)
         self.idx = faiss.IndexHNSWFlat(dim, M)
         self.idx.hnsw.efConstruction = ef_c
         self.idx.hnsw.efSearch = ef_s

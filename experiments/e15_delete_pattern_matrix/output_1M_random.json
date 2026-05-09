@@ -1,0 +1,42 @@
+[
+  {
+    "scale": "1M",
+    "pattern": "random",
+    "name": "gamma_v2+hnswlib",
+    "total_s": 1191.6869982024655,
+    "n_delete": 890000,
+    "n_alive": 110000,
+    "query_latency_ms_p95": 2.1366104011889546,
+    "recall": 0.9957999999999999
+  },
+  {
+    "scale": "1M",
+    "pattern": "random",
+    "name": "hnswlib direct",
+    "total_s": 1645.9061180232093,
+    "n_delete": 890000,
+    "n_alive": 110000,
+    "query_latency_ms_p95": 2.3464094193186606,
+    "recall": 0.9965
+  },
+  {
+    "scale": "1M",
+    "pattern": "random",
+    "name": "gamma_v2+faiss_hnsw",
+    "total_s": 332.21332201361656,
+    "n_delete": 890000,
+    "n_alive": 110000,
+    "query_latency_ms_p95": 0.5479348059743643,
+    "recall": 0.8677
+  },
+  {
+    "scale": "1M",
+    "pattern": "random",
+    "name": "faiss_hnsw direct",
+    "total_s": 394.6376007758081,
+    "n_delete": 890000,
+    "n_alive": 110000,
+    "query_latency_ms_p95": 0.6285234387498349,
+    "recall": 0.8512000000000001
+  }
+]

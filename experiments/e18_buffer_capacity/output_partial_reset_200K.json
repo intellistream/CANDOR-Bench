@@ -1,0 +1,90 @@
+[
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "buf_mult": null,
+    "name": "hnswlib direct",
+    "total_s": 156.34427601471543,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 1.2379479939118025,
+    "recall": 0.9994
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "buf_mult": 5,
+    "name": "gamma_v2+hnswlib(buf=5x)",
+    "total_s": 126.92801727168262,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 1.0413025791756807,
+    "recall": 0.9987999999999999
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "buf_mult": 10,
+    "name": "gamma_v2+hnswlib(buf=10x)",
+    "total_s": 130.45430278871208,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 1.0373064121231435,
+    "recall": 0.9987999999999999
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "buf_mult": 25,
+    "name": "gamma_v2+hnswlib(buf=25x)",
+    "total_s": 129.29367227572948,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 1.043585923872888,
+    "recall": 0.9987999999999999
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "buf_mult": 50,
+    "name": "gamma_v2+hnswlib(buf=50x)",
+    "total_s": 131.69520668592304,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 1.065311635751277,
+    "recall": 0.9987999999999999
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "buf_mult": 100,
+    "name": "gamma_v2+hnswlib(buf=100x)",
+    "total_s": 145.7687324816361,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 1.1705647236667571,
+    "recall": 0.9987999999999999
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "buf_mult": 200,
+    "name": "gamma_v2+hnswlib(buf=200x)",
+    "total_s": 150.56605521496385,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 1.2147297378629445,
+    "recall": 0.9987999999999999
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "buf_mult": 400,
+    "name": "gamma_v2+hnswlib(buf=400x)",
+    "total_s": 152.71424022410065,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 1.2461856053210794,
+    "recall": 0.9987999999999999
+  }
+]

@@ -1,0 +1,101 @@
+[
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "default",
+    "overrides": {},
+    "name": "gamma_cpp[default]",
+    "total_s": 452.32996951881796,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 20.745096394605934,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "no_spatial",
+    "overrides": {
+      "split_factor": 1000000000.0
+    },
+    "name": "gamma_cpp[no_spatial]",
+    "total_s": 172.6950860954821,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 20.852780657075346,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "no_split",
+    "overrides": {
+      "gamma_split_threshold": 1000000000.0,
+      "min_size_for_split": 1000000000
+    },
+    "name": "gamma_cpp[no_split]",
+    "total_s": 172.5998174790293,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 21.36371935307979,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "cost_off_admit",
+    "overrides": {
+      "placement_controller_newcomer_epsilon_ms": 0.0
+    },
+    "name": "gamma_cpp[cost_off_admit]",
+    "total_s": 427.059360393323,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 19.580020289029925,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "cost_off_buffer",
+    "overrides": {
+      "placement_controller_newcomer_epsilon_ms": 1000000000.0
+    },
+    "name": "gamma_cpp[cost_off_buffer]",
+    "total_s": 394.94996330328286,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 17.46689042272046,
+    "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "eager_maint",
+    "overrides": {
+      "maintenance_interval": 1,
+      "maintenance_query_interval": 1
+    },
+    "name": "gamma_cpp[eager_maint]",
+    "total_s": 380.47914830967784,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 16.95645452681929,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "lazy_maint",
+    "overrides": {
+      "maintenance_interval": 1000000,
+      "maintenance_query_interval": 1000000
+    },
+    "name": "gamma_cpp[lazy_maint]",
+    "total_s": 147.41650208923966,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 5.796804370824246,
+    "recall": 0.001
+  }
+]
