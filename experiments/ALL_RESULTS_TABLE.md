@@ -1,6 +1,6 @@
 # All experiment results (auto-generated)
 
-Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **787**.
+Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **791**.
 
 ## e01_write_throughput
 
@@ -818,6 +818,7 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **787**.
 | gamma_v2 (no rebuild) | 1M | partial_reset | 709.2 | 0.9968 | 1.027 | 120000 | 880000 |
 | hnswlib direct | 1M | partial_reset | 753.1 | 0.9974 | 1.098 | 120000 | 880000 |
 | gamma_rebuild(th=0.5) | 1M | partial_reset | 352.6 | 0.9971 | 0.298 | 120000 | 880000 |
+| gamma_rebuild(th=1.1) | 1M | partial_reset | 626.6 | 0.9968 | 0.890 | 120000 | 880000 |
 | gamma_v2 (no rebuild) | 200K | partial_reset | 96.2 | 0.9988 | 0.782 | 40000 | 160000 |
 | hnswlib direct | 200K | partial_reset | 134.2 | 0.9994 | 1.076 | 40000 | 160000 |
 | gamma_rebuild(th=0.25) | 200K | partial_reset | 64.5 | 0.9988 | 0.160 | 40000 | 160000 |
@@ -826,6 +827,8 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **787**.
 | gamma_rebuild(th=1.1) | 200K | partial_reset | 116.4 | 0.9988 | 0.943 | 40000 | 160000 |
 | gamma_v2 (no rebuild) | 1M | random | 792.3 | 0.9958 | 1.175 | 110000 | 890000 |
 | hnswlib direct | 1M | random | 934.2 | 0.9965 | 1.417 | 110000 | 890000 |
+| gamma_rebuild(th=0.5) | 1M | random | 384.6 | 0.9937 | 0.259 | 110000 | 890000 |
+| gamma_rebuild(th=1.1) | 1M | random | 681.0 | 0.9958 | 1.019 | 110000 | 890000 |
 | gamma_v2 (no rebuild) | 200K | random | 119.3 | 0.9996 | 0.887 | 22500 | 177500 |
 | hnswlib direct | 200K | random | 170.5 | 0.9990 | 1.305 | 22500 | 177500 |
 | gamma_rebuild(th=0.25) | 200K | random | 92.5 | 0.9992 | 0.137 | 22500 | 177500 |
@@ -835,6 +838,7 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **787**.
 | gamma_v2 (no rebuild) | 1M | sequential | 1488.1 | 0.9952 | 1.725 | 110000 | 890000 |
 | hnswlib direct | 1M | sequential | 988.0 | 0.9954 | 1.799 | 110000 | 890000 |
 | gamma_rebuild(th=0.5) | 1M | sequential | 522.1 | 0.9941 | 0.329 | 110000 | 890000 |
+| gamma_rebuild(th=1.1) | 1M | sequential | 1274.4 | 0.9952 | 1.563 | 110000 | 890000 |
 | gamma_v2 (no rebuild) | 200K | sequential | 205.6 | 0.9990 | 1.256 | 22500 | 177500 |
 | hnswlib direct | 200K | sequential | 184.8 | 0.9984 | 1.329 | 22500 | 177500 |
 | gamma_rebuild(th=0.25) | 200K | sequential | 105.2 | 0.9994 | 0.136 | 22500 | 177500 |

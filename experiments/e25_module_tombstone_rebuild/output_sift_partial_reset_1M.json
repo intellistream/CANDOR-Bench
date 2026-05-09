@@ -1,0 +1,48 @@
+[
+  {
+    "scale": "1M",
+    "pattern": "partial_reset",
+    "rebuild_threshold": null,
+    "name": "gamma_v2 (no rebuild)",
+    "total_s": 709.2083410667256,
+    "n_delete": 880000,
+    "n_alive": 120000,
+    "query_latency_ms_p95": 1.0269880968611684,
+    "recall": 0.9967999999999999
+  },
+  {
+    "scale": "1M",
+    "pattern": "partial_reset",
+    "rebuild_threshold": -1,
+    "name": "hnswlib direct",
+    "total_s": 753.144004673697,
+    "n_delete": 880000,
+    "n_alive": 120000,
+    "query_latency_ms_p95": 1.09781197970733,
+    "recall": 0.9974
+  },
+  {
+    "scale": "1M",
+    "pattern": "partial_reset",
+    "rebuild_threshold": 0.5,
+    "rebuild_count": 4,
+    "name": "gamma_rebuild(th=0.5)",
+    "total_s": 352.61582660116255,
+    "n_delete": 880000,
+    "n_alive": 120000,
+    "query_latency_ms_p95": 0.29762784792110325,
+    "recall": 0.9970999999999999
+  },
+  {
+    "scale": "1M",
+    "pattern": "partial_reset",
+    "rebuild_threshold": 1.1,
+    "rebuild_count": 0,
+    "name": "gamma_rebuild(th=1.1)",
+    "total_s": 626.6137365475297,
+    "n_delete": 880000,
+    "n_alive": 120000,
+    "query_latency_ms_p95": 0.8903824435546991,
+    "recall": 0.9967999999999999
+  }
+]
