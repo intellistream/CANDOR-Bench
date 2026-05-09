@@ -9,6 +9,7 @@
 | e17_churn_rate_sweep |  | 200K | random | ratio=1.5 | 279.1 | 991.9 | -71.9% | 1.0000 | 1.0000 |
 | e17_churn_rate_sweep |  | 200K | cluster | ratio=2.0 | 178.9 | 631.4 | -71.7% | 0.9998 | 1.0000 |
 | e17_churn_rate_sweep |  | 200K | random | ratio=2.0 | 213.7 | 727.8 | -70.6% | 1.0000 | 1.0000 |
+| e17_churn_rate_sweep |  | 200K | partial_reset | ratio=3.0 | 273.9 | 887.7 | -69.1% | 0.9968 | 0.9978 |
 | e17_churn_rate_sweep |  | 200K | partial_reset | ratio=2.0 | 392.0 | 1028.7 | -61.9% | 0.9250 | 0.9988 |
 | e17_churn_rate_sweep |  | 200K | sequential | ratio=1.5 | 406.9 | 1002.1 | -59.4% | 0.9892 | 1.0000 |
 | e17_churn_rate_sweep |  | 200K | random | ratio=3.0 | 256.2 | 569.6 | -55.0% | 1.0000 | 1.0000 |
@@ -155,6 +156,7 @@
 | e23_multi_seed_variance |  | 200K | cluster |  | 142.2 | 140.7 | +1.1% | 0.9992 | 0.9992 |
 | e17_churn_rate_sweep |  | 200K | sequential | ratio=0.5 | 92.7 | 91.3 | +1.5% | 0.9942 | 0.9948 |
 | e20_router_component_ablation | sift | 200K | sequential |  | 250.9 | 245.6 | +2.1% | 0.9984 | 0.9984 |
+| e16_cross_dataset | glove | 1M | sequential |  | 265.3 | 258.7 | +2.6% | 0.6635 | 0.6595 |
 | e20_router_component_ablation | sift | 200K | cluster |  | 244.7 | 237.5 | +3.0% | 0.9994 | 0.9994 |
 | e20_router_component_ablation | glove | 200K | random |  | 413.4 | 398.1 | +3.8% | 0.9380 | 0.9430 |
 | e20_router_component_ablation | sift | 200K | random |  | 239.6 | 230.7 | +3.9% | 0.9990 | 0.9990 |
@@ -187,6 +189,7 @@
 | e22_cpp_tuned |  | 200K | random |  | 110.6 | 58.0 | +90.6% | 0.9996 | 0.9042 |
 | e22_cpp_tuned |  | 200K | cluster |  | 116.4 | 58.4 | +99.2% | 0.9986 | 0.9104 |
 | e22_cpp_tuned |  | 200K | partial_reset |  | 116.1 | 57.8 | +100.8% | 0.0020 | 0.9454 |
+| e16_cross_dataset | msong | 1M | sequential |  | 4313.3 | 2096.6 | +105.7% | 0.9935 | 0.9945 |
 | e22_cpp_tuned |  | 200K | sequential |  | 118.3 | 57.4 | +106.1% | 1.0000 | 0.9030 |
 | e22_cpp_tuned |  | 200K | cluster |  | 123.3 | 58.4 | +111.2% | 0.9986 | 0.9104 |
 | e22_cpp_tuned |  | 200K | random |  | 123.4 | 58.0 | +112.7% | 0.9996 | 0.9042 |

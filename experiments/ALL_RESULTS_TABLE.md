@@ -1,6 +1,6 @@
 # All experiment results (auto-generated)
 
-Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **595**.
+Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **601**.
 
 ## e01_write_throughput
 
@@ -354,6 +354,8 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **595**.
 |---|---|---|---|---|---|---|---|---|
 | gamma_v2+hnswlib | 1M | glove | sequential | 3738.1 | 0.8710 | 3.213 | 110000 | 890000 |
 | hnswlib direct | 1M | glove | sequential | 1739.4 | 0.8795 | 1.978 | 110000 | 890000 |
+| gamma_v2+faiss_hnsw | 1M | glove | sequential | 265.3 | 0.6635 | 0.620 | 110000 | 890000 |
+| faiss_hnsw direct | 1M | glove | sequential | 258.7 | 0.6595 | 0.620 | 110000 | 890000 |
 | gamma_v2+hnswlib | 200K | glove | sequential | 507.4 | 0.9340 | 2.633 | 22500 | 177500 |
 | hnswlib direct | 200K | glove | sequential | 447.8 | 0.9335 | 2.982 | 22500 | 177500 |
 | gamma_v2+faiss_hnsw | 200K | glove | sequential | 77.3 | 0.7110 | 0.551 | 22500 | 177500 |
@@ -370,6 +372,8 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **595**.
 | hnswlib direct | 200K | glove | partial_reset | 235.5 | 0.9230 | 1.740 | 40000 | 160000 |
 | gamma_v2+faiss_hnsw | 200K | glove | partial_reset | 49.2 | 0.7840 | 0.413 | 40000 | 160000 |
 | faiss_hnsw direct | 200K | glove | partial_reset | 60.8 | 0.7760 | 0.440 | 40000 | 160000 |
+| gamma_v2+hnswlib | 1M | msong | sequential | 4313.3 | 0.9935 | 3.749 | 102272 | 890000 |
+| hnswlib direct | 1M | msong | sequential | 2096.6 | 0.9945 | 2.824 | 102272 | 890000 |
 | gamma_v2+hnswlib | 200K | msong | sequential | 692.6 | 0.9985 | 3.849 | 22500 | 177500 |
 | hnswlib direct | 200K | msong | sequential | 566.2 | 0.9990 | 4.001 | 22500 | 177500 |
 | gamma_v2+faiss_hnsw | 200K | msong | sequential | 100.8 | 0.9420 | 0.648 | 22500 | 177500 |
@@ -429,6 +433,8 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **595**.
 | hnswlib direct | 200K | partial_reset | 1.5 | 2470.9 | 0.9982 | 20.148 | 17500 | 182500 |
 | gamma_v2+hnswlib | 200K | partial_reset | 2.0 | 392.0 | 0.9250 | 3.099 | 17500 | 182500 |
 | hnswlib direct | 200K | partial_reset | 2.0 | 1028.7 | 0.9988 | 9.880 | 17500 | 182500 |
+| gamma_v2+hnswlib | 200K | partial_reset | 3.0 | 273.9 | 0.9968 | 2.835 | 17500 | 182500 |
+| hnswlib direct | 200K | partial_reset | 3.0 | 887.7 | 0.9978 | 6.932 | 17500 | 182500 |
 | gamma_v2+hnswlib | 200K | random | 0.25 | 69.4 | 0.9946 | 0.305 | 155625 | 44375 |
 | hnswlib direct | 200K | random | 0.25 | 71.1 | 0.9946 | 0.309 | 155625 | 44375 |
 | gamma_v2+hnswlib | 200K | random | 0.5 | 81.1 | 0.9940 | 0.398 | 111250 | 88750 |
