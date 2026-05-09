@@ -60,8 +60,13 @@ class FaissHnswBackend(GraphBackend):
     def mark_deleted(self, vec_id):
         self._deleted.add(int(vec_id))
     def search(self, queries, k):
-        # Search with a larger k to compensate for filtered tombstones, then trim.
-        over_k = k * 4 if self._deleted else k
+        # Adaptive over_k: with M tombstoned of N total, expected alive
+        # fraction is (N-M)/N. Need over_k >= k / alive_fraction to have
+        # enough alive results after filtering.
+        n_total = self.idx.ntotal
+        n_deleted = len(self._deleted)
+        alive_frac = max((n_total - n_deleted) / max(n_total, 1), 0.01)
+        over_k = max(k, min(int(k / alive_frac * 2), n_total))
         D, I = self.idx.search(np.ascontiguousarray(queries, dtype=np.float32), over_k)
         # Map internal back to external + filter deleted
         # Build inverse map (cached for performance, rebuild on add)
