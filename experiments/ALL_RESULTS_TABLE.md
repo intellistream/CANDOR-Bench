@@ -1,6 +1,6 @@
 # All experiment results (auto-generated)
 
-Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **714**.
+Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **756**.
 
 ## e01_write_throughput
 
@@ -364,6 +364,10 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **714**.
 | hnswlib direct | 1M | glove | cluster | 423.1 | 0.8240 | 0.366 | 555000 | 445000 |
 | gamma_v2+faiss_hnsw | 1M | glove | cluster | 233.1 | 0.7675 | 0.546 | 555000 | 445000 |
 | faiss_hnsw direct | 1M | glove | cluster | 246.4 | 0.7640 | 0.634 | 555000 | 445000 |
+| gamma_v2+hnswlib | 1M | glove | partial_reset | 1082.4 | 0.8655 | 1.752 | 120000 | 880000 |
+| hnswlib direct | 1M | glove | partial_reset | 1371.7 | 0.8725 | 1.636 | 120000 | 880000 |
+| gamma_v2+faiss_hnsw | 1M | glove | partial_reset | 246.8 | 0.6685 | 0.645 | 120000 | 880000 |
+| faiss_hnsw direct | 1M | glove | partial_reset | 280.1 | 0.6575 | 0.688 | 120000 | 880000 |
 | gamma_v2+hnswlib | 200K | glove | sequential | 507.4 | 0.9340 | 2.633 | 22500 | 177500 |
 | hnswlib direct | 200K | glove | sequential | 447.8 | 0.9335 | 2.982 | 22500 | 177500 |
 | gamma_v2+faiss_hnsw | 200K | glove | sequential | 77.3 | 0.7110 | 0.551 | 22500 | 177500 |
@@ -386,6 +390,8 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **714**.
 | faiss_hnsw direct | 1M | msong | sequential | 371.5 | 0.9145 | 0.698 | 102272 | 890000 |
 | gamma_v2+hnswlib | 1M | msong | random | 1457.8 | 0.9985 | 2.105 | 102272 | 890000 |
 | hnswlib direct | 1M | msong | random | 2128.9 | 0.9990 | 3.823 | 102272 | 890000 |
+| gamma_v2+faiss_hnsw | 1M | msong | random | 372.5 | 0.9325 | 0.836 | 102272 | 890000 |
+| faiss_hnsw direct | 1M | msong | random | 451.4 | 0.9190 | 0.957 | 102272 | 890000 |
 | gamma_v2+hnswlib | 200K | msong | sequential | 692.6 | 0.9985 | 3.849 | 22500 | 177500 |
 | hnswlib direct | 200K | msong | sequential | 566.2 | 0.9990 | 4.001 | 22500 | 177500 |
 | gamma_v2+faiss_hnsw | 200K | msong | sequential | 100.8 | 0.9420 | 0.648 | 22500 | 177500 |
@@ -771,11 +777,34 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **714**.
 | gamma_spatial(K=8/M=4/centroid) | 200K | sequential | 156.8 | 0.9972 | 3.898 | 22500 | 177500 |
 | gamma_spatial(K=16/M=8/centroid) | 200K | sequential | 114.9 | 0.9998 | 5.646 | 22500 | 177500 |
 | gamma_spatial(K=2/M=1/round_robin) | 200K | sequential | 183.8 | 0.5098 | 1.088 | 22500 | 177500 |
+| gamma_spatial(K=4/M=2/round_robin) | 200K | sequential | 147.6 | 0.4898 | 1.941 | 22500 | 177500 |
+| gamma_spatial(K=8/M=4/round_robin) | 200K | sequential | 112.1 | 0.5168 | 2.967 | 22500 | 177500 |
+| gamma_spatial(K=16/M=8/round_robin) | 200K | sequential | 84.9 | 0.5156 | 4.497 | 22500 | 177500 |
 
 ## e25_module_tombstone_rebuild
 
 | name | scale | pattern | total_s | recall | query_latency_ms_p95 | n_alive | n_delete |
 |---|---|---|---|---|---|---|---|
+| gamma_v2 (no rebuild) | 200K | cluster | 335.1 | 0.9530 | 2.474 | 22500 | 177500 |
+| hnswlib direct | 200K | cluster | 434.9 | 0.9630 | 3.195 | 22500 | 177500 |
+| gamma_rebuild(th=0.5) | 200K | cluster | 76.8 | 0.9515 | 0.342 | 22500 | 177500 |
+| gamma_rebuild(th=1.1) | 200K | cluster | 276.0 | 0.9530 | 1.998 | 22500 | 177500 |
+| gamma_v2 (no rebuild) | 200K | sequential | 388.8 | 0.9340 | 1.974 | 22500 | 177500 |
+| hnswlib direct | 200K | sequential | 259.9 | 0.9335 | 1.713 | 22500 | 177500 |
+| gamma_rebuild(th=0.5) | 200K | sequential | 91.9 | 0.9305 | 0.259 | 22500 | 177500 |
+| gamma_rebuild(th=1.1) | 200K | sequential | 326.1 | 0.9340 | 1.700 | 22500 | 177500 |
+| gamma_v2 (no rebuild) | 200K | cluster | 342.3 | 0.9995 | 2.506 | 22500 | 177500 |
+| hnswlib direct | 200K | cluster | 448.2 | 0.9995 | 3.065 | 22500 | 177500 |
+| gamma_rebuild(th=0.5) | 200K | cluster | 114.4 | 0.9980 | 0.552 | 22500 | 177500 |
+| gamma_rebuild(th=1.1) | 200K | cluster | 284.2 | 0.9995 | 2.050 | 22500 | 177500 |
+| gamma_v2 (no rebuild) | 200K | sequential | 469.0 | 0.9985 | 2.338 | 22500 | 177500 |
+| hnswlib direct | 200K | sequential | 328.8 | 0.9990 | 2.191 | 22500 | 177500 |
+| gamma_rebuild(th=0.5) | 200K | sequential | 157.8 | 0.9970 | 0.454 | 22500 | 177500 |
+| gamma_rebuild(th=1.1) | 200K | sequential | 391.2 | 0.9985 | 2.086 | 22500 | 177500 |
+| gamma_v2 (no rebuild) | 1M | cluster | 473.0 | 0.9876 | 0.438 | 555000 | 445000 |
+| hnswlib direct | 1M | cluster | 442.9 | 0.9892 | 0.387 | 555000 | 445000 |
+| gamma_rebuild(th=0.5) | 1M | cluster | 400.9 | 0.9876 | 0.363 | 555000 | 445000 |
+| gamma_rebuild(th=1.1) | 1M | cluster | 368.8 | 0.9876 | 0.333 | 555000 | 445000 |
 | gamma_v2 (no rebuild) | 200K | cluster | 120.7 | 0.9992 | 0.876 | 22500 | 177500 |
 | hnswlib direct | 200K | cluster | 175.9 | 0.9994 | 1.301 | 22500 | 177500 |
 | gamma_rebuild(th=0.25) | 200K | cluster | 88.2 | 0.9994 | 0.144 | 22500 | 177500 |
@@ -794,6 +823,7 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **714**.
 | gamma_rebuild(th=0.5) | 200K | random | 67.5 | 0.9994 | 0.251 | 22500 | 177500 |
 | gamma_rebuild(th=0.75) | 200K | random | 92.9 | 0.9986 | 0.550 | 22500 | 177500 |
 | gamma_rebuild(th=1.1) | 200K | random | 136.9 | 0.9996 | 0.990 | 22500 | 177500 |
+| gamma_v2 (no rebuild) | 1M | sequential | 1488.1 | 0.9952 | 1.725 | 110000 | 890000 |
 | gamma_v2 (no rebuild) | 200K | sequential | 205.6 | 0.9990 | 1.256 | 22500 | 177500 |
 | hnswlib direct | 200K | sequential | 184.8 | 0.9984 | 1.329 | 22500 | 177500 |
 | gamma_rebuild(th=0.25) | 200K | sequential | 105.2 | 0.9994 | 0.136 | 22500 | 177500 |
@@ -827,6 +857,8 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **714**.
 | hnswlib direct | 200K | sequential | 188.3 | 0.9984 | 1.361 | 22500 | 177500 |
 | gamma_adaptive_maint(th=0.1) | 200K | sequential | 225.2 | 0.9990 | 1.217 | 22500 | 177500 |
 | gamma_adaptive_maint(th=0.25) | 200K | sequential | 216.1 | 0.9990 | 1.210 | 22500 | 177500 |
+| gamma_adaptive_maint(th=0.5) | 200K | sequential | 213.3 | 0.9990 | 1.223 | 22500 | 177500 |
+| gamma_adaptive_maint(th=0.8) | 200K | sequential | 207.1 | 0.9990 | 1.130 | 22500 | 177500 |
 
 ## e27_module_cost_admit
 
@@ -836,18 +868,28 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **714**.
 | hnswlib direct | 200K | cluster | 186.4 | 0.9994 | 1.275 | 22500 | 177500 |
 | gamma_cost_admit(th=0) | 200K | cluster | 175.0 | 0.9994 | 1.156 | 22500 | 177500 |
 | gamma_cost_admit(th=5000) | 200K | cluster | 170.7 | 0.9994 | 1.199 | 22500 | 177500 |
+| gamma_cost_admit(th=20000) | 200K | cluster | 165.7 | 0.9994 | 1.190 | 22500 | 177500 |
+| gamma_cost_admit(th=100000) | 200K | cluster | 132.0 | 0.9992 | 0.939 | 22500 | 177500 |
+| gamma_cost_admit(th=1000000000) | 200K | cluster | 126.8 | 0.9992 | 0.905 | 22500 | 177500 |
 | gamma_v2 | 200K | partial_reset | 117.6 | 0.9988 | 0.938 | 40000 | 160000 |
 | hnswlib direct | 200K | partial_reset | 147.7 | 0.9994 | 1.192 | 40000 | 160000 |
 | gamma_cost_admit(th=0) | 200K | partial_reset | 144.8 | 0.9994 | 1.128 | 40000 | 160000 |
 | gamma_cost_admit(th=5000) | 200K | partial_reset | 134.6 | 0.9994 | 1.061 | 40000 | 160000 |
 | gamma_cost_admit(th=20000) | 200K | partial_reset | 136.2 | 0.9994 | 1.082 | 40000 | 160000 |
 | gamma_cost_admit(th=100000) | 200K | partial_reset | 107.7 | 0.9988 | 0.842 | 40000 | 160000 |
+| gamma_cost_admit(th=1000000000) | 200K | partial_reset | 107.9 | 0.9988 | 0.870 | 40000 | 160000 |
 | gamma_v2 | 200K | random | 143.3 | 0.9996 | 1.037 | 22500 | 177500 |
 | hnswlib direct | 200K | random | 182.8 | 0.9990 | 1.309 | 22500 | 177500 |
 | gamma_cost_admit(th=0) | 200K | random | 172.4 | 0.9990 | 1.182 | 22500 | 177500 |
 | gamma_cost_admit(th=5000) | 200K | random | 167.4 | 0.9990 | 1.216 | 22500 | 177500 |
+| gamma_cost_admit(th=20000) | 200K | random | 162.6 | 0.9990 | 1.200 | 22500 | 177500 |
+| gamma_cost_admit(th=100000) | 200K | random | 131.7 | 0.9996 | 0.950 | 22500 | 177500 |
+| gamma_cost_admit(th=1000000000) | 200K | random | 127.9 | 0.9996 | 0.936 | 22500 | 177500 |
 | gamma_v2 | 200K | sequential | 236.6 | 0.9990 | 1.350 | 22500 | 177500 |
 | hnswlib direct | 200K | sequential | 184.9 | 0.9984 | 1.290 | 22500 | 177500 |
 | gamma_cost_admit(th=0) | 200K | sequential | 172.3 | 0.9984 | 1.249 | 22500 | 177500 |
 | gamma_cost_admit(th=5000) | 200K | sequential | 169.7 | 0.9984 | 1.148 | 22500 | 177500 |
+| gamma_cost_admit(th=20000) | 200K | sequential | 173.4 | 0.9984 | 1.218 | 22500 | 177500 |
+| gamma_cost_admit(th=100000) | 200K | sequential | 206.8 | 0.9990 | 1.133 | 22500 | 177500 |
+| gamma_cost_admit(th=1000000000) | 200K | sequential | 190.0 | 0.9990 | 1.098 | 22500 | 177500 |
 

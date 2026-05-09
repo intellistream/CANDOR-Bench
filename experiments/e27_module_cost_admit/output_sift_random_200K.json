@@ -59,5 +59,31 @@
     "n_alive": 22500,
     "query_latency_ms_p95": 1.2004941958002746,
     "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "admit_threshold": 100000,
+    "n_admit_buffer": 175000,
+    "n_admit_direct": 5000,
+    "name": "gamma_cost_admit(th=100000)",
+    "total_s": 131.73845007643104,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.9504984860308467,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "admit_threshold": 1000000000,
+    "n_admit_buffer": 180000,
+    "n_admit_direct": 0,
+    "name": "gamma_cost_admit(th=1000000000)",
+    "total_s": 127.89954095054418,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.9361158049665391,
+    "recall": 0.9996
   }
 ]
