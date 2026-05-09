@@ -1,0 +1,24 @@
+[
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "admit_threshold": null,
+    "name": "gamma_v2",
+    "total_s": 236.5608319574967,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.3499776874668894,
+    "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "admit_threshold": -1,
+    "name": "hnswlib direct",
+    "total_s": 184.85567649267614,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.290432322025299,
+    "recall": 0.9984
+  }
+]

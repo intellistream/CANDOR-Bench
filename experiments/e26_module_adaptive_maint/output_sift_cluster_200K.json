@@ -1,0 +1,36 @@
+[
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "threshold": null,
+    "name": "gamma_v2 (qstride maint)",
+    "total_s": 130.95634130574763,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.9310663219541311,
+    "recall": 0.9992000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "threshold": -1,
+    "name": "hnswlib direct",
+    "total_s": 183.75794435013086,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.274201537296176,
+    "recall": 0.9994000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "threshold": 0.1,
+    "auto_maint_count": 0,
+    "name": "gamma_adaptive_maint(th=0.1)",
+    "total_s": 142.86635259073228,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.0202358523383737,
+    "recall": 0.9992000000000001
+  }
+]
