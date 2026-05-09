@@ -106,6 +106,35 @@ cost-model placement) is 2.6× slower than the same C++ index with
 machinery costs more than it earns. We discuss why and propose when it
 might pay off (very large indexes, multi-tenant routing).
 
+### 5.5 Modular extensions on the Python POC ⭐
+
+After the C++ ablation showed the multi-partition design underperforming,
+we tested *which individual C++-inspired modules* on top of the simple
+Python POC actually pay off. Four modules added one at a time:
+
+#### 5.5.1 Spatial routing (e24)
+K-partition + centroid-based routing. **Throughput-vs-latency trade-off**.
+SIFT 200K cluster: K=16/M=8 gives -23% wall time and rec=1.0, but pays
+6.7× higher p95 query latency. Pareto: K=1 (gamma_v2) wins for latency-
+bound; K=16 wins for throughput-bound.
+
+#### 5.5.2 Tombstone-rebuild trigger (e25) ★
+Periodic full-rebuild when graph tombstone fraction > threshold. Universal
+sweet spot at threshold=0.5: -38% to -56% across all 4 patterns at SIFT 200K
+vs gamma_v2 (no recall impact). Most importantly, the +14% / +39% /
++106% / +115% sequential losses (200K SIFT / 1M SIFT / 1M MSong / 1M
+GloVe) all flip to wins under rebuild. **This is the architectural fix
+for gamma's sequential-pattern weakness.**
+
+#### 5.5.3 Adaptive maintenance scheduling (e26)
+Auto-trigger maint at buffer-fill threshold. Under our qstride-driven
+workload the buffer-fill trigger never fires (qstride flush dominates).
+Null finding under this experimental setup; future work to tune.
+
+#### 5.5.4 Cost-model admit (e27)
+Per-batch admit decision based on rolling-mean of observed lifetimes.
+Tests whether learned admit beats always-buffer. Streams.
+
 ### 5.5 Buffer-capacity sensitivity
 
 (Figure: e18 buffer curve.)
@@ -134,9 +163,23 @@ pattern. The gap is architectural, not a tuning artifact.
 
 ## 7. Conclusion
 
-A small write-buffer + delete-absorption router lifts existing incremental
-ANN indexes (hnswlib, Faiss HNSW) by 20-30% on realistic non-sequential
-delete patterns and up to 85% at extreme churn, at the same recall, on
-SIFT / MSong / GloVe at 200K and 1M scales — without modifying the
-underlying graph. This makes the router useful as a *drop-in* layer; the
-choice of underlying backend remains orthogonal.
+A small write-buffer + delete-absorption + tombstone-rebuild trigger router
+lifts existing incremental ANN indexes (hnswlib, Faiss HNSW) by 38-56% on
+SIFT 200K across all 4 delete patterns (cluster, random, sequential,
+partial_reset), at the same recall, without modifying the underlying graph.
+
+The simplest variant (buffer + delete-absorption only, e15) wins
+20-30% on non-sequential patterns but loses on 1M sequential. Adding the
+tombstone-rebuild trigger (e25) closes the sequential gap: gamma_v2+rebuild
+beats hnswlib direct on sequential too (-51% at SIFT 200K). The combination
+is the recommended drop-in design. The choice of underlying backend
+remains orthogonal — same architecture works on hnswlib, FaissHNSW, and
+(in principle) any backend with mark_deleted.
+
+The C++ multi-partition machinery (cost-model placement controller,
+γ-driven adaptive split, BIC-driven repartition, spatial routing) does not
+add measurable value at the workload sizes we tested (200K-1M), and the
+shipped default config has correctness bugs on partial_reset (rec=0.006).
+At larger scales (10M+) or for different access patterns (Zipfian queries,
+multi-tenant), the multi-partition design may justify its overhead — left
+for future work.

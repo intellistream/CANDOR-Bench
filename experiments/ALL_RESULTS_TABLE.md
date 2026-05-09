@@ -1,6 +1,6 @@
 # All experiment results (auto-generated)
 
-Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **678**.
+Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **714**.
 
 ## e01_write_throughput
 
@@ -384,6 +384,8 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **678**.
 | hnswlib direct | 1M | msong | sequential | 2096.6 | 0.9945 | 2.824 | 102272 | 890000 |
 | gamma_v2+faiss_hnsw | 1M | msong | sequential | 369.4 | 0.9170 | 0.688 | 102272 | 890000 |
 | faiss_hnsw direct | 1M | msong | sequential | 371.5 | 0.9145 | 0.698 | 102272 | 890000 |
+| gamma_v2+hnswlib | 1M | msong | random | 1457.8 | 0.9985 | 2.105 | 102272 | 890000 |
+| hnswlib direct | 1M | msong | random | 2128.9 | 0.9990 | 3.823 | 102272 | 890000 |
 | gamma_v2+hnswlib | 200K | msong | sequential | 692.6 | 0.9985 | 3.849 | 22500 | 177500 |
 | hnswlib direct | 200K | msong | sequential | 566.2 | 0.9990 | 4.001 | 22500 | 177500 |
 | gamma_v2+faiss_hnsw | 200K | msong | sequential | 100.8 | 0.9420 | 0.648 | 22500 | 177500 |
@@ -739,6 +741,9 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **678**.
 | gamma_spatial(K=8/M=4/centroid) | 200K | cluster | 98.8 | 0.9976 | 3.392 | 22500 | 177500 |
 | gamma_spatial(K=16/M=8/centroid) | 200K | cluster | 81.6 | 1.0000 | 5.168 | 22500 | 177500 |
 | gamma_spatial(K=2/M=1/round_robin) | 200K | cluster | 123.8 | 0.5006 | 0.965 | 22500 | 177500 |
+| gamma_spatial(K=4/M=2/round_robin) | 200K | cluster | 99.5 | 0.5078 | 1.585 | 22500 | 177500 |
+| gamma_spatial(K=8/M=4/round_robin) | 200K | cluster | 74.4 | 0.5186 | 2.374 | 22500 | 177500 |
+| gamma_spatial(K=16/M=8/round_robin) | 200K | cluster | 58.7 | 0.5114 | 3.658 | 22500 | 177500 |
 | gamma_v2 (k=1, baseline) | 200K | partial_reset | 85.5 | 0.9988 | 0.691 | 40000 | 160000 |
 | hnswlib direct | 200K | partial_reset | 107.7 | 0.9994 | 0.859 | 40000 | 160000 |
 | gamma_spatial(K=2/M=1/centroid) | 200K | partial_reset | 83.8 | 0.9988 | 0.795 | 40000 | 160000 |
@@ -756,10 +761,16 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **678**.
 | gamma_spatial(K=8/M=4/centroid) | 200K | random | 97.7 | 0.9972 | 3.275 | 22500 | 177500 |
 | gamma_spatial(K=16/M=8/centroid) | 200K | random | 80.8 | 0.9998 | 5.105 | 22500 | 177500 |
 | gamma_spatial(K=2/M=1/round_robin) | 200K | random | 123.2 | 0.5040 | 0.950 | 22500 | 177500 |
+| gamma_spatial(K=4/M=2/round_robin) | 200K | random | 99.1 | 0.5048 | 1.595 | 22500 | 177500 |
+| gamma_spatial(K=8/M=4/round_robin) | 200K | random | 74.3 | 0.5192 | 2.412 | 22500 | 177500 |
+| gamma_spatial(K=16/M=8/round_robin) | 200K | random | 58.2 | 0.5028 | 3.620 | 22500 | 177500 |
 | gamma_v2 (k=1, baseline) | 200K | sequential | 176.1 | 0.9990 | 1.021 | 22500 | 177500 |
 | hnswlib direct | 200K | sequential | 150.3 | 0.9984 | 1.133 | 22500 | 177500 |
 | gamma_spatial(K=2/M=1/centroid) | 200K | sequential | 213.6 | 0.9990 | 1.410 | 22500 | 177500 |
 | gamma_spatial(K=4/M=2/centroid) | 200K | sequential | 186.4 | 0.9996 | 2.707 | 22500 | 177500 |
+| gamma_spatial(K=8/M=4/centroid) | 200K | sequential | 156.8 | 0.9972 | 3.898 | 22500 | 177500 |
+| gamma_spatial(K=16/M=8/centroid) | 200K | sequential | 114.9 | 0.9998 | 5.646 | 22500 | 177500 |
+| gamma_spatial(K=2/M=1/round_robin) | 200K | sequential | 183.8 | 0.5098 | 1.088 | 22500 | 177500 |
 
 ## e25_module_tombstone_rebuild
 
@@ -770,6 +781,7 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **678**.
 | gamma_rebuild(th=0.25) | 200K | cluster | 88.2 | 0.9994 | 0.144 | 22500 | 177500 |
 | gamma_rebuild(th=0.5) | 200K | cluster | 66.6 | 0.9994 | 0.253 | 22500 | 177500 |
 | gamma_rebuild(th=0.75) | 200K | cluster | 92.9 | 0.9992 | 0.553 | 22500 | 177500 |
+| gamma_rebuild(th=1.1) | 200K | cluster | 138.1 | 0.9992 | 0.981 | 22500 | 177500 |
 | gamma_v2 (no rebuild) | 200K | partial_reset | 96.2 | 0.9988 | 0.782 | 40000 | 160000 |
 | hnswlib direct | 200K | partial_reset | 134.2 | 0.9994 | 1.076 | 40000 | 160000 |
 | gamma_rebuild(th=0.25) | 200K | partial_reset | 64.5 | 0.9988 | 0.160 | 40000 | 160000 |
@@ -781,10 +793,13 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **678**.
 | gamma_rebuild(th=0.25) | 200K | random | 92.5 | 0.9992 | 0.137 | 22500 | 177500 |
 | gamma_rebuild(th=0.5) | 200K | random | 67.5 | 0.9994 | 0.251 | 22500 | 177500 |
 | gamma_rebuild(th=0.75) | 200K | random | 92.9 | 0.9986 | 0.550 | 22500 | 177500 |
+| gamma_rebuild(th=1.1) | 200K | random | 136.9 | 0.9996 | 0.990 | 22500 | 177500 |
 | gamma_v2 (no rebuild) | 200K | sequential | 205.6 | 0.9990 | 1.256 | 22500 | 177500 |
 | hnswlib direct | 200K | sequential | 184.8 | 0.9984 | 1.329 | 22500 | 177500 |
 | gamma_rebuild(th=0.25) | 200K | sequential | 105.2 | 0.9994 | 0.136 | 22500 | 177500 |
 | gamma_rebuild(th=0.5) | 200K | sequential | 90.1 | 0.9994 | 0.295 | 22500 | 177500 |
+| gamma_rebuild(th=0.75) | 200K | sequential | 109.1 | 0.9990 | 0.503 | 22500 | 177500 |
+| gamma_rebuild(th=1.1) | 200K | sequential | 214.3 | 0.9990 | 1.253 | 22500 | 177500 |
 
 ## e26_module_adaptive_maint
 
@@ -793,15 +808,25 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **678**.
 | gamma_v2 (qstride maint) | 200K | cluster | 131.0 | 0.9992 | 0.931 | 22500 | 177500 |
 | hnswlib direct | 200K | cluster | 183.8 | 0.9994 | 1.274 | 22500 | 177500 |
 | gamma_adaptive_maint(th=0.1) | 200K | cluster | 142.9 | 0.9992 | 1.020 | 22500 | 177500 |
+| gamma_adaptive_maint(th=0.25) | 200K | cluster | 136.5 | 0.9992 | 0.979 | 22500 | 177500 |
+| gamma_adaptive_maint(th=0.5) | 200K | cluster | 128.5 | 0.9992 | 0.977 | 22500 | 177500 |
+| gamma_adaptive_maint(th=0.8) | 200K | cluster | 130.5 | 0.9992 | 0.933 | 22500 | 177500 |
 | gamma_v2 (qstride maint) | 200K | partial_reset | 106.9 | 0.9988 | 0.866 | 40000 | 160000 |
 | hnswlib direct | 200K | partial_reset | 144.3 | 0.9994 | 1.172 | 40000 | 160000 |
 | gamma_adaptive_maint(th=0.1) | 200K | partial_reset | 116.0 | 0.9988 | 0.930 | 40000 | 160000 |
 | gamma_adaptive_maint(th=0.25) | 200K | partial_reset | 115.5 | 0.9988 | 0.920 | 40000 | 160000 |
+| gamma_adaptive_maint(th=0.5) | 200K | partial_reset | 110.7 | 0.9988 | 0.872 | 40000 | 160000 |
+| gamma_adaptive_maint(th=0.8) | 200K | partial_reset | 104.4 | 0.9988 | 0.851 | 40000 | 160000 |
 | gamma_v2 (qstride maint) | 200K | random | 132.1 | 0.9996 | 0.968 | 22500 | 177500 |
 | hnswlib direct | 200K | random | 181.6 | 0.9990 | 1.279 | 22500 | 177500 |
 | gamma_adaptive_maint(th=0.1) | 200K | random | 144.3 | 0.9996 | 1.049 | 22500 | 177500 |
+| gamma_adaptive_maint(th=0.25) | 200K | random | 137.1 | 0.9996 | 1.014 | 22500 | 177500 |
+| gamma_adaptive_maint(th=0.5) | 200K | random | 129.4 | 0.9996 | 0.976 | 22500 | 177500 |
+| gamma_adaptive_maint(th=0.8) | 200K | random | 130.8 | 0.9996 | 0.957 | 22500 | 177500 |
 | gamma_v2 (qstride maint) | 200K | sequential | 224.6 | 0.9990 | 1.372 | 22500 | 177500 |
 | hnswlib direct | 200K | sequential | 188.3 | 0.9984 | 1.361 | 22500 | 177500 |
+| gamma_adaptive_maint(th=0.1) | 200K | sequential | 225.2 | 0.9990 | 1.217 | 22500 | 177500 |
+| gamma_adaptive_maint(th=0.25) | 200K | sequential | 216.1 | 0.9990 | 1.210 | 22500 | 177500 |
 
 ## e27_module_cost_admit
 
@@ -809,9 +834,20 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **678**.
 |---|---|---|---|---|---|---|---|
 | gamma_v2 | 200K | cluster | 143.7 | 0.9992 | 1.018 | 22500 | 177500 |
 | hnswlib direct | 200K | cluster | 186.4 | 0.9994 | 1.275 | 22500 | 177500 |
+| gamma_cost_admit(th=0) | 200K | cluster | 175.0 | 0.9994 | 1.156 | 22500 | 177500 |
+| gamma_cost_admit(th=5000) | 200K | cluster | 170.7 | 0.9994 | 1.199 | 22500 | 177500 |
 | gamma_v2 | 200K | partial_reset | 117.6 | 0.9988 | 0.938 | 40000 | 160000 |
 | hnswlib direct | 200K | partial_reset | 147.7 | 0.9994 | 1.192 | 40000 | 160000 |
+| gamma_cost_admit(th=0) | 200K | partial_reset | 144.8 | 0.9994 | 1.128 | 40000 | 160000 |
+| gamma_cost_admit(th=5000) | 200K | partial_reset | 134.6 | 0.9994 | 1.061 | 40000 | 160000 |
+| gamma_cost_admit(th=20000) | 200K | partial_reset | 136.2 | 0.9994 | 1.082 | 40000 | 160000 |
+| gamma_cost_admit(th=100000) | 200K | partial_reset | 107.7 | 0.9988 | 0.842 | 40000 | 160000 |
 | gamma_v2 | 200K | random | 143.3 | 0.9996 | 1.037 | 22500 | 177500 |
 | hnswlib direct | 200K | random | 182.8 | 0.9990 | 1.309 | 22500 | 177500 |
+| gamma_cost_admit(th=0) | 200K | random | 172.4 | 0.9990 | 1.182 | 22500 | 177500 |
+| gamma_cost_admit(th=5000) | 200K | random | 167.4 | 0.9990 | 1.216 | 22500 | 177500 |
 | gamma_v2 | 200K | sequential | 236.6 | 0.9990 | 1.350 | 22500 | 177500 |
+| hnswlib direct | 200K | sequential | 184.9 | 0.9984 | 1.290 | 22500 | 177500 |
+| gamma_cost_admit(th=0) | 200K | sequential | 172.3 | 0.9984 | 1.249 | 22500 | 177500 |
+| gamma_cost_admit(th=5000) | 200K | sequential | 169.7 | 0.9984 | 1.148 | 22500 | 177500 |
 

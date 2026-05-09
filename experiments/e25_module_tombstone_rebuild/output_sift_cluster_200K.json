@@ -56,5 +56,17 @@
     "n_alive": 22500,
     "query_latency_ms_p95": 0.5527226333506405,
     "recall": 0.9992000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "rebuild_threshold": 1.1,
+    "rebuild_count": 0,
+    "name": "gamma_rebuild(th=1.1)",
+    "total_s": 138.11654731817544,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.9812810229137539,
+    "recall": 0.9992000000000001
   }
 ]

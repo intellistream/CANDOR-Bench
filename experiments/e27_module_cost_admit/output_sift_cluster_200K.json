@@ -20,5 +20,44 @@
     "n_alive": 22500,
     "query_latency_ms_p95": 1.2749358755536377,
     "recall": 0.9994000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "admit_threshold": 0,
+    "n_admit_buffer": 0,
+    "n_admit_direct": 180000,
+    "name": "gamma_cost_admit(th=0)",
+    "total_s": 175.02455367613584,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.1558543490245938,
+    "recall": 0.9994000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "admit_threshold": 5000,
+    "n_admit_buffer": 0,
+    "n_admit_direct": 180000,
+    "name": "gamma_cost_admit(th=5000)",
+    "total_s": 170.6858503529802,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.1986927325837313,
+    "recall": 0.9994000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "admit_threshold": 20000,
+    "n_admit_buffer": 5000,
+    "n_admit_direct": 175000,
+    "name": "gamma_cost_admit(th=20000)",
+    "total_s": 165.7237696107477,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.189564581029117,
+    "recall": 0.9994000000000001
   }
 ]

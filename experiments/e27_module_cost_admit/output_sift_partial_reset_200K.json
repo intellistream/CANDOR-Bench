@@ -33,5 +33,44 @@
     "n_alive": 40000,
     "query_latency_ms_p95": 1.1278886599466202,
     "recall": 0.9994
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "admit_threshold": 5000,
+    "n_admit_buffer": 0,
+    "n_admit_direct": 180000,
+    "name": "gamma_cost_admit(th=5000)",
+    "total_s": 134.62712910678238,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 1.061232498474419,
+    "recall": 0.9994
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "admit_threshold": 20000,
+    "n_admit_buffer": 0,
+    "n_admit_direct": 180000,
+    "name": "gamma_cost_admit(th=20000)",
+    "total_s": 136.1901507442817,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 1.0816026394255458,
+    "recall": 0.9994
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "admit_threshold": 100000,
+    "n_admit_buffer": 157500,
+    "n_admit_direct": 22500,
+    "name": "gamma_cost_admit(th=100000)",
+    "total_s": 107.70827996078879,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 0.8423686150461434,
+    "recall": 0.9987999999999999
   }
 ]
