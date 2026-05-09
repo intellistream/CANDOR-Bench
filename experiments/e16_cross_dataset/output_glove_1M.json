@@ -20,5 +20,27 @@
     "n_alive": 110000,
     "query_latency_ms_p95": 1.9775078021921213,
     "recall": 0.8795000000000001
+  },
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "sequential",
+    "name": "gamma_v2+faiss_hnsw",
+    "total_s": 265.3153495443985,
+    "n_delete": 890000,
+    "n_alive": 110000,
+    "query_latency_ms_p95": 0.619545397348702,
+    "recall": 0.6635000000000001
+  },
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "sequential",
+    "name": "faiss_hnsw direct",
+    "total_s": 258.70496786851436,
+    "n_delete": 890000,
+    "n_alive": 110000,
+    "query_latency_ms_p95": 0.6202656945679337,
+    "recall": 0.6595
   }
 ]

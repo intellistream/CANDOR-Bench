@@ -118,5 +118,29 @@
     "n_alive": 17500,
     "query_latency_ms_p95": 9.880276086274531,
     "recall": 0.9987999999999999
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "ratio": 3.0,
+    "n_del_per_batch": 7500,
+    "name": "gamma_v2+hnswlib",
+    "total_s": 273.9092321405187,
+    "n_delete": 182500,
+    "n_alive": 17500,
+    "query_latency_ms_p95": 2.8353309321217215,
+    "recall": 0.9967999999999999
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "ratio": 3.0,
+    "n_del_per_batch": 7500,
+    "name": "hnswlib direct",
+    "total_s": 887.6616324549541,
+    "n_delete": 182500,
+    "n_alive": 17500,
+    "query_latency_ms_p95": 6.932324773538851,
+    "recall": 0.9977999999999999
   }
 ]

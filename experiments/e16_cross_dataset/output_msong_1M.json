@@ -1,0 +1,24 @@
+[
+  {
+    "dataset": "msong",
+    "scale": "1M",
+    "pattern": "sequential",
+    "name": "gamma_v2+hnswlib",
+    "total_s": 4313.258280088194,
+    "n_delete": 890000,
+    "n_alive": 102272,
+    "query_latency_ms_p95": 3.7487719433847815,
+    "recall": 0.9934999999999999
+  },
+  {
+    "dataset": "msong",
+    "scale": "1M",
+    "pattern": "sequential",
+    "name": "hnswlib direct",
+    "total_s": 2096.6098467884585,
+    "n_delete": 890000,
+    "n_alive": 102272,
+    "query_latency_ms_p95": 2.823609697865322,
+    "recall": 0.9945
+  }
+]
