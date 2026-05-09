@@ -1,0 +1,38 @@
+[
+  {
+    "algo": "gamma",
+    "n_insert": 180000,
+    "stream_s": 6.673571083985735,
+    "stream_throughput_per_sec": 26972.06604001534,
+    "insert_latency_us_avg": 37.070448727980775,
+    "insert_latency_us_p99": 46.87389256129974,
+    "maint_s": 43.63679309200961,
+    "final_query_latency_ms": 0.2189008470159024,
+    "recall": 0.9917,
+    "scale": "200K"
+  },
+  {
+    "algo": "faiss",
+    "n_insert": 180000,
+    "stream_s": 43.91286170005333,
+    "stream_throughput_per_sec": 4099.026868927137,
+    "insert_latency_us_avg": 243.95437727507667,
+    "insert_latency_us_p99": 363.31030624499545,
+    "maint_s": 6.887898780405521e-05,
+    "final_query_latency_ms": 0.23678852402372286,
+    "recall": 0.9914,
+    "scale": "200K"
+  },
+  {
+    "algo": "ivf",
+    "n_insert": 180000,
+    "stream_s": 2.4448812099872157,
+    "stream_throughput_per_sec": 73623.20887604238,
+    "insert_latency_us_avg": 13.579796082922257,
+    "insert_latency_us_p99": 262.0271778057851,
+    "maint_s": 3.016961272805929e-06,
+    "final_query_latency_ms": 12.630073801032268,
+    "recall": 0.9999,
+    "scale": "200K"
+  }
+]

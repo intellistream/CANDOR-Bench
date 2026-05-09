@@ -6,7 +6,6 @@ import os, sys, json, subprocess
 
 CHILD_CODE = r"""
 import os, sys, time, json, numpy as np
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.insert(0, os.environ['EXP_DIR'])
 import _shared
 from _shared import load_sift, cached_gt, recall_at_k

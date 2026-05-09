@@ -1,0 +1,202 @@
+[
+  {
+    "label": "gamma",
+    "delete_frac": 0.25,
+    "total_s": 309.394366662018,
+    "query_latency_ms_avg": 0.1547317001257195,
+    "query_latency_ms_p95": 0.206199386663502,
+    "final_query_latency_ms": 0.16288167797029018,
+    "recall": 0.9943999999999998,
+    "n_delete": 45000
+  },
+  {
+    "label": "faiss",
+    "delete_frac": 0.25,
+    "total_s": 63.36868325097021,
+    "query_latency_ms_avg": 2.7008924345524674,
+    "query_latency_ms_p95": 4.619871782866539,
+    "final_query_latency_ms": 5.002679327968508,
+    "recall": 0.9885999999999999,
+    "n_delete": 45000
+  },
+  {
+    "label": "faiss+rebuild1",
+    "delete_frac": 0.25,
+    "total_s": 323.8187695040251,
+    "query_latency_ms_avg": 0.1306902072327729,
+    "query_latency_ms_p95": 0.1726140643993858,
+    "final_query_latency_ms": 0.16942559403833002,
+    "recall": 0.9934,
+    "n_delete": 45000
+  },
+  {
+    "label": "faiss+rebuild4",
+    "delete_frac": 0.25,
+    "total_s": 324.7979774340056,
+    "query_latency_ms_avg": 0.13427504543991137,
+    "query_latency_ms_p95": 0.17170157728833146,
+    "final_query_latency_ms": 0.17772415198851377,
+    "recall": 0.9934,
+    "n_delete": 45000
+  },
+  {
+    "label": "faiss+rebuild16",
+    "delete_frac": 0.25,
+    "total_s": 152.0874606720172,
+    "query_latency_ms_avg": 1.7304625338939432,
+    "query_latency_ms_p95": 3.590920125931734,
+    "final_query_latency_ms": 0.17199664004147053,
+    "recall": 0.9934,
+    "n_delete": 45000
+  },
+  {
+    "label": "gamma",
+    "delete_frac": 0.5,
+    "total_s": 192.2522957379697,
+    "query_latency_ms_avg": 0.12979714445019552,
+    "query_latency_ms_p95": 0.1704013077949639,
+    "final_query_latency_ms": 0.1579458978958428,
+    "recall": 0.9936,
+    "n_delete": 90000
+  },
+  {
+    "label": "faiss",
+    "delete_frac": 0.5,
+    "total_s": 63.350206425006036,
+    "query_latency_ms_avg": 2.745034088432375,
+    "query_latency_ms_p95": 4.510699280072004,
+    "final_query_latency_ms": 4.893927386030555,
+    "recall": 0.9832000000000001,
+    "n_delete": 90000
+  },
+  {
+    "label": "faiss+rebuild1",
+    "delete_frac": 0.5,
+    "total_s": 217.86349226901075,
+    "query_latency_ms_avg": 0.11618150923297639,
+    "query_latency_ms_p95": 0.15795791895943692,
+    "final_query_latency_ms": 0.14340091205667704,
+    "recall": 0.9944000000000001,
+    "n_delete": 90000
+  },
+  {
+    "label": "faiss+rebuild4",
+    "delete_frac": 0.5,
+    "total_s": 228.3424111289787,
+    "query_latency_ms_avg": 0.12221695154827707,
+    "query_latency_ms_p95": 0.15752166262827813,
+    "final_query_latency_ms": 0.16525483992882073,
+    "recall": 0.9944000000000001,
+    "n_delete": 90000
+  },
+  {
+    "label": "faiss+rebuild16",
+    "delete_frac": 0.5,
+    "total_s": 113.7188715460361,
+    "query_latency_ms_avg": 1.4110836521334322,
+    "query_latency_ms_p95": 2.754073202854488,
+    "final_query_latency_ms": 0.16177480202168226,
+    "recall": 0.9944000000000001,
+    "n_delete": 90000
+  },
+  {
+    "label": "gamma",
+    "delete_frac": 0.75,
+    "total_s": 106.42583322001155,
+    "query_latency_ms_avg": 0.11105117611845747,
+    "query_latency_ms_p95": 0.14084641395602374,
+    "final_query_latency_ms": 0.14452407008502632,
+    "recall": 0.9967999999999999,
+    "n_delete": 135000
+  },
+  {
+    "label": "faiss",
+    "delete_frac": 0.75,
+    "total_s": 63.81798393902136,
+    "query_latency_ms_avg": 2.7641746312082334,
+    "query_latency_ms_p95": 4.707734568504383,
+    "final_query_latency_ms": 4.844563868013211,
+    "recall": 0.9646000000000001,
+    "n_delete": 135000
+  },
+  {
+    "label": "faiss+rebuild1",
+    "delete_frac": 0.75,
+    "total_s": 130.57662456395337,
+    "query_latency_ms_avg": 0.10315245754059611,
+    "query_latency_ms_p95": 0.13982225468498652,
+    "final_query_latency_ms": 0.12320576002821325,
+    "recall": 0.9952000000000001,
+    "n_delete": 135000
+  },
+  {
+    "label": "faiss+rebuild4",
+    "delete_frac": 0.75,
+    "total_s": 127.2851858040085,
+    "query_latency_ms_avg": 0.09884506178140226,
+    "query_latency_ms_p95": 0.12806919520371593,
+    "final_query_latency_ms": 0.12544745800551027,
+    "recall": 0.9952000000000001,
+    "n_delete": 135000
+  },
+  {
+    "label": "faiss+rebuild16",
+    "delete_frac": 0.75,
+    "total_s": 73.69819117395673,
+    "query_latency_ms_avg": 1.1298098791093152,
+    "query_latency_ms_p95": 1.8871631833200806,
+    "final_query_latency_ms": 0.12816736404784024,
+    "recall": 0.9952000000000001,
+    "n_delete": 135000
+  },
+  {
+    "label": "gamma",
+    "delete_frac": 0.9,
+    "total_s": 56.07400701998267,
+    "query_latency_ms_avg": 0.09097984611677626,
+    "query_latency_ms_p95": 0.11928874215809628,
+    "final_query_latency_ms": 0.11041167995426804,
+    "recall": 0.998,
+    "n_delete": 162000
+  },
+  {
+    "label": "faiss",
+    "delete_frac": 0.9,
+    "total_s": 63.43169014400337,
+    "query_latency_ms_avg": 2.7862442340055065,
+    "query_latency_ms_p95": 4.887692820088704,
+    "final_query_latency_ms": 4.858210940030403,
+    "recall": 0.9428000000000001,
+    "n_delete": 162000
+  },
+  {
+    "label": "faiss+rebuild1",
+    "delete_frac": 0.9,
+    "total_s": 74.59631900204113,
+    "query_latency_ms_avg": 0.08103089156793429,
+    "query_latency_ms_p95": 0.11363933592801911,
+    "final_query_latency_ms": 0.11041046609170735,
+    "recall": 0.998,
+    "n_delete": 162000
+  },
+  {
+    "label": "faiss+rebuild4",
+    "delete_frac": 0.9,
+    "total_s": 74.38655354798539,
+    "query_latency_ms_avg": 0.07804971143034184,
+    "query_latency_ms_p95": 0.09516736545483581,
+    "final_query_latency_ms": 0.10063674999400973,
+    "recall": 0.998,
+    "n_delete": 162000
+  },
+  {
+    "label": "faiss+rebuild16",
+    "delete_frac": 0.9,
+    "total_s": 53.758451403991785,
+    "query_latency_ms_avg": 0.9263275243380727,
+    "query_latency_ms_p95": 1.5515087797306477,
+    "final_query_latency_ms": 0.10133661597501487,
+    "recall": 0.998,
+    "n_delete": 162000
+  }
+]
