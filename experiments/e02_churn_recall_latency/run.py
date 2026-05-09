@@ -76,32 +76,46 @@ DATASET_CONFIGS = {
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--datasets", nargs="+",
-                   default=["sift", "msong", "random-m"],
-                   help="datasets to sweep")
+                   default=["sift", "msong", "random-m"])
     p.add_argument("--delete-fracs", nargs="+", type=float,
                    default=[0.0, 0.25, 0.5, 0.75, 0.9])
+    p.add_argument("--shard", default=None,
+                   help="X/N — run only shard X of N (1-indexed). Useful for parallel runs.")
+    p.add_argument("--output", default=None,
+                   help="custom output path; default: output.json or output_shard_X.json")
     args = p.parse_args()
 
+    # Build full task list as (dataset, df) tuples
+    all_tasks = [(ds, df) for ds in args.datasets for df in args.delete_fracs]
+    if args.shard:
+        idx, n = map(int, args.shard.split("/"))
+        all_tasks = [t for i, t in enumerate(all_tasks) if i % n == (idx - 1)]
+        out = args.output or os.path.join(os.path.dirname(__file__),
+                                           f"output_shard_{idx}of{n}.json")
+    else:
+        out = args.output or os.path.join(os.path.dirname(__file__), "output.json")
+
     rows = []
-    for ds_name in args.datasets:
+    last_ds = None
+    for ds_name, df in all_tasks:
         slice_n, init_n, batch, qstride, n_queries = DATASET_CONFIGS[ds_name]
-        print(f"\n##### dataset = {ds_name} (slice {slice_n}, init {init_n}) #####",
-              flush=True)
-        data, queries = load_dataset(ds_name, n_queries=n_queries, slice_n=slice_n)
-        for df in args.delete_fracs:
-            print(f"\n  delete_frac = {df:.2f}", flush=True)
-            for algo in ["gamma", "faiss", "ivf"]:
-                row = run_churn(algo, data, queries, init_n, batch, df, qstride)
-                row["dataset"] = ds_name
-                row["dim"] = int(data.shape[1])
-                rows.append(row)
-                print(f"    {algo:6s}  total={row['total_s']:6.1f}s  "
-                      f"recall={row['recall']:.4f}  "
-                      f"qry_avg={row['query_latency_ms_avg']:.3f}ms  "
-                      f"qry_p95={row['query_latency_ms_p95']:.3f}ms", flush=True)
-                out = os.path.join(os.path.dirname(__file__), "output.json")
-                with open(out, "w") as f:
-                    json.dump(rows, f, indent=2)
+        if ds_name != last_ds:
+            print(f"\n##### dataset = {ds_name} (slice {slice_n}, init {init_n}) #####",
+                  flush=True)
+            data, queries = load_dataset(ds_name, n_queries=n_queries, slice_n=slice_n)
+            last_ds = ds_name
+        print(f"\n  delete_frac = {df:.2f}", flush=True)
+        for algo in ["gamma", "faiss", "ivf"]:
+            row = run_churn(algo, data, queries, init_n, batch, df, qstride)
+            row["dataset"] = ds_name
+            row["dim"] = int(data.shape[1])
+            rows.append(row)
+            print(f"    {algo:6s}  total={row['total_s']:6.1f}s  "
+                  f"recall={row['recall']:.4f}  "
+                  f"qry_avg={row['query_latency_ms_avg']:.3f}ms  "
+                  f"qry_p95={row['query_latency_ms_p95']:.3f}ms", flush=True)
+            with open(out, "w") as f:
+                json.dump(rows, f, indent=2)
     print(f"\n✓ saved {out}")
 
 

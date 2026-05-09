@@ -42,11 +42,15 @@ def run_one(name, data, queries, gt, init_n, batch):
 
 
 def main():
-    # Sweep two scales: 200K (fast iteration) and 1M (publication scale)
-    cases = [
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument("--scale", choices=["200K", "1M", "both"], default="both")
+    args = p.parse_args()
+    all_cases = [
         {"label": "200K", "slice_n": 200_000, "init_n": 20_000, "batch": 2_500},
         {"label": "1M",   "slice_n": 1_000_000, "init_n": 100_000, "batch": 10_000},
     ]
+    cases = all_cases if args.scale == "both" else [c for c in all_cases if c["label"] == args.scale]
     rows = []
     for case in cases:
         print(f"\n========== insert_only/{case['label']} ==========", flush=True)
