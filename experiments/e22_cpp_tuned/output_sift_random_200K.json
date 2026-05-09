@@ -1,0 +1,86 @@
+[
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "python_poc_v2",
+    "name": "python_poc_v2+FaissHNSW",
+    "total_s": 45.90877101570368,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.3759548432193696,
+    "recall": 0.9268
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "(faiss_hnsw direct)",
+    "name": "FaissHNSW direct",
+    "total_s": 58.013417076319456,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.43481861632317304,
+    "recall": 0.9042
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "default_cpp",
+    "overrides": {},
+    "name": "gamma_cpp[default_cpp]+FaissHNSW",
+    "total_s": 367.76249416545033,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 16.463728238549084,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "no_spatial",
+    "overrides": {
+      "split_factor": 1000000000.0
+    },
+    "name": "gamma_cpp[no_spatial]+FaissHNSW",
+    "total_s": 123.41274044942111,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 14.733101927954703,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "e04_tuned",
+    "overrides": {
+      "split_factor": 4.0,
+      "gamma_split_threshold": 0.4,
+      "min_size_for_split": 64,
+      "maintenance_interval": 4,
+      "maintenance_query_interval": 4
+    },
+    "name": "gamma_cpp[e04_tuned]+FaissHNSW",
+    "total_s": 214.80488858371973,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 2.797926440369338,
+    "recall": 0.9814
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "large_split",
+    "overrides": {
+      "split_factor": 16.0,
+      "gamma_split_threshold": 1.0,
+      "min_size_for_split": 512,
+      "maintenance_interval": 4,
+      "maintenance_query_interval": 4
+    },
+    "name": "gamma_cpp[large_split]+FaissHNSW",
+    "total_s": 110.58493548538536,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 10.542180478572845,
+    "recall": 0.9996
+  }
+]

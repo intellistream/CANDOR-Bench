@@ -1,0 +1,90 @@
+[
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "buf_mult": null,
+    "name": "hnswlib direct",
+    "total_s": 204.63551336620003,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.4744820854626595,
+    "recall": 0.9984
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "buf_mult": 5,
+    "name": "gamma_v2+hnswlib(buf=5x)",
+    "total_s": 272.7245160518214,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.5767674612812694,
+    "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "buf_mult": 10,
+    "name": "gamma_v2+hnswlib(buf=10x)",
+    "total_s": 277.3722163345665,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.7102793392725288,
+    "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "buf_mult": 25,
+    "name": "gamma_v2+hnswlib(buf=25x)",
+    "total_s": 309.5843099951744,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.7890739833004772,
+    "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "buf_mult": 50,
+    "name": "gamma_v2+hnswlib(buf=50x)",
+    "total_s": 307.8718781154603,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.762654576357454,
+    "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "buf_mult": 100,
+    "name": "gamma_v2+hnswlib(buf=100x)",
+    "total_s": 303.1062712650746,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.7966998902149498,
+    "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "buf_mult": 200,
+    "name": "gamma_v2+hnswlib(buf=200x)",
+    "total_s": 315.4131530774757,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.8121534678153692,
+    "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "buf_mult": 400,
+    "name": "gamma_v2+hnswlib(buf=400x)",
+    "total_s": 292.1441831346601,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.6389925703406332,
+    "recall": 0.999
+  }
+]

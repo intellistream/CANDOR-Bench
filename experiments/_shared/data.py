@@ -8,23 +8,32 @@ Supported datasets (verified working):
 """
 import os
 import numpy as np
-from datasets.loaders import prepare_dataset
 
 
 # (dataset name, full-N, dim, default n_queries)
 DATASETS_INFO = {
     "sift":     {"n": 1_000_000, "dim": 128, "default_q": 1000, "domain": "image"},
     "msong":    {"n":   992_272, "dim": 420, "default_q": 200,  "domain": "audio"},
+    "glove":    {"n": 1_183_514, "dim": 100, "default_q": 200,  "domain": "text"},
     "random-m": {"n":   100_000, "dim": 128, "default_q": 1000, "domain": "synthetic"},
     "random-s": {"n":    10_000, "dim": 128, "default_q":  100, "domain": "synthetic"},
 }
 
 
 def load_dataset(name: str, n_queries: int | None = None, slice_n: int | None = None):
-    """Generic dataset loader. Returns (data, queries) as float32 contiguous."""
+    """Generic dataset loader. Returns (data, queries) as float32 contiguous.
+
+    Skips re-download if the data file already exists locally (some loaders
+    in datasets/registry.py — notably glove/msong — naively re-download
+    every prepare() call).
+    """
     if name not in DATASETS_INFO:
         raise ValueError(f"unknown dataset: {name}; supported: {list(DATASETS_INFO)}")
-    ds = prepare_dataset(name)
+    from datasets.registry import get_dataset
+    ds = get_dataset(name)
+    fn = ds.get_dataset_fn() if hasattr(ds, "get_dataset_fn") else None
+    skip_data = bool(fn and os.path.exists(fn))
+    ds.prepare(skip_data=skip_data)
     data = np.asarray(ds.get_dataset(), dtype=np.float32)
     if slice_n is not None:
         data = data[:slice_n]

@@ -15,3 +15,4 @@ sys.path.insert(0, os.path.join(_REPO, "algorithms_impl/GammaFresh/python"))
 from .data import load_sift, load_dataset, compute_gt, cached_gt, gt_for_surviving, DATASETS_INFO  # noqa: E402,F401
 from .builders import build_gamma, build_faiss, build_ivf, build  # noqa: E402,F401
 from .metrics import recall_at_k, percentile_ms, format_row, maintain  # noqa: E402,F401
+from .workloads import run_workload, make_pattern, PATTERNS  # noqa: E402,F401

@@ -1,0 +1,87 @@
+[
+  {
+    "dataset": "glove",
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "(hnswlib direct)",
+    "name": "hnswlib direct",
+    "total_s": 398.1380906412378,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 2.580878123175353,
+    "recall": 0.9430000000000001
+  },
+  {
+    "dataset": "glove",
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "full",
+    "kwargs": {},
+    "name": "gamma_v3(full)+hnswlib",
+    "total_s": 305.95860095787793,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 2.0200363053008914,
+    "recall": 0.9420000000000001
+  },
+  {
+    "dataset": "glove",
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "no_buffer_scan",
+    "kwargs": {
+      "use_buffer_scan": false
+    },
+    "name": "gamma_v3(no_buffer_scan)+hnswlib",
+    "total_s": 310.41638263501227,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 2.1218400152865797,
+    "recall": 0.9420000000000001
+  },
+  {
+    "dataset": "glove",
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "no_buffer_inserts",
+    "kwargs": {
+      "buffer_inserts": false
+    },
+    "name": "gamma_v3(no_buffer_inserts)+hnswlib",
+    "total_s": 400.5680213710293,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 2.408911381382495,
+    "recall": 0.9430000000000001
+  },
+  {
+    "dataset": "glove",
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "no_absorb_deletes",
+    "kwargs": {
+      "absorb_buffer_deletes": false
+    },
+    "name": "gamma_v3(no_absorb_deletes)+hnswlib",
+    "total_s": 413.44461473543197,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 2.11675894074142,
+    "recall": 0.9380000000000002
+  },
+  {
+    "dataset": "glove",
+    "scale": "200K",
+    "pattern": "random",
+    "variant": "eager_maint",
+    "kwargs": {
+      "eager_maint": true
+    },
+    "name": "gamma_v3(eager_maint)+hnswlib",
+    "total_s": 355.1532891690731,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 2.263965280493721,
+    "recall": 0.9430000000000001
+  }
+]

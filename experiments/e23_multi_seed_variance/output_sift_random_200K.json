@@ -1,0 +1,112 @@
+[
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "seed": 1,
+    "name": "gamma_v2+hnswlib",
+    "total_s": 138.90482685435563,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.0018028293736279,
+    "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "seed": 1,
+    "name": "hnswlib direct",
+    "total_s": 161.62170084379613,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.1380717779509724,
+    "recall": 0.9992000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "seed": 2,
+    "name": "gamma_v2+hnswlib",
+    "total_s": 123.61495046783239,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.9133568475954235,
+    "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "seed": 2,
+    "name": "hnswlib direct",
+    "total_s": 150.8548421477899,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.0537716956809162,
+    "recall": 0.9987999999999999
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "seed": 3,
+    "name": "gamma_v2+hnswlib",
+    "total_s": 110.57965895533562,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.8360266465693709,
+    "recall": 0.9994000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "seed": 3,
+    "name": "hnswlib direct",
+    "total_s": 133.54070133715868,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.9323595781810582,
+    "recall": 0.9992000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "seed": 4,
+    "name": "gamma_v2+hnswlib",
+    "total_s": 100.54888158664107,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.7768482333049176,
+    "recall": 0.9987999999999999
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "seed": 4,
+    "name": "hnswlib direct",
+    "total_s": 126.53226027823985,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.9137704285793006,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "seed": 5,
+    "name": "gamma_v2+hnswlib",
+    "total_s": 98.21481602080166,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.7397367546334862,
+    "recall": 0.998
+  },
+  {
+    "scale": "200K",
+    "pattern": "random",
+    "seed": 5,
+    "name": "hnswlib direct",
+    "total_s": 125.94230659399182,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.9161287122406065,
+    "recall": 0.999
+  }
+]

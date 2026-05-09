@@ -1,0 +1,112 @@
+[
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "seed": 1,
+    "name": "gamma_v2+hnswlib",
+    "total_s": 142.24147961009294,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.1412035859189928,
+    "recall": 0.9992000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "seed": 1,
+    "name": "hnswlib direct",
+    "total_s": 168.19400006439537,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.183269130438566,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "seed": 2,
+    "name": "gamma_v2+hnswlib",
+    "total_s": 130.3163043372333,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.001259971130639,
+    "recall": 0.9986
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "seed": 2,
+    "name": "hnswlib direct",
+    "total_s": 155.93547454103827,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.0896952820941805,
+    "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "seed": 3,
+    "name": "gamma_v2+hnswlib",
+    "total_s": 115.30769654083997,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.8321438057348132,
+    "recall": 0.9992000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "seed": 3,
+    "name": "hnswlib direct",
+    "total_s": 140.67914077732712,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.9705907879397273,
+    "recall": 0.9992000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "seed": 4,
+    "name": "gamma_v2+hnswlib",
+    "total_s": 104.67233679164201,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.778306835051626,
+    "recall": 0.9996
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "seed": 4,
+    "name": "hnswlib direct",
+    "total_s": 133.48470328655094,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.9725622893311083,
+    "recall": 0.9994000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "seed": 5,
+    "name": "gamma_v2+hnswlib",
+    "total_s": 101.78418387938291,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.7597987746819853,
+    "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "seed": 5,
+    "name": "hnswlib direct",
+    "total_s": 129.85668230149895,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.9004320591688155,
+    "recall": 0.9994
+  }
+]

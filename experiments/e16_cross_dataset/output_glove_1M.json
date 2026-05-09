@@ -1,0 +1,24 @@
+[
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "sequential",
+    "name": "gamma_v2+hnswlib",
+    "total_s": 3738.1424515079707,
+    "n_delete": 890000,
+    "n_alive": 110000,
+    "query_latency_ms_p95": 3.2128458418883383,
+    "recall": 0.871
+  },
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "sequential",
+    "name": "hnswlib direct",
+    "total_s": 1739.3663054695353,
+    "n_delete": 890000,
+    "n_alive": 110000,
+    "query_latency_ms_p95": 1.9775078021921213,
+    "recall": 0.8795000000000001
+  }
+]

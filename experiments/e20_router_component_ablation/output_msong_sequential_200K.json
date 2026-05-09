@@ -1,0 +1,87 @@
+[
+  {
+    "dataset": "msong",
+    "scale": "200K",
+    "pattern": "sequential",
+    "variant": "(hnswlib direct)",
+    "name": "hnswlib direct",
+    "total_s": 577.7455914663151,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 3.7434023551177233,
+    "recall": 0.9990000000000001
+  },
+  {
+    "dataset": "msong",
+    "scale": "200K",
+    "pattern": "sequential",
+    "variant": "full",
+    "kwargs": {},
+    "name": "gamma_v3(full)+hnswlib",
+    "total_s": 648.4971322929487,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 3.514428545720875,
+    "recall": 0.9984999999999999
+  },
+  {
+    "dataset": "msong",
+    "scale": "200K",
+    "pattern": "sequential",
+    "variant": "no_buffer_scan",
+    "kwargs": {
+      "use_buffer_scan": false
+    },
+    "name": "gamma_v3(no_buffer_scan)+hnswlib",
+    "total_s": 616.2216180097312,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 3.1013921024277806,
+    "recall": 0.9984999999999999
+  },
+  {
+    "dataset": "msong",
+    "scale": "200K",
+    "pattern": "sequential",
+    "variant": "no_buffer_inserts",
+    "kwargs": {
+      "buffer_inserts": false
+    },
+    "name": "gamma_v3(no_buffer_inserts)+hnswlib",
+    "total_s": 447.81990483775735,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 3.2229936050716788,
+    "recall": 0.9990000000000001
+  },
+  {
+    "dataset": "msong",
+    "scale": "200K",
+    "pattern": "sequential",
+    "variant": "no_absorb_deletes",
+    "kwargs": {
+      "absorb_buffer_deletes": false
+    },
+    "name": "gamma_v3(no_absorb_deletes)+hnswlib",
+    "total_s": 509.88351725414395,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 2.7310509691014886,
+    "recall": 0.9984999999999999
+  },
+  {
+    "dataset": "msong",
+    "scale": "200K",
+    "pattern": "sequential",
+    "variant": "eager_maint",
+    "kwargs": {
+      "eager_maint": true
+    },
+    "name": "gamma_v3(eager_maint)+hnswlib",
+    "total_s": 359.6169953197241,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 2.3798009057063596,
+    "recall": 0.9990000000000001
+  }
+]
