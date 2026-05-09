@@ -42,5 +42,93 @@
     "n_alive": 110000,
     "query_latency_ms_p95": 0.6202656945679337,
     "recall": 0.6595
+  },
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "random",
+    "name": "gamma_v2+hnswlib",
+    "total_s": 902.6155543131754,
+    "n_delete": 890000,
+    "n_alive": 110000,
+    "query_latency_ms_p95": 1.1584932706318793,
+    "recall": 0.8684999999999999
+  },
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "random",
+    "name": "hnswlib direct",
+    "total_s": 1168.8013183865696,
+    "n_delete": 890000,
+    "n_alive": 110000,
+    "query_latency_ms_p95": 1.45098197623156,
+    "recall": 0.8759999999999999
+  },
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "random",
+    "name": "gamma_v2+faiss_hnsw",
+    "total_s": 183.49768414814025,
+    "n_delete": 890000,
+    "n_alive": 110000,
+    "query_latency_ms_p95": 0.5723055605776608,
+    "recall": 0.6635
+  },
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "random",
+    "name": "faiss_hnsw direct",
+    "total_s": 243.53952282387763,
+    "n_delete": 890000,
+    "n_alive": 110000,
+    "query_latency_ms_p95": 0.7161011949647218,
+    "recall": 0.647
+  },
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "cluster",
+    "name": "gamma_v2+hnswlib",
+    "total_s": 392.4936769353226,
+    "n_delete": 445000,
+    "n_alive": 555000,
+    "query_latency_ms_p95": 0.340584862511605,
+    "recall": 0.8160000000000001
+  },
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "cluster",
+    "name": "hnswlib direct",
+    "total_s": 423.08540071733296,
+    "n_delete": 445000,
+    "n_alive": 555000,
+    "query_latency_ms_p95": 0.3661449740175158,
+    "recall": 0.8240000000000001
+  },
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "cluster",
+    "name": "gamma_v2+faiss_hnsw",
+    "total_s": 233.06260859873146,
+    "n_delete": 445000,
+    "n_alive": 555000,
+    "query_latency_ms_p95": 0.5460827443748713,
+    "recall": 0.7675
+  },
+  {
+    "dataset": "glove",
+    "scale": "1M",
+    "pattern": "cluster",
+    "name": "faiss_hnsw direct",
+    "total_s": 246.35322039108723,
+    "n_delete": 445000,
+    "n_alive": 555000,
+    "query_latency_ms_p95": 0.6343279054854065,
+    "recall": 0.764
   }
 ]

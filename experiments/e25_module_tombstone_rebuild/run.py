@@ -26,6 +26,8 @@ from _shared.gamma_py_rebuild import GammaPyHybridRebuild
 
 def main():
     p = argparse.ArgumentParser()
+    p.add_argument("--dataset", default="sift",
+                   choices=["sift", "msong", "glove", "random-m"])
     p.add_argument("--scale", default="200K", choices=["200K", "1M"])
     p.add_argument("--pattern", default="cluster",
                    choices=["sequential", "random", "cluster", "partial_reset"])
@@ -37,11 +39,12 @@ def main():
     else:
         slice_n, init_n, batch, qstride, n_queries = 1_000_000, 100_000, 10_000, 50_000, 1000
 
-    data, queries = load_dataset("sift", n_queries=n_queries, slice_n=slice_n)
+    nq = {"sift": n_queries, "msong": 200, "glove": 200, "random-m": n_queries}.get(args.dataset, 200)
+    data, queries = load_dataset(args.dataset, n_queries=nq, slice_n=slice_n)
     n, d = data.shape
     rows = []
     out_path = os.path.join(os.path.dirname(__file__),
-                             f"output_sift_{args.pattern}_{args.scale}.json")
+                             f"output_{args.dataset}_{args.pattern}_{args.scale}.json")
     delete_fn = make_pattern(args.pattern)
 
     # 1. Reference: gamma_v2 (no tombstone rebuild)

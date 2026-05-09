@@ -32,5 +32,41 @@
     "n_alive": 22500,
     "query_latency_ms_p95": 1.0202358523383737,
     "recall": 0.9992000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "threshold": 0.25,
+    "auto_maint_count": 0,
+    "name": "gamma_adaptive_maint(th=0.25)",
+    "total_s": 136.52569723594934,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.9788371004164219,
+    "recall": 0.9992000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "threshold": 0.5,
+    "auto_maint_count": 0,
+    "name": "gamma_adaptive_maint(th=0.5)",
+    "total_s": 128.45098725147545,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.9771890490315854,
+    "recall": 0.9992000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "threshold": 0.8,
+    "auto_maint_count": 0,
+    "name": "gamma_adaptive_maint(th=0.8)",
+    "total_s": 130.45183947123587,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.9330034635961055,
+    "recall": 0.9992000000000001
   }
 ]

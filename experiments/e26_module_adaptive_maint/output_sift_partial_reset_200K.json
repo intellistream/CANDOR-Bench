@@ -44,5 +44,29 @@
     "n_alive": 40000,
     "query_latency_ms_p95": 0.919682784564793,
     "recall": 0.9987999999999999
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "threshold": 0.5,
+    "auto_maint_count": 0,
+    "name": "gamma_adaptive_maint(th=0.5)",
+    "total_s": 110.73822962585837,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 0.8715181726031004,
+    "recall": 0.9987999999999999
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "threshold": 0.8,
+    "auto_maint_count": 0,
+    "name": "gamma_adaptive_maint(th=0.8)",
+    "total_s": 104.37852655630559,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 0.8513825987465679,
+    "recall": 0.9987999999999999
   }
 ]

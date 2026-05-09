@@ -20,5 +20,29 @@
     "n_alive": 22500,
     "query_latency_ms_p95": 1.3611877692863343,
     "recall": 0.9984
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "threshold": 0.1,
+    "auto_maint_count": 0,
+    "name": "gamma_adaptive_maint(th=0.1)",
+    "total_s": 225.249204358086,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.2174939712509512,
+    "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "threshold": 0.25,
+    "auto_maint_count": 0,
+    "name": "gamma_adaptive_maint(th=0.25)",
+    "total_s": 216.11781834997237,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.2097701455466447,
+    "recall": 0.999
   }
 ]
