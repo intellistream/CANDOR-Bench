@@ -1,6 +1,6 @@
 # All experiment results (auto-generated)
 
-Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **799**.
+Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **810**.
 
 ## e01_write_throughput
 
@@ -796,19 +796,30 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **799**.
 | gamma_v2 (no rebuild) | 1M | cluster | 462.5 | 0.8160 | 0.401 | 555000 | 445000 |
 | hnswlib direct | 1M | cluster | 496.8 | 0.8240 | 0.438 | 555000 | 445000 |
 | gamma_rebuild(th=0.5) | 1M | cluster | 472.4 | 0.8160 | 0.412 | 555000 | 445000 |
+| gamma_rebuild(th=1.1) | 1M | cluster | 439.6 | 0.8160 | 0.387 | 555000 | 445000 |
 | gamma_v2 (no rebuild) | 200K | cluster | 335.1 | 0.9530 | 2.474 | 22500 | 177500 |
 | hnswlib direct | 200K | cluster | 434.9 | 0.9630 | 3.195 | 22500 | 177500 |
 | gamma_rebuild(th=0.5) | 200K | cluster | 76.8 | 0.9515 | 0.342 | 22500 | 177500 |
 | gamma_rebuild(th=1.1) | 200K | cluster | 276.0 | 0.9530 | 1.998 | 22500 | 177500 |
+| gamma_v2 (no rebuild) | 1M | sequential | 2056.4 | 0.8710 | 1.911 | 110000 | 890000 |
+| hnswlib direct | 1M | sequential | 1386.5 | 0.8795 | 1.789 | 110000 | 890000 |
+| gamma_rebuild(th=0.5) | 1M | sequential | 566.6 | 0.8420 | 0.308 | 110000 | 890000 |
+| gamma_rebuild(th=1.1) | 1M | sequential | 1771.0 | 0.8710 | 1.737 | 110000 | 890000 |
 | gamma_v2 (no rebuild) | 200K | sequential | 388.8 | 0.9340 | 1.974 | 22500 | 177500 |
 | hnswlib direct | 200K | sequential | 259.9 | 0.9335 | 1.713 | 22500 | 177500 |
 | gamma_rebuild(th=0.5) | 200K | sequential | 91.9 | 0.9305 | 0.259 | 22500 | 177500 |
 | gamma_rebuild(th=1.1) | 200K | sequential | 326.1 | 0.9340 | 1.700 | 22500 | 177500 |
 | gamma_v2 (no rebuild) | 1M | cluster | 830.5 | 0.9940 | 0.783 | 547272 | 445000 |
+| hnswlib direct | 1M | cluster | 879.0 | 0.9960 | 0.794 | 547272 | 445000 |
+| gamma_rebuild(th=0.5) | 1M | cluster | 787.8 | 0.9940 | 0.734 | 547272 | 445000 |
+| gamma_rebuild(th=1.1) | 1M | cluster | 786.9 | 0.9940 | 0.737 | 547272 | 445000 |
 | gamma_v2 (no rebuild) | 200K | cluster | 342.3 | 0.9995 | 2.506 | 22500 | 177500 |
 | hnswlib direct | 200K | cluster | 448.2 | 0.9995 | 3.065 | 22500 | 177500 |
 | gamma_rebuild(th=0.5) | 200K | cluster | 114.4 | 0.9980 | 0.552 | 22500 | 177500 |
 | gamma_rebuild(th=1.1) | 200K | cluster | 284.2 | 0.9995 | 2.050 | 22500 | 177500 |
+| gamma_v2 (no rebuild) | 1M | sequential | 2818.4 | 0.9935 | 2.941 | 102272 | 890000 |
+| hnswlib direct | 1M | sequential | 2023.7 | 0.9945 | 2.822 | 102272 | 890000 |
+| gamma_rebuild(th=0.5) | 1M | sequential | 1025.1 | 0.9955 | 0.602 | 102272 | 890000 |
 | gamma_v2 (no rebuild) | 200K | sequential | 469.0 | 0.9985 | 2.338 | 22500 | 177500 |
 | hnswlib direct | 200K | sequential | 328.8 | 0.9990 | 2.191 | 22500 | 177500 |
 | gamma_rebuild(th=0.5) | 200K | sequential | 157.8 | 0.9970 | 0.454 | 22500 | 177500 |

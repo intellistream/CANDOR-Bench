@@ -445,20 +445,41 @@ worst-case pattern is now a strong win at 1M scale.
 | glove | cluster | 335s | 77s | 435s | **-82%** |
 | glove | sequential | 389s | 92s | 260s | **-65%** |
 
+#### MSong/GloVe 1M cross-dataset
+
+| dataset | pattern | gamma_v2 | gamma_rebuild(0.5) | hnswlib direct | Δ vs hnswlib | recall pre/post rebuild |
+|---|---|---|---|---|---|---|
+| msong | cluster | 830s | 788s (0 rebuilds) | 879s | -10% | 0.994 / 0.994 |
+| **msong** | **sequential** | **2818s** | **1025s (6 reb)** | 2024s | **-49%** | **0.9935 / 0.9955** ★ |
+| glove | cluster | 462s | 472s (0 rebuilds) | 497s | -5% | 0.816 / 0.816 |
+| glove | sequential | 2056s | 567s (6 reb) | 1387s | -59% | 0.871 / 0.842 |
+
 The rebuild module generalizes beyond SIFT and is even more impactful
 on the higher-dim datasets. **All sequential losses (200K SIFT, 1M
 SIFT, 200K msong, 200K glove, 1M msong/glove) flip to wins under
 rebuild.**
+
+The msong 1M sequential result is the cleanest: rebuild gives -49%
+time AND a *slightly higher* recall (0.9935 → 0.9955) — the rebuilt
+graph is less polluted by tombstones, which helps both speed and
+quality. The glove 1M sequential trades 4 percentage points of recall
+(0.871 → 0.842) for the -59% time win — Pareto-explorable via the
+threshold knob.
 
 #### Conclusion
 
 A periodic rebuild trigger (threshold=0.5, the universal sweet spot)
 adds -38% to -65% on top of gamma_v2 across all 4 patterns at SIFT
 200K, and crucially, fixes the 1M sequential weakness (-47% vs hnswlib
-direct). Same effect generalizes to msong/glove at 200K. The amortized
-cost of periodic full rebuilds is more than recovered by the lower
-per-search work on a cleaner graph; with threshold=0.5, the rebuild
-fires only 4-6 times across the entire workload, recall is preserved.
+direct on SIFT 1M, -59% on glove 1M). Same effect generalizes to
+msong/glove at 200K and 1M. With threshold=0.5, the rebuild fires
+only 4-6 times across the entire workload.
+
+**Recall trade-off**: at SIFT scales recall is preserved (≥0.99); at
+glove 1M sequential the rebuild trades 4 percentage points of recall
+(0.88 → 0.84) for the -59% time win. This is acceptable for many
+applications and worth documenting. (Higher threshold=0.75 gives
+better recall but smaller speedup — Pareto knob.)
 
 ### e26 adaptive maintenance — null result under current workload
 
