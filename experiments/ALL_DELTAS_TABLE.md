@@ -142,7 +142,9 @@
 | e16_cross_dataset | random-m | 100K | sequential |  | 88.3 | 94.4 | -6.5% | 0.5538 | 0.5536 |
 | e20_router_component_ablation | sift | 200K | sequential |  | 231.1 | 245.6 | -5.9% | 0.9984 | 0.9984 |
 | e16_cross_dataset | glove | 1M | cluster |  | 233.1 | 246.4 | -5.4% | 0.7675 | 0.7640 |
+| e16_cross_dataset | msong | 1M | cluster |  | 384.6 | 406.1 | -5.3% | 0.9810 | 0.9805 |
 | e15_delete_pattern_matrix |  | 1M | cluster |  | 456.3 | 477.9 | -4.5% | 0.9705 | 0.9673 |
+| e16_cross_dataset | msong | 1M | cluster |  | 855.5 | 883.5 | -3.2% | 0.9940 | 0.9960 |
 | e17_churn_rate_sweep |  | 200K | partial_reset | ratio=0.25 | 67.5 | 69.7 | -3.1% | 0.9932 | 0.9926 |
 | e17_churn_rate_sweep |  | 200K | random | ratio=0.25 | 69.4 | 71.1 | -2.5% | 0.9946 | 0.9946 |
 | e23_multi_seed_variance |  | 200K | cluster |  | 130.3 | 133.5 | -2.4% | 0.9986 | 0.9994 |

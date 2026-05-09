@@ -431,6 +431,32 @@ For the paper, two complementary modules:
   cost_admit), so it's the recommended sequential fix.
 - e27 is a cheaper alternative if rebuild's amortized cost is unwanted.
 
+### e28 — Combined modules: pattern-specific best design
+
+Test of orthogonality: gamma_v2 + rebuild + cost_admit. Each pattern at
+SIFT 200K, 5 variants:
+
+| pattern | gamma_v2 | hnswlib_direct | rebuild_only | cost_admit_only | rebuild+cost_admit | best |
+|---|---|---|---|---|---|---|
+| cluster | 113.1 | 146.1 | **49.3 (-56%)** | 144.0 | 57.7 | rebuild |
+| random | 113.8 | 144.0 | **50.6 (-56%)** | 141.9 | 58.2 | rebuild |
+| partial_reset | 93.4 | 117.7 | **46.0 (-51%)** | 116.9 | 52.5 | rebuild |
+| **sequential** | 190.4 | 150.1 | 70.0 (-63%) | 144.7 | **53.1 (-72%)** | **combined ★** |
+
+**Modules are pattern-specific:**
+- cluster/random/partial_reset: rebuild alone wins; cost_admit ADDS overhead
+- sequential: rebuild + cost_admit together is best (-24% better than rebuild
+  alone). cost_admit picks "direct admit" (since FIFO deletes mean buffer
+  cancellation is rare); rebuild then prunes remaining tombstones.
+
+**Recommended drop-in design (universal):** gamma_v2 + rebuild only.
+Universally beats hnswlib direct by -34% to -68% and gamma_v2 by -51%
+to -63% across all 4 patterns.
+
+**Recommended adaptive design (knows pattern):** gamma_v2 + rebuild +
+cost_admit. Same as universal on cluster/random/partial_reset (within
+12% noise) but adds -24% on sequential.
+
 ---
 
 ## What remains (when complete)

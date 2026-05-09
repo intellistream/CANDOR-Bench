@@ -1,0 +1,63 @@
+[
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "config": "gamma_v2",
+    "name": "gamma_v2",
+    "total_s": 190.40843253675848,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.094854327198118,
+    "recall": 0.999
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "config": "hnswlib_direct",
+    "name": "hnswlib direct",
+    "total_s": 150.10540034994483,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.0856834987178445,
+    "recall": 0.9984
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "config": "rebuild_only",
+    "rebuild_count": 6,
+    "name": "gamma_v2+rebuild",
+    "total_s": 70.04235529061407,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.21614136835560196,
+    "recall": 0.9994000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "config": "cost_admit_only",
+    "n_admit_buffer": 0,
+    "n_admit_direct": 180000,
+    "name": "gamma_v2+cost_admit",
+    "total_s": 144.6523695262149,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.001870619226247,
+    "recall": 0.9984
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "config": "combined",
+    "rebuild_count": 6,
+    "n_admit_buffer": 0,
+    "n_admit_direct": 180000,
+    "name": "gamma_v2+rebuild+cost_admit",
+    "total_s": 53.10262652672827,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.18755474155768748,
+    "recall": 0.9994000000000001
+  }
+]
