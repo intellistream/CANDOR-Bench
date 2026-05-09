@@ -1,0 +1,41 @@
+[
+  {
+    "algo": "gamma",
+    "delete_frac": 0.3,
+    "n_insert": 900000,
+    "n_delete": 300000,
+    "op_total_s": 40.463452685042284,
+    "wall_total_s": 103.76041417900706,
+    "insert_latency_us_avg": 42.509540812202935,
+    "delete_latency_us_avg": 7.34952165997432,
+    "final_query_qps": 15.79854666634113,
+    "final_query_latency_ms": 63.29696149396477,
+    "recall": 1.0
+  },
+  {
+    "algo": "faiss",
+    "delete_frac": 0.3,
+    "n_insert": 900000,
+    "n_delete": 300000,
+    "op_total_s": 289.5342207089998,
+    "wall_total_s": 315.3558038820047,
+    "insert_latency_us_avg": 321.6750107311075,
+    "delete_latency_us_avg": 0.0890097999945283,
+    "final_query_qps": 38.72729233137985,
+    "final_query_latency_ms": 25.82158317300491,
+    "recall": 0.9728
+  },
+  {
+    "algo": "ivf",
+    "delete_frac": 0.3,
+    "n_insert": 900000,
+    "n_delete": 300000,
+    "op_total_s": 15.682734531001188,
+    "wall_total_s": 26.700531942013185,
+    "insert_latency_us_avg": 17.11584993334125,
+    "delete_latency_us_avg": 0.9282041599120323,
+    "final_query_qps": 90.7622424605962,
+    "final_query_latency_ms": 11.017797411011998,
+    "recall": 0.9921
+  }
+]
