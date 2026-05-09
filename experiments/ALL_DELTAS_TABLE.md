@@ -57,6 +57,7 @@
 | e23_multi_seed_variance |  | 200K | cluster |  | 115.3 | 155.9 | -26.1% | 0.9992 | 0.9990 |
 | e23_multi_seed_variance |  | 200K | cluster |  | 104.7 | 140.7 | -25.6% | 0.9996 | 0.9992 |
 | e23_multi_seed_variance |  | 200K | random |  | 100.5 | 133.5 | -24.7% | 0.9988 | 0.9992 |
+| e16_cross_dataset | glove | 1M | random |  | 183.5 | 243.5 | -24.7% | 0.6635 | 0.6470 |
 | e14_optimized_buffer |  |  | random |  | 17.9 | 23.7 | -24.5% | 0.9268 | 0.9042 |
 | e20_router_component_ablation | msong | 200K | partial_reset |  | 341.5 | 451.9 | -24.4% | 0.9970 | 0.9970 |
 | e15_delete_pattern_matrix |  | 1M | partial_reset |  | 1044.0 | 1380.8 | -24.4% | 0.9968 | 0.9974 |
@@ -72,6 +73,7 @@
 | e16_cross_dataset | random-m | 100K | partial_reset |  | 171.5 | 223.8 | -23.4% | 0.8738 | 0.8766 |
 | e20_router_component_ablation | glove | 200K | random |  | 306.0 | 398.1 | -23.2% | 0.9420 | 0.9430 |
 | e15_delete_pattern_matrix |  | 200K | cluster |  | 186.4 | 241.6 | -22.8% | 0.9992 | 0.9994 |
+| e16_cross_dataset | glove | 1M | random |  | 902.6 | 1168.8 | -22.8% | 0.8685 | 0.8760 |
 | e15_delete_pattern_matrix |  | 200K | partial_reset |  | 149.2 | 192.8 | -22.6% | 0.9988 | 0.9994 |
 | e23_multi_seed_variance |  | 200K | cluster |  | 130.3 | 168.2 | -22.5% | 0.9986 | 0.9996 |
 | e20_router_component_ablation | msong | 200K | sequential |  | 447.8 | 577.7 | -22.5% | 0.9990 | 0.9990 |
@@ -130,10 +132,12 @@
 | e17_churn_rate_sweep |  | 200K | cluster | ratio=0.5 | 88.7 | 96.3 | -7.9% | 0.9968 | 0.9970 |
 | e23_multi_seed_variance |  | 200K | random |  | 123.6 | 133.5 | -7.4% | 0.9990 | 0.9992 |
 | e23_multi_seed_variance |  | 200K | cluster |  | 130.3 | 140.7 | -7.4% | 0.9986 | 0.9992 |
+| e16_cross_dataset | glove | 1M | cluster |  | 392.5 | 423.1 | -7.2% | 0.8160 | 0.8240 |
 | e20_router_component_ablation | msong | 200K | partial_reset |  | 420.7 | 451.9 | -6.9% | 0.9950 | 0.9970 |
 | e15_delete_pattern_matrix |  | 200K | sequential |  | 195.3 | 209.2 | -6.6% | 0.9990 | 0.9984 |
 | e16_cross_dataset | random-m | 100K | sequential |  | 88.3 | 94.4 | -6.5% | 0.5538 | 0.5536 |
 | e20_router_component_ablation | sift | 200K | sequential |  | 231.1 | 245.6 | -5.9% | 0.9984 | 0.9984 |
+| e16_cross_dataset | glove | 1M | cluster |  | 233.1 | 246.4 | -5.4% | 0.7675 | 0.7640 |
 | e15_delete_pattern_matrix |  | 1M | cluster |  | 456.3 | 477.9 | -4.5% | 0.9705 | 0.9673 |
 | e17_churn_rate_sweep |  | 200K | partial_reset | ratio=0.25 | 67.5 | 69.7 | -3.1% | 0.9932 | 0.9926 |
 | e17_churn_rate_sweep |  | 200K | random | ratio=0.25 | 69.4 | 71.1 | -2.5% | 0.9946 | 0.9946 |
@@ -144,6 +148,7 @@
 | e15_delete_pattern_matrix |  | 200K | sequential |  | 60.6 | 61.5 | -1.4% | 0.9040 | 0.9030 |
 | e16_cross_dataset | glove | 200K | sequential |  | 77.3 | 77.8 | -0.6% | 0.7110 | 0.7185 |
 | e20_router_component_ablation | sift | 200K | cluster |  | 236.2 | 237.5 | -0.6% | 0.9994 | 0.9994 |
+| e16_cross_dataset | msong | 1M | sequential |  | 369.4 | 371.5 | -0.6% | 0.9170 | 0.9145 |
 | e20_router_component_ablation | glove | 200K | sequential |  | 452.3 | 454.0 | -0.4% | 0.9340 | 0.9335 |
 | e20_router_component_ablation | sift | 200K | random |  | 230.1 | 230.7 | -0.3% | 0.9990 | 0.9990 |
 | e14_optimized_buffer |  |  | sequential |  | 23.4 | 23.5 | -0.2% | 0.9040 | 0.9030 |

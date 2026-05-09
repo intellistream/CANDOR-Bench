@@ -1,0 +1,60 @@
+[
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "rebuild_threshold": null,
+    "name": "gamma_v2 (no rebuild)",
+    "total_s": 120.71712721977383,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.876222191378474,
+    "recall": 0.9992000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "rebuild_threshold": -1,
+    "name": "hnswlib direct",
+    "total_s": 175.89723652042449,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 1.3006049550138414,
+    "recall": 0.9994000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "rebuild_threshold": 0.25,
+    "rebuild_count": 16,
+    "name": "gamma_rebuild(th=0.25)",
+    "total_s": 88.23236996494234,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.14441601438447824,
+    "recall": 0.9994000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "rebuild_threshold": 0.5,
+    "rebuild_count": 5,
+    "name": "gamma_rebuild(th=0.5)",
+    "total_s": 66.6109661264345,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.25333447754383087,
+    "recall": 0.9994000000000001
+  },
+  {
+    "scale": "200K",
+    "pattern": "cluster",
+    "rebuild_threshold": 0.75,
+    "rebuild_count": 2,
+    "name": "gamma_rebuild(th=0.75)",
+    "total_s": 92.89862933568656,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.5527226333506405,
+    "recall": 0.9992000000000001
+  }
+]

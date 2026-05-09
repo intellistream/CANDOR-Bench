@@ -358,6 +358,51 @@ within-condition standard deviation.
 
 ---
 
+## e24-e27 — Module-by-module additions to the Python POC
+
+After e21/e22 showed the C++ multi-partition is not paying off at this
+scale, the next question is: which C++-inspired modules, added one at a
+time to the simple Python POC, actually help in which scenario?
+
+### e24 spatial routing (K-partition + centroid) — preliminary
+
+SIFT 200K cluster, hnswlib backend, centroid-routing variants:
+
+| K | M | total_s | recall | query_p95 | Δ vs gamma_v2 |
+|---|---|---|---|---|---|
+| 1 (gamma_v2) | 1 | 106.4 | 0.9992 | 0.770 ms | — |
+| 2 | 1 | 115.0 | 0.9992 | 0.992 ms | +8% |
+| 4 | 2 | 101.9 | 1.0000 | 1.983 ms | -4% |
+| 8 | 4 | 98.8 | 0.9976 | 3.392 ms | -7% |
+| 16 | 8 | 81.6 | 1.0000 | 5.168 ms | **-23%** |
+
+**Spatial routing is a throughput-vs-latency trade-off**: K=16 gives
+-23% wall time and perfect recall, but pays 6.7× higher p95 query
+latency (you have to search M graphs). For latency-bound workloads,
+K=1 (gamma_v2) is best; for throughput-bound, K=16. Paper should
+report the Pareto front, not a single winner.
+
+(round_robin variants will tell us whether the win is from the smart
+centroid routing or just from having smaller per-partition graphs.)
+
+### e25 tombstone rebuild — preliminary
+
+| threshold | total_s | recall | rebuilds | Δ vs gamma_v2 |
+|---|---|---|---|---|
+| (gamma_v2 baseline) | 120.7 | 0.9992 | — | — |
+| 0.25 | 88.2 | 0.9994 | 16 | **-27%** |
+
+A periodic rebuild trigger gives 27% speedup on cluster pattern at
+SIFT 200K. The amortized cost of periodic full rebuilds is more than
+recovered by the lower per-search work on a cleaner graph. Higher
+threshold variants pending.
+
+### e26 adaptive maintenance + e27 cost-model admit — in flight
+
+Results streaming. Will be added once they land.
+
+---
+
 ## What remains (when complete)
 
 - e15 1M finish (3 of 4 patterns missing 1-2 algos)

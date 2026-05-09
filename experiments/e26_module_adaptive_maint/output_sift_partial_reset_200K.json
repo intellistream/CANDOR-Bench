@@ -1,0 +1,48 @@
+[
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "threshold": null,
+    "name": "gamma_v2 (qstride maint)",
+    "total_s": 106.89765618275851,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 0.8661663906648753,
+    "recall": 0.9987999999999999
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "threshold": -1,
+    "name": "hnswlib direct",
+    "total_s": 144.27963980846107,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 1.171928041242063,
+    "recall": 0.9994
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "threshold": 0.1,
+    "auto_maint_count": 0,
+    "name": "gamma_adaptive_maint(th=0.1)",
+    "total_s": 116.0412804344669,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 0.9303147127851842,
+    "recall": 0.9987999999999999
+  },
+  {
+    "scale": "200K",
+    "pattern": "partial_reset",
+    "threshold": 0.25,
+    "auto_maint_count": 0,
+    "name": "gamma_adaptive_maint(th=0.25)",
+    "total_s": 115.46054501179606,
+    "n_delete": 160000,
+    "n_alive": 40000,
+    "query_latency_ms_p95": 0.919682784564793,
+    "recall": 0.9987999999999999
+  }
+]
