@@ -1,0 +1,98 @@
+[
+  {
+    "label": "gamma_full",
+    "delete_frac": 0.5,
+    "total_s": 81.13908073800849,
+    "query_latency_ms_p95": 9.825336373079335,
+    "final_query_latency_ms": 0.14554754993878305,
+    "recall": 0.9944
+  },
+  {
+    "label": "gamma_graph_only(force_drain)",
+    "delete_frac": 0.5,
+    "total_s": 621.2504955290351,
+    "query_latency_ms_p95": 0.13923409203998743,
+    "final_query_latency_ms": 0.1445440660463646,
+    "recall": 0.9936
+  },
+  {
+    "label": "faiss_no_rebuild",
+    "delete_frac": 0.5,
+    "total_s": 58.230651554011274,
+    "query_latency_ms_p95": 4.393123834300786,
+    "final_query_latency_ms": 4.869689328013919,
+    "recall": 0.9832000000000001
+  },
+  {
+    "label": "faiss_rebuild_every_batch",
+    "delete_frac": 0.5,
+    "total_s": 661.1145300749922,
+    "query_latency_ms_p95": 0.1353710369206965,
+    "final_query_latency_ms": 0.16661636997014284,
+    "recall": 0.9944000000000001
+  },
+  {
+    "label": "gamma_full",
+    "delete_frac": 0.75,
+    "total_s": 53.640021453029476,
+    "query_latency_ms_p95": 6.3214780797541605,
+    "final_query_latency_ms": 0.12432507798075676,
+    "recall": 0.9962000000000001
+  },
+  {
+    "label": "gamma_graph_only(force_drain)",
+    "delete_frac": 0.75,
+    "total_s": 326.5085471540224,
+    "query_latency_ms_p95": 0.12530521102598868,
+    "final_query_latency_ms": 0.12151720409747213,
+    "recall": 0.9962000000000001
+  },
+  {
+    "label": "faiss_no_rebuild",
+    "delete_frac": 0.75,
+    "total_s": 58.68571178003913,
+    "query_latency_ms_p95": 4.42222539721406,
+    "final_query_latency_ms": 4.790786104043946,
+    "recall": 0.9646000000000001
+  },
+  {
+    "label": "faiss_rebuild_every_batch",
+    "delete_frac": 0.75,
+    "total_s": 352.9397912839777,
+    "query_latency_ms_p95": 0.11338650214020163,
+    "final_query_latency_ms": 0.11966963205486536,
+    "recall": 0.9952000000000001
+  },
+  {
+    "label": "gamma_full",
+    "delete_frac": 0.9,
+    "total_s": 35.28550382499816,
+    "query_latency_ms_p95": 3.6093076705466953,
+    "final_query_latency_ms": 0.0900050540221855,
+    "recall": 0.9984
+  },
+  {
+    "label": "gamma_graph_only(force_drain)",
+    "delete_frac": 0.9,
+    "total_s": 171.32027719798498,
+    "query_latency_ms_p95": 0.0908481730846688,
+    "final_query_latency_ms": 0.09778405399993062,
+    "recall": 0.998
+  },
+  {
+    "label": "faiss_no_rebuild",
+    "delete_frac": 0.9,
+    "total_s": 58.57989185897168,
+    "query_latency_ms_p95": 4.386645514675183,
+    "final_query_latency_ms": 4.749468478024937,
+    "recall": 0.9428000000000001
+  },
+  {
+    "label": "faiss_rebuild_every_batch",
+    "delete_frac": 0.9,
+    "total_s": 189.1031587139587,
+    "query_latency_ms_p95": 0.08522359982598572,
+    "final_query_latency_ms": 0.08537535194773227,
+    "recall": 0.998
+  }
+]
