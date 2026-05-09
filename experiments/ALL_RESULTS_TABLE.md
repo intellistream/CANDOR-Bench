@@ -1,6 +1,6 @@
 # All experiment results (auto-generated)
 
-Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **561**.
+Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **595**.
 
 ## e01_write_throughput
 
@@ -352,6 +352,8 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **561**.
 
 | name | scale | dataset | pattern | total_s | recall | query_latency_ms_p95 | n_alive | n_delete |
 |---|---|---|---|---|---|---|---|---|
+| gamma_v2+hnswlib | 1M | glove | sequential | 3738.1 | 0.8710 | 3.213 | 110000 | 890000 |
+| hnswlib direct | 1M | glove | sequential | 1739.4 | 0.8795 | 1.978 | 110000 | 890000 |
 | gamma_v2+hnswlib | 200K | glove | sequential | 507.4 | 0.9340 | 2.633 | 22500 | 177500 |
 | hnswlib direct | 200K | glove | sequential | 447.8 | 0.9335 | 2.982 | 22500 | 177500 |
 | gamma_v2+faiss_hnsw | 200K | glove | sequential | 77.3 | 0.7110 | 0.551 | 22500 | 177500 |
@@ -380,6 +382,10 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **561**.
 | hnswlib direct | 200K | msong | cluster | 574.2 | 0.9995 | 3.767 | 22500 | 177500 |
 | gamma_v2+faiss_hnsw | 200K | msong | cluster | 54.0 | 0.9005 | 0.476 | 22500 | 177500 |
 | faiss_hnsw direct | 200K | msong | cluster | 79.7 | 0.8660 | 0.547 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | msong | partial_reset | 228.2 | 0.9945 | 1.711 | 40000 | 160000 |
+| hnswlib direct | 200K | msong | partial_reset | 273.9 | 0.9970 | 1.996 | 40000 | 160000 |
+| gamma_v2+faiss_hnsw | 200K | msong | partial_reset | 47.1 | 0.9765 | 0.360 | 40000 | 160000 |
+| faiss_hnsw direct | 200K | msong | partial_reset | 62.2 | 0.9735 | 0.398 | 40000 | 160000 |
 | gamma_v2+hnswlib | 100K | random-m | sequential | 321.6 | 0.9292 | 3.625 | 11250 | 88750 |
 | hnswlib direct | 100K | random-m | sequential | 282.6 | 0.9352 | 3.698 | 11250 | 88750 |
 | gamma_v2+faiss_hnsw | 100K | random-m | sequential | 88.3 | 0.5538 | 0.726 | 11250 | 88750 |
@@ -411,6 +417,8 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **561**.
 | hnswlib direct | 200K | cluster | 1.5 | 2194.1 | 0.9994 | 32.555 | 1250 | 198750 |
 | gamma_v2+hnswlib | 200K | cluster | 2.0 | 178.9 | 0.9998 | 2.298 | 5000 | 195000 |
 | hnswlib direct | 200K | cluster | 2.0 | 631.4 | 1.0000 | 6.698 | 5000 | 195000 |
+| gamma_v2+hnswlib | 200K | cluster | 3.0 | 232.8 | 0.9998 | 1.692 | 5000 | 195000 |
+| hnswlib direct | 200K | cluster | 3.0 | 380.4 | 0.9996 | 2.461 | 5000 | 195000 |
 | gamma_v2+hnswlib | 200K | partial_reset | 0.25 | 67.5 | 0.9932 | 0.299 | 160000 | 40000 |
 | hnswlib direct | 200K | partial_reset | 0.25 | 69.7 | 0.9926 | 0.309 | 160000 | 40000 |
 | gamma_v2+hnswlib | 200K | partial_reset | 0.5 | 75.9 | 0.9932 | 0.384 | 120000 | 80000 |
@@ -419,6 +427,8 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **561**.
 | hnswlib direct | 200K | partial_reset | 1.0 | 164.6 | 0.9994 | 1.291 | 40000 | 160000 |
 | gamma_v2+hnswlib | 200K | partial_reset | 1.5 | 674.5 | 0.9216 | 12.218 | 17500 | 182500 |
 | hnswlib direct | 200K | partial_reset | 1.5 | 2470.9 | 0.9982 | 20.148 | 17500 | 182500 |
+| gamma_v2+hnswlib | 200K | partial_reset | 2.0 | 392.0 | 0.9250 | 3.099 | 17500 | 182500 |
+| hnswlib direct | 200K | partial_reset | 2.0 | 1028.7 | 0.9988 | 9.880 | 17500 | 182500 |
 | gamma_v2+hnswlib | 200K | random | 0.25 | 69.4 | 0.9946 | 0.305 | 155625 | 44375 |
 | hnswlib direct | 200K | random | 0.25 | 71.1 | 0.9946 | 0.309 | 155625 | 44375 |
 | gamma_v2+hnswlib | 200K | random | 0.5 | 81.1 | 0.9940 | 0.398 | 111250 | 88750 |
@@ -589,6 +599,7 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **561**.
 | gamma_v3(no_buffer_scan)+hnswlib | 200K | msong | sequential | 616.2 | 0.9985 | 3.101 | 22500 | 177500 |
 | gamma_v3(no_buffer_inserts)+hnswlib | 200K | msong | sequential | 447.8 | 0.9990 | 3.223 | 22500 | 177500 |
 | gamma_v3(no_absorb_deletes)+hnswlib | 200K | msong | sequential | 509.9 | 0.9985 | 2.731 | 22500 | 177500 |
+| gamma_v3(eager_maint)+hnswlib | 200K | msong | sequential | 359.6 | 0.9990 | 2.380 | 22500 | 177500 |
 | hnswlib direct | 200K | sift | cluster | 237.5 | 0.9994 | 1.675 | 22500 | 177500 |
 | gamma_v3(full)+hnswlib | 200K | sift | cluster | 188.7 | 0.9992 | 1.412 | 22500 | 177500 |
 | gamma_v3(no_buffer_scan)+hnswlib | 200K | sift | cluster | 187.3 | 0.9992 | 1.414 | 22500 | 177500 |
@@ -631,6 +642,7 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **561**.
 | gamma_cpp[cost_off_admit] | 200K | partial_reset | 531.3 | 0.0060 | 7.196 | 40000 | 160000 |
 | gamma_cpp[cost_off_buffer] | 200K | partial_reset | 491.0 | 0.2284 | 11.883 | 40000 | 160000 |
 | gamma_cpp[eager_maint] | 200K | partial_reset | 458.9 | 0.0060 | 6.192 | 40000 | 160000 |
+| gamma_cpp[lazy_maint] | 200K | partial_reset | 98.3 | 0.0024 | 4.034 | 40000 | 160000 |
 | gamma_cpp[default] | 200K | random | 452.3 | 0.9996 | 20.745 | 22500 | 177500 |
 | gamma_cpp[no_spatial] | 200K | random | 172.7 | 0.9996 | 20.853 | 22500 | 177500 |
 | gamma_cpp[no_split] | 200K | random | 172.6 | 0.9996 | 21.364 | 22500 | 177500 |
@@ -655,19 +667,25 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **561**.
 | gamma_cpp[default_cpp]+FaissHNSW | 200K | cluster | 366.1 | 0.9986 | 16.559 | 22500 | 177500 |
 | gamma_cpp[no_spatial]+FaissHNSW | 200K | cluster | 123.3 | 0.9986 | 14.647 | 22500 | 177500 |
 | gamma_cpp[e04_tuned]+FaissHNSW | 200K | cluster | 163.4 | 0.9886 | 14.477 | 22500 | 177500 |
+| gamma_cpp[large_split]+FaissHNSW | 200K | cluster | 116.4 | 0.9986 | 11.099 | 22500 | 177500 |
 | python_poc_v2+FaissHNSW | 200K | partial_reset | 46.5 | 0.9588 | 0.355 | 40000 | 160000 |
 | FaissHNSW direct | 200K | partial_reset | 57.8 | 0.9454 | 0.385 | 40000 | 160000 |
 | gamma_cpp[default_cpp]+FaissHNSW | 200K | partial_reset | 484.1 | 0.0060 | 5.935 | 40000 | 160000 |
 | gamma_cpp[no_spatial]+FaissHNSW | 200K | partial_reset | 143.7 | 0.9946 | 20.547 | 40000 | 160000 |
+| gamma_cpp[e04_tuned]+FaissHNSW | 200K | partial_reset | 262.6 | 0.4820 | 5.132 | 40000 | 160000 |
+| gamma_cpp[large_split]+FaissHNSW | 200K | partial_reset | 116.1 | 0.0020 | 4.383 | 40000 | 160000 |
 | python_poc_v2+FaissHNSW | 200K | random | 45.9 | 0.9268 | 0.376 | 22500 | 177500 |
 | FaissHNSW direct | 200K | random | 58.0 | 0.9042 | 0.435 | 22500 | 177500 |
 | gamma_cpp[default_cpp]+FaissHNSW | 200K | random | 367.8 | 0.9996 | 16.464 | 22500 | 177500 |
 | gamma_cpp[no_spatial]+FaissHNSW | 200K | random | 123.4 | 0.9996 | 14.733 | 22500 | 177500 |
+| gamma_cpp[e04_tuned]+FaissHNSW | 200K | random | 214.8 | 0.9814 | 2.798 | 22500 | 177500 |
+| gamma_cpp[large_split]+FaissHNSW | 200K | random | 110.6 | 0.9996 | 10.542 | 22500 | 177500 |
 | python_poc_v2+FaissHNSW | 200K | sequential | 59.4 | 0.9040 | 0.418 | 22500 | 177500 |
 | FaissHNSW direct | 200K | sequential | 57.4 | 0.9030 | 0.392 | 22500 | 177500 |
 | gamma_cpp[default_cpp]+FaissHNSW | 200K | sequential | 288.0 | 0.6720 | 5.236 | 22500 | 177500 |
 | gamma_cpp[no_spatial]+FaissHNSW | 200K | sequential | 50.9 | 1.0000 | 5.850 | 22500 | 177500 |
 | gamma_cpp[e04_tuned]+FaissHNSW | 200K | sequential | 212.5 | 0.9858 | 2.542 | 22500 | 177500 |
+| gamma_cpp[large_split]+FaissHNSW | 200K | sequential | 118.3 | 1.0000 | 10.930 | 22500 | 177500 |
 
 ## e23_multi_seed_variance
 
@@ -675,6 +693,22 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **561**.
 |---|---|---|---|---|---|---|---|
 | gamma_v2+hnswlib | 200K | cluster | 142.2 | 0.9992 | 1.141 | 22500 | 177500 |
 | hnswlib direct | 200K | cluster | 168.2 | 0.9996 | 1.183 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | cluster | 130.3 | 0.9986 | 1.001 | 22500 | 177500 |
+| hnswlib direct | 200K | cluster | 155.9 | 0.9990 | 1.090 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | cluster | 115.3 | 0.9992 | 0.832 | 22500 | 177500 |
+| hnswlib direct | 200K | cluster | 140.7 | 0.9992 | 0.971 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | cluster | 104.7 | 0.9996 | 0.778 | 22500 | 177500 |
+| hnswlib direct | 200K | cluster | 133.5 | 0.9994 | 0.973 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | cluster | 101.8 | 0.9990 | 0.760 | 22500 | 177500 |
+| hnswlib direct | 200K | cluster | 129.9 | 0.9994 | 0.900 | 22500 | 177500 |
 | gamma_v2+hnswlib | 200K | random | 138.9 | 0.9990 | 1.002 | 22500 | 177500 |
 | hnswlib direct | 200K | random | 161.6 | 0.9992 | 1.138 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | random | 123.6 | 0.9990 | 0.913 | 22500 | 177500 |
+| hnswlib direct | 200K | random | 150.9 | 0.9988 | 1.054 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | random | 110.6 | 0.9994 | 0.836 | 22500 | 177500 |
+| hnswlib direct | 200K | random | 133.5 | 0.9992 | 0.932 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | random | 100.5 | 0.9988 | 0.777 | 22500 | 177500 |
+| hnswlib direct | 200K | random | 126.5 | 0.9996 | 0.914 | 22500 | 177500 |
+| gamma_v2+hnswlib | 200K | random | 98.2 | 0.9980 | 0.740 | 22500 | 177500 |
+| hnswlib direct | 200K | random | 125.9 | 0.9990 | 0.916 | 22500 | 177500 |
 

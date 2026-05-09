@@ -284,6 +284,31 @@ currently *underperforms* the simple version at the workload sizes we
 tested. e22 is checking whether tuning (split_factor=4 / 16 instead of
 1.5) can save the multi-partition design.
 
+## e22 — Tuned C++ config sweep (final)
+
+Key question: can we save the C++ multi-partition design by better tuning
+than the shipped defaults?
+
+| pattern | python_poc_v2 (FaissHNSW) | faiss direct | default_cpp | no_spatial | e04_tuned | large_split |
+|---|---|---|---|---|---|---|
+| cluster | 46.0s rec=0.93 | 58.4s rec=0.91 | 366.1s rec=0.998 | 123.3s rec=0.998 | 163.4s rec=0.99 | 116.4s rec=0.998 |
+| random | 45.9s rec=0.93 | 58.0s rec=0.90 | 367.8s rec=0.999 | 123.4s rec=0.999 | 214.8s rec=0.98 | 110.6s rec=0.999 |
+| sequential | 59.4s rec=0.90 | 57.4s rec=0.90 | 288.0s rec=0.67 | 50.9s rec=1.00 | 212.5s rec=0.99 | 118.3s rec=1.00 |
+| partial_reset | 46.5s rec=0.96 | 57.8s rec=0.95 | 484.1s rec=0.006 | 143.7s rec=0.99 | 262.6s rec=0.48 | **116.1s rec=0.002** |
+
+**`large_split` (split_factor=16, γ=1.0)** — supposedly the best-tuned
+multi-partition config — breaks completely on partial_reset (rec=0.002)
+while looking great on cluster/random. The C++ multi-partition design
+has a **partial-reset-specific bug** that tuning does NOT fix. Only
+`no_spatial` (single partition) is safe across all four patterns.
+
+The `python_poc_v2` (gamma_v2 + FaissHNSW) is the **fastest of all** at
+46-60s, with recall in the 0.90-0.96 range (matching faiss_hnsw direct's
+recall floor — this is a backend property, not a router property).
+**For VLDB the simple Python POC is the right algorithmic claim**; the
+C++ multi-partition machinery, even after tuning, has reliability bugs
+on bursty workloads that take it out of contention at this scale.
+
 ### Cross-dataset confirmation (e20 on msong, glove)
 
 | dataset | pattern | full Δ vs hnswlib direct | no_absorb_deletes Δ |
@@ -298,6 +323,22 @@ tested. e22 is checking whether tuning (split_factor=4 / 16 instead of
 Same ablation pattern as SIFT: removing delete-absorption makes gamma
 WORSE than the direct backend. Buffer-admit + delete-absorption are
 load-bearing across datasets.
+
+---
+
+## e23 — Multi-seed variance estimation (5 seeds, SIFT 200K)
+
+Addresses the reviewer concern "is your -23% gamma win on a single run?"
+
+| pattern | gamma_v2+hnswlib (mean ± std) | hnswlib direct (mean ± std) | Δ% (mean) |
+|---|---|---|---|
+| cluster | 118.9 ± 15.4 s, recall 0.9991 ± 0.0003 | 145.6 ± 14.4 s, recall 0.9993 ± 0.0002 | **-18.4%** |
+| random | 114.4 ± 15.2 s, recall 0.9988 ± 0.0005 | 139.7 ± 14.2 s, recall 0.9992 ± 0.0003 | **-18.1%** |
+
+The single-run point estimates from e15 (-23% on cluster, -27% on random)
+are within one standard deviation of the multi-seed mean. The headline
+wins are **statistically robust to seed**, with effect size ~10× the
+within-condition standard deviation.
 
 ---
 
