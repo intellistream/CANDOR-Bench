@@ -1,6 +1,6 @@
 # All experiment results (auto-generated)
 
-Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **810**.
+Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **811**.
 
 ## e01_write_throughput
 
@@ -820,6 +820,7 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **810**.
 | gamma_v2 (no rebuild) | 1M | sequential | 2818.4 | 0.9935 | 2.941 | 102272 | 890000 |
 | hnswlib direct | 1M | sequential | 2023.7 | 0.9945 | 2.822 | 102272 | 890000 |
 | gamma_rebuild(th=0.5) | 1M | sequential | 1025.1 | 0.9955 | 0.602 | 102272 | 890000 |
+| gamma_rebuild(th=1.1) | 1M | sequential | 2432.0 | 0.9935 | 2.680 | 102272 | 890000 |
 | gamma_v2 (no rebuild) | 200K | sequential | 469.0 | 0.9985 | 2.338 | 22500 | 177500 |
 | hnswlib direct | 200K | sequential | 328.8 | 0.9990 | 2.191 | 22500 | 177500 |
 | gamma_rebuild(th=0.5) | 200K | sequential | 157.8 | 0.9970 | 0.454 | 22500 | 177500 |
