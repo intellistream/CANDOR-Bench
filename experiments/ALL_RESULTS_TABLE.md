@@ -1,6 +1,6 @@
 # All experiment results (auto-generated)
 
-Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **791**.
+Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **799**.
 
 ## e01_write_throughput
 
@@ -396,6 +396,10 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **791**.
 | hnswlib direct | 1M | msong | cluster | 883.5 | 0.9960 | 0.851 | 547272 | 445000 |
 | gamma_v2+faiss_hnsw | 1M | msong | cluster | 384.6 | 0.9810 | 0.700 | 547272 | 445000 |
 | faiss_hnsw direct | 1M | msong | cluster | 406.1 | 0.9805 | 0.775 | 547272 | 445000 |
+| gamma_v2+hnswlib | 1M | msong | partial_reset | 1405.8 | 0.9960 | 1.902 | 112272 | 880000 |
+| hnswlib direct | 1M | msong | partial_reset | 1539.6 | 0.9970 | 2.273 | 112272 | 880000 |
+| gamma_v2+faiss_hnsw | 1M | msong | partial_reset | 331.6 | 0.9345 | 0.723 | 112272 | 880000 |
+| faiss_hnsw direct | 1M | msong | partial_reset | 400.6 | 0.9235 | 0.800 | 112272 | 880000 |
 | gamma_v2+hnswlib | 200K | msong | sequential | 692.6 | 0.9985 | 3.849 | 22500 | 177500 |
 | hnswlib direct | 200K | msong | sequential | 566.2 | 0.9990 | 4.001 | 22500 | 177500 |
 | gamma_v2+faiss_hnsw | 200K | msong | sequential | 100.8 | 0.9420 | 0.648 | 22500 | 177500 |
@@ -789,6 +793,9 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **791**.
 
 | name | scale | pattern | total_s | recall | query_latency_ms_p95 | n_alive | n_delete |
 |---|---|---|---|---|---|---|---|
+| gamma_v2 (no rebuild) | 1M | cluster | 462.5 | 0.8160 | 0.401 | 555000 | 445000 |
+| hnswlib direct | 1M | cluster | 496.8 | 0.8240 | 0.438 | 555000 | 445000 |
+| gamma_rebuild(th=0.5) | 1M | cluster | 472.4 | 0.8160 | 0.412 | 555000 | 445000 |
 | gamma_v2 (no rebuild) | 200K | cluster | 335.1 | 0.9530 | 2.474 | 22500 | 177500 |
 | hnswlib direct | 200K | cluster | 434.9 | 0.9630 | 3.195 | 22500 | 177500 |
 | gamma_rebuild(th=0.5) | 200K | cluster | 76.8 | 0.9515 | 0.342 | 22500 | 177500 |
@@ -797,6 +804,7 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **791**.
 | hnswlib direct | 200K | sequential | 259.9 | 0.9335 | 1.713 | 22500 | 177500 |
 | gamma_rebuild(th=0.5) | 200K | sequential | 91.9 | 0.9305 | 0.259 | 22500 | 177500 |
 | gamma_rebuild(th=1.1) | 200K | sequential | 326.1 | 0.9340 | 1.700 | 22500 | 177500 |
+| gamma_v2 (no rebuild) | 1M | cluster | 830.5 | 0.9940 | 0.783 | 547272 | 445000 |
 | gamma_v2 (no rebuild) | 200K | cluster | 342.3 | 0.9995 | 2.506 | 22500 | 177500 |
 | hnswlib direct | 200K | cluster | 448.2 | 0.9995 | 3.065 | 22500 | 177500 |
 | gamma_rebuild(th=0.5) | 200K | cluster | 114.4 | 0.9980 | 0.552 | 22500 | 177500 |
