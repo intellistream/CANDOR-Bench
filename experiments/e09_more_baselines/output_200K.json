@@ -1,0 +1,32 @@
+[
+  {
+    "algo": "gamma",
+    "op_total_s": 29.395049904007465,
+    "final_query_latency_ms": 0.1493736879201606,
+    "recall": 0.9912000000000001
+  },
+  {
+    "algo": "faiss_HNSW(M=32,ef=80)",
+    "op_total_s": 21.476022307993844,
+    "final_query_latency_ms": 0.11253381206188351,
+    "recall": 0.9944000000000001
+  },
+  {
+    "algo": "faiss_NSG(R=32,L=80)",
+    "op_total_s": 196.74857711000368,
+    "final_query_latency_ms": 0.0770309140207246,
+    "recall": 0.9904
+  },
+  {
+    "algo": "faiss_IVF(nlist=64,np=16)",
+    "op_total_s": 0.28693429194390774,
+    "final_query_latency_ms": 0.5801240759901702,
+    "recall": 0.9986
+  },
+  {
+    "algo": "faiss_IVFPQ(nl=64,m=8,np=16)",
+    "op_total_s": 2.442836795002222,
+    "final_query_latency_ms": 0.12248381006065755,
+    "recall": 0.36519999999999997
+  }
+]
