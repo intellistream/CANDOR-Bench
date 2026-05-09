@@ -1,0 +1,98 @@
+[
+  {
+    "pattern": "sequential",
+    "name": "gamma_v2+hnswlib",
+    "total_s": 15.531622047012206,
+    "n_delete": 177500,
+    "query_latency_ms_p95": 0.10360305600333958,
+    "recall": 0.999
+  },
+  {
+    "pattern": "sequential",
+    "name": "hnswlib direct",
+    "total_s": 12.338509513996542,
+    "n_delete": 177500,
+    "query_latency_ms_p95": 0.10512904013739899,
+    "recall": 0.9984
+  },
+  {
+    "pattern": "sequential",
+    "name": "gamma_v2+faiss_hnsw",
+    "total_s": 23.439965470985044,
+    "n_delete": 177500,
+    "query_latency_ms_p95": 0.18290687450207768,
+    "recall": 0.904
+  },
+  {
+    "pattern": "sequential",
+    "name": "faiss_hnsw direct",
+    "total_s": 23.48086957097985,
+    "n_delete": 177500,
+    "query_latency_ms_p95": 0.18742880189092828,
+    "recall": 0.9030000000000001
+  },
+  {
+    "pattern": "random",
+    "name": "gamma_v2+hnswlib",
+    "total_s": 8.77147832600167,
+    "n_delete": 177500,
+    "query_latency_ms_p95": 0.07232780840131453,
+    "recall": 0.9996
+  },
+  {
+    "pattern": "random",
+    "name": "hnswlib direct",
+    "total_s": 12.065527873986866,
+    "n_delete": 177500,
+    "query_latency_ms_p95": 0.09645020372699946,
+    "recall": 0.9992000000000001
+  },
+  {
+    "pattern": "random",
+    "name": "gamma_v2+faiss_hnsw",
+    "total_s": 17.859640028036665,
+    "n_delete": 177500,
+    "query_latency_ms_p95": 0.16236235529650003,
+    "recall": 0.9268
+  },
+  {
+    "pattern": "random",
+    "name": "faiss_hnsw direct",
+    "total_s": 23.6508038410102,
+    "n_delete": 177500,
+    "query_latency_ms_p95": 0.2005218764010351,
+    "recall": 0.9042
+  },
+  {
+    "pattern": "cluster",
+    "name": "gamma_v2+hnswlib",
+    "total_s": 10.717262056015898,
+    "n_delete": 177500,
+    "query_latency_ms_p95": 0.11388618634664453,
+    "recall": 0.9992000000000001
+  },
+  {
+    "pattern": "cluster",
+    "name": "hnswlib direct",
+    "total_s": 20.171343652007636,
+    "n_delete": 177500,
+    "query_latency_ms_p95": 0.18496857652207835,
+    "recall": 0.9996
+  },
+  {
+    "pattern": "cluster",
+    "name": "gamma_v2+faiss_hnsw",
+    "total_s": 16.9624545010156,
+    "n_delete": 177500,
+    "query_latency_ms_p95": 0.17169080103049053,
+    "recall": 0.7564
+  },
+  {
+    "pattern": "cluster",
+    "name": "faiss_hnsw direct",
+    "total_s": 23.456060184980743,
+    "n_delete": 177500,
+    "query_latency_ms_p95": 0.2126969402655959,
+    "recall": 0.7092
+  }
+]
