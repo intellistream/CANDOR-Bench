@@ -1,0 +1,26 @@
+[
+  {
+    "algo": "gamma_py_hnswlib",
+    "total_s": 14.56663664302323,
+    "n_delete": 175000,
+    "query_latency_ms_avg": 0.04669253154295601,
+    "query_latency_ms_p95": 0.10108326360350475,
+    "recall": 0.9982000000000001
+  },
+  {
+    "algo": "hnswlib_raw",
+    "total_s": 11.658132344018668,
+    "n_delete": 175000,
+    "query_latency_ms_avg": 0.04642157810869523,
+    "query_latency_ms_p95": 0.10360037756036035,
+    "recall": 0.998
+  },
+  {
+    "algo": "gamma",
+    "total_s": 34.43882753199432,
+    "n_delete": 175000,
+    "query_latency_ms_avg": 0.06308742533696608,
+    "query_latency_ms_p95": 0.06758290022262371,
+    "recall": 0.9986
+  }
+]
