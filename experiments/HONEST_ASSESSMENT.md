@@ -67,13 +67,57 @@
 | **VLDB demo / industrial** | 🟡 可投(focus 在 system design 而非性能)|
 | **arxiv preprint** | ✅ 可发(诚实呈现 trade-off)|
 
-## 可能的挽救路径
+## 路径 1 已 Python POC 验证(e12)
 
-### 路径 1: 替换 backend 为 hnswlib(2-3 周工作)
-- 把 gamma 的 graph 后端从 FaissHNSW 改为 hnswlib
-- 期望:gamma + hnswlib backend 应该 inherit hnswlib 的写速度,加上 buffer-first 的额外好处
-- 风险:可能 gamma + hnswlib 跟纯 hnswlib 性能相当,差 buffer 的额外开销
-- **这是最有希望的路径**
+**结果:Backend 替换确实是大头,但 hybrid 架构在 hnswlib 后端下没有额外优势。**
+
+streaming_sliding(lag=2)/200K:
+| algo | total | recall | qry p95 |
+|---|---:|---:|---:|
+| gamma_py_hnswlib (POC) | 14.6s | 0.998 | 0.101ms |
+| hnswlib raw | **11.7s** | 0.998 | 0.104ms |
+| gamma (FaissHNSW backend) | 34.4s | 0.999 | 0.068ms |
+
+streaming_sliding(lag=1, 极端 churn)/200K:
+| algo | total | recall |
+|---|---:|---:|
+| gamma_py_hnswlib | 16.1s | 0.999 |
+| hnswlib + mark | **12.9s** | 0.998 |
+
+bulk_delete(30%)/200K:
+| algo | op | recall |
+|---|---:|---:|
+| gamma_py_hnswlib | 4.4s | 0.991 |
+| hnswlib + rebuild | 5.1s | 0.991 |
+| **hnswlib + mark** | **3.2s** | 0.996 |
+
+**结论:**
+- ✅ 替换 backend 让 gamma 提速 2-3×(确认 backend 是大头)
+- ❌ 但仍输 plain hnswlib 25-50%(hybrid 架构的「buffer 吸收 delete」价值在 hnswlib 的免费 mark_deleted 面前消失)
+- **路径 1 不能让 gamma 翻盘**
+
+## 真正可行的剩余路径
+
+### 路径 1.5: 替换 backend 但改 paper 卖点为「extensible architecture」(2-3 周)
+- gamma 把 hnswlib/Faiss/任何图后端做成 plug-in
+- 卖点变成「modular fresh-ANN framework」而非「最快的 ANN」
+- 投 SoCC industrial / SIGMOD demo
+
+### 路径 2: 探索 hnswlib 的失败模式(1-2 周)
+**未测试且可能 gamma 赢的场景:**
+- **多线程并发写**:gamma 的 buffer-first 减少 graph 锁竞争
+- **内存受限**:hnswlib 的 max_elements 必须预分配 + tombstone 不释放内存;gamma 的 maint 可以真删除压缩
+- **Variable-length retention**(不同 vector TTL 不同)
+- **Auto-tuning placement**(用 cost model 决定 buffer vs graph)
+
+### 路径 3: 转 system contribution(改写 paper)
+- "An extensible framework for hybrid ANN with operator-controlled maintenance"
+- 重点放在 architecture / API / observability
+- 性能不是主卖点
+
+### 路径 4: 转下游应用 paper
+- 用 gamma 做某个具体应用 case study(推荐系统 / RAG / 监控告警)
+- 论文重点是 application 而非算法本身
 
 ### 路径 2: 找 hnswlib 真正失败的场景(1-2 周探索)
 - 内存受限场景(hnswlib 必须 max_elements pre-alloc)
