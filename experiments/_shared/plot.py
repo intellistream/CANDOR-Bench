@@ -327,6 +327,141 @@ def fig_e21_cpp_ablation():
     print("wrote", out)
 
 
+def fig_e29_iso_rebuild():
+    """4-bar grouped chart per pattern: A/B/C/D mean ± std time."""
+    files = list((EXP_DIR / "e29_iso_rebuild_baseline").glob("output_sift_*_200K.json"))
+    if not files:
+        return
+    import statistics
+    by_pat = {}
+    for p in files:
+        rows = load_json(p)
+        if rows:
+            by_pat[rows[0]["pattern"]] = rows
+    if not by_pat:
+        return
+    patterns = ["sequential", "random", "cluster", "partial_reset"]
+    variants = ["A_hnswlib_direct", "B_hnswlib_direct+rebuild",
+                 "C_gamma_v2", "D_gamma_v2+rebuild"]
+    colors = ["#888", "#7bbe70", "#5b8def", "#e07b5b"]
+    fig, ax = plt.subplots(figsize=(10, 5))
+    width = 0.18
+    x = np.arange(len(patterns))
+    for i, v in enumerate(variants):
+        means = []
+        stds = []
+        for pat in patterns:
+            rows = by_pat.get(pat, [])
+            ts = [r["total_s"] for r in rows if r.get("variant") == v]
+            means.append(statistics.mean(ts) if ts else 0)
+            stds.append(statistics.stdev(ts) if len(ts) > 1 else 0)
+        ax.bar(x + i * width, means, width, yerr=stds, capsize=3,
+               color=colors[i],
+               label=v.replace("_", " ").replace("hnswlib direct+rebuild", "hnswlib+rebuild"))
+    ax.set_xticks(x + 1.5 * width)
+    ax.set_xticklabels(patterns)
+    ax.set_ylabel("total time (s, mean ± std over 3 seeds)")
+    ax.set_title("e29 — iso-rebuild baseline: rebuild is the dominant contribution; buffer adds 5-15% more")
+    ax.legend(loc="upper right", fontsize=9)
+    ax.grid(True, alpha=0.3, axis="y")
+    fig.tight_layout()
+    out = FIG_DIR / "fig_e29_iso_rebuild.png"
+    fig.savefig(out, dpi=130)
+    plt.close(fig)
+    print("wrote", out)
+
+
+def fig_e31_op_latency():
+    """Stacked bar per design × pattern: time spent in insert vs delete vs maintain vs search."""
+    files = list((EXP_DIR / "e31_op_latency_decomposition").glob("output_sift_*_200K.json"))
+    if not files:
+        return
+    import statistics
+    by_pat = {}
+    for p in files:
+        rows = load_json(p)
+        if rows:
+            by_pat[rows[0]["pattern"]] = rows
+    if not by_pat:
+        return
+    patterns = ["sequential", "random", "cluster", "partial_reset"]
+    designs = ["hnswlib_direct", "gamma_v2", "gamma_v2+rebuild"]
+    fig, axes = plt.subplots(1, 4, figsize=(16, 5), sharey=True)
+    op_colors = {"insert": "#5b8def", "delete": "#e07b5b",
+                  "maintain": "#7bbe70", "search": "#a05bbe"}
+    for ax, pat in zip(axes, patterns):
+        rows = by_pat.get(pat, [])
+        means = {}
+        for d in designs:
+            d_rows = [r for r in rows if r.get("design") == d]
+            if not d_rows:
+                continue
+            means[d] = {
+                "insert": statistics.mean(r["sum_t_insert_s"] for r in d_rows),
+                "delete": statistics.mean(r["sum_t_delete_s"] for r in d_rows),
+                "maintain": statistics.mean(r["sum_t_maintain_s"] for r in d_rows),
+                "search": statistics.mean(r["sum_t_search_s"] for r in d_rows),
+            }
+        x = np.arange(len(designs))
+        bottom = np.zeros(len(designs))
+        for op in ["insert", "delete", "maintain", "search"]:
+            vals = [means.get(d, {}).get(op, 0) for d in designs]
+            ax.bar(x, vals, bottom=bottom, color=op_colors[op], label=op if pat == patterns[0] else "")
+            bottom += np.array(vals)
+        ax.set_xticks(x)
+        ax.set_xticklabels([d.replace("hnswlib_direct", "hnsw direct").replace("gamma_v2+rebuild", "gamma+reb") for d in designs], rotation=20, fontsize=8)
+        ax.set_title(pat)
+    axes[0].set_ylabel("cumulative time (s)")
+    axes[0].legend(loc="upper right", fontsize=9)
+    fig.suptitle("e31 — per-op time decomposition (mean over 3 seeds, SIFT 200K)")
+    fig.tight_layout()
+    out = FIG_DIR / "fig_e31_op_latency.png"
+    fig.savefig(out, dpi=130)
+    plt.close(fig)
+    print("wrote", out)
+
+
+def fig_e32_iso_recall():
+    files = list((EXP_DIR / "e32_iso_recall_pareto").glob("output_sift_*_200K.json"))
+    if not files:
+        return
+    by_pat = {}
+    for p in files:
+        rows = load_json(p)
+        if rows:
+            by_pat[rows[0]["pattern"]] = rows
+    if not by_pat:
+        return
+    patterns = ["sequential", "random", "cluster", "partial_reset"]
+    fig, axes = plt.subplots(1, 4, figsize=(16, 4.5), sharey=False)
+    for ax, pat in zip(axes, patterns):
+        rows = by_pat.get(pat, [])
+        h_rows = [r for r in rows if r.get("design") == "hnswlib_direct"]
+        g_rows = [r for r in rows if r.get("design") == "gamma_v2"]
+        gr_rows = [r for r in rows if r.get("design") == "gamma_v2+rebuild"]
+        if h_rows:
+            h_rows = sorted(h_rows, key=lambda r: r.get("ef_search", 0))
+            ax.plot([r["recall"] for r in h_rows], [r["total_s"] for r in h_rows],
+                     marker="o", color="#888", label="hnswlib direct (efS sweep)")
+        if g_rows:
+            ax.scatter([r["recall"] for r in g_rows], [r["total_s"] for r in g_rows],
+                        color="#5b8def", s=120, marker="*", label="gamma_v2 (default)")
+        if gr_rows:
+            ax.scatter([r["recall"] for r in gr_rows], [r["total_s"] for r in gr_rows],
+                        color="#e07b5b", s=180, marker="*", label="gamma_v2+rebuild (default)")
+        ax.set_xlabel("recall@10")
+        ax.set_title(pat)
+        ax.grid(True, alpha=0.3)
+    axes[0].set_ylabel("total time (s)")
+    axes[0].legend(loc="best", fontsize=8)
+    fig.suptitle("e32 — iso-recall Pareto: gamma+rebuild vs hnswlib direct efSearch sweep (SIFT 200K)")
+    fig.tight_layout()
+    out = FIG_DIR / "fig_e32_iso_recall.png"
+    fig.savefig(out, dpi=130)
+    plt.close(fig)
+    print("wrote", out)
+
+
 def main():
     fig_e15_main()
     fig_e16_cross_dataset()
@@ -335,6 +470,9 @@ def main():
     fig_e19_pareto()
     fig_e20_ablation()
     fig_e21_cpp_ablation()
+    fig_e29_iso_rebuild()
+    fig_e31_op_latency()
+    fig_e32_iso_recall()
 
 
 if __name__ == "__main__":
