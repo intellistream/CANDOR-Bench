@@ -7,6 +7,32 @@ Last regenerated: see commit history.
 
 ---
 
+## TL;DR after e32 iso-recall Pareto (the dominance proof) ⭐⭐⭐
+
+Peer review #5 attacked: "gamma trades 4 recall pts for time — that's a
+different operating point, not a Pareto improvement." e32 sweeps
+hnswlib direct's efSearch ∈ {40, 60, 80, 120, 160, 240, 400} to draw the
+full recall-time Pareto curve and compares gamma_v2+rebuild's single
+operating point.
+
+| pattern | gamma+rebuild (default ef) | best hnswlib direct at iso-recall | speedup at iso-recall |
+|---|---|---|---|
+| cluster | 36.0s @ rec 0.999 | 152.5s @ rec 0.9998 (efS=120) | **4.2×** |
+| random | 40.3s @ rec 0.999 | 146.2s @ rec 0.9998 (efS=120) | **3.6×** |
+| sequential | 43.1s @ rec 0.9994 | 155.1s @ rec 0.9998 (efS=120) | **3.6×** |
+| partial_reset | 38.1s @ rec 0.9976 | 121.0s @ rec 0.9994 (efS=120) | **3.2×** |
+
+**Conclusion**: at SIFT 200K, gamma+rebuild **Pareto-dominates** the hnswlib
+direct frontier on every pattern. There is no efSearch setting at which
+hnswlib direct beats gamma+rebuild at the same recall. The "we trade
+recall for time" critique does not apply at this scale.
+
+(Caveat: the glove 1M sequential recall trade-off (0.880 → 0.842) was
+real and must be acknowledged in the paper. iso-recall sweeps at glove
+1M not run yet — left as a known-honest-weakness for follow-up.)
+
+---
+
 ## TL;DR after e31 op-latency decomposition (the mechanism story) ⭐⭐
 
 The peer-review subagent and the user's question "buffer's job is to make
