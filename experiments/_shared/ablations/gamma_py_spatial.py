@@ -21,7 +21,7 @@ by stride. Per-partition buffers are pre-allocated to buf_capacity_per_part
 from __future__ import annotations
 import numpy as np
 from typing import Callable
-from .gamma_py import GraphBackend
+from ..gamma_py import GraphBackend
 
 
 class GammaPyHybridSpatial:

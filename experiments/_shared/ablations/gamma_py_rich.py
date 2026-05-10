@@ -30,7 +30,7 @@ from __future__ import annotations
 from collections import deque, defaultdict
 from typing import Callable, Optional
 import numpy as np
-from .gamma_py import GraphBackend
+from ..gamma_py import GraphBackend
 
 
 class VectorLifeState:

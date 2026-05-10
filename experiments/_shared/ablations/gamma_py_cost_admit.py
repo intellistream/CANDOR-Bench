@@ -27,7 +27,7 @@ Knobs:
 from __future__ import annotations
 from collections import deque
 import numpy as np
-from .gamma_py import GraphBackend
+from ..gamma_py import GraphBackend
 
 
 class GammaPyHybridCostAdmit:

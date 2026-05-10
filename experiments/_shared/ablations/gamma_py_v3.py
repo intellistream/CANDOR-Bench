@@ -18,7 +18,7 @@ mechanism's contribution.
 """
 from __future__ import annotations
 import numpy as np
-from .gamma_py import GraphBackend
+from ..gamma_py import GraphBackend
 
 
 class GammaPyHybridV3:
