@@ -36,6 +36,9 @@ def main():
                    help="centroids probed per query (default 4)")
     p.add_argument("--rebuild_threshold", type=float, default=0.5)
     p.add_argument("--seeds", default="42")
+    p.add_argument("--dataset", default="sift",
+                   choices=["sift", "msong", "glove", "random-m"],
+                   help="dataset name (default sift)")
     args = p.parse_args()
 
     if args.scale == "200K":
@@ -43,12 +46,12 @@ def main():
     else:
         slice_n, init_n, batch, qstride, n_queries = 1_000_000, 100_000, 10_000, 50_000, 1000
 
-    data, queries = load_dataset("sift", n_queries=n_queries, slice_n=slice_n)
+    data, queries = load_dataset(args.dataset, n_queries=n_queries, slice_n=slice_n)
     n, d = data.shape
     delete_fn = make_pattern(args.pattern)
     rows = []
     out_path = os.path.join(os.path.dirname(__file__),
-                            f"output_sift_{args.pattern}_K{args.n_clusters}_{args.scale}.json")
+                            f"output_{args.dataset}_{args.pattern}_K{args.n_clusters}_{args.scale}.json")
     seeds = [int(s) for s in args.seeds.split(",")]
 
     factory = lambda: HnswlibBackend(d, max_elements=n)
