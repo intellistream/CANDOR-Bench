@@ -1,0 +1,37 @@
+[
+  {
+    "variant": "V2_flat_rebuild",
+    "n": 5000000,
+    "rebuild_count": 10,
+    "name": "V2_flat_rebuild",
+    "total_s": 5153.787489430048,
+    "n_delete": 4875000,
+    "n_alive": 125000,
+    "query_latency_ms_p95": 0.6511292192153633,
+    "recall": 0.42100000000000004
+  },
+  {
+    "variant": "V4_cluster_rebuild",
+    "n": 5000000,
+    "K": 16,
+    "rebuild_count": 10,
+    "name": "V4_cluster_rebuild",
+    "total_s": 5022.319748098962,
+    "n_delete": 4875000,
+    "n_alive": 125000,
+    "query_latency_ms_p95": 0.6461834164801985,
+    "recall": 0.425
+  },
+  {
+    "variant": "V6_cluster_full_rebuild",
+    "n": 5000000,
+    "K": 16,
+    "rebuild_count": 10,
+    "name": "V6_cluster_full_rebuild",
+    "total_s": 5035.576935539022,
+    "n_delete": 4875000,
+    "n_alive": 125000,
+    "query_latency_ms_p95": 0.6518885486293584,
+    "recall": 0.425
+  }
+]
