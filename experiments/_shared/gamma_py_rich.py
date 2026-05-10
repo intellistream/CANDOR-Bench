@@ -527,8 +527,21 @@ class GammaPyHybridRich:
                 continue
             all_l = all_l[valid]
             all_d = all_d[valid]
+            # Dedupe by id (a vector promoted to hot tier ALSO lives in the
+            # graph; without dedup it'd appear twice in top-k and crowd out
+            # other neighbors). Keep the smallest distance per id.
+            if len(all_l) > k:
+                # Sort by distance asc, then take unique-by-id keeping first
+                sort_idx = np.argsort(all_d)
+                sorted_l = all_l[sort_idx]
+                sorted_d = all_d[sort_idx]
+                _, unique_idx = np.unique(sorted_l, return_index=True)
+                # Preserve sort order (np.unique returns first occurrence in sorted_l)
+                unique_idx_sorted = np.sort(unique_idx)
+                all_l = sorted_l[unique_idx_sorted]
+                all_d = sorted_d[unique_idx_sorted]
             kk = min(k, len(all_l))
-            order = np.argpartition(all_d, kk - 1)[:kk]
+            order = np.argpartition(all_d, kk - 1)[:kk] if kk < len(all_d) else np.arange(len(all_d))
             order = order[np.argsort(all_d[order])]
             result_labels[q_i, :kk] = all_l[order]
             result_dists[q_i, :kk] = all_d[order]
