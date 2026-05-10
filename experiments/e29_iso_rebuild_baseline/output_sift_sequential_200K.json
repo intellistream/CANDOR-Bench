@@ -1,0 +1,39 @@
+[
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "seed": 1,
+    "variant": "A_hnswlib_direct",
+    "name": "A_hnswlib_direct",
+    "total_s": 132.23789686523378,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.9517547907307743,
+    "recall": 0.9984
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "seed": 1,
+    "variant": "B_hnswlib_direct+rebuild",
+    "rebuild_count": 7,
+    "name": "B_hnswlib_direct+rebuild",
+    "total_s": 46.51747342478484,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.17000387627631422,
+    "recall": 0.9982
+  },
+  {
+    "scale": "200K",
+    "pattern": "sequential",
+    "seed": 1,
+    "variant": "C_gamma_v2",
+    "name": "C_gamma_v2",
+    "total_s": 164.8999171135947,
+    "n_delete": 177500,
+    "n_alive": 22500,
+    "query_latency_ms_p95": 0.992806193139404,
+    "recall": 0.999
+  }
+]
