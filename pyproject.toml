@@ -49,7 +49,7 @@ name = "sage-db-bench"
 version = "0.1.0"
 description = "Streaming ANN Benchmark Framework"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10,<3.11"
 license = "MIT"
 authors = [
     {name = "SAGE-DB-Bench Team", email = "intellistream@example.com"}
@@ -67,6 +67,7 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Topic :: Software Development :: Libraries",
 ]
+
 dependencies = [
     "numpy>=1.20.0,<2.0",
     "pandas>=1.3.0",
@@ -74,6 +75,11 @@ dependencies = [
     "pyyaml>=5.4.0",
     "scipy>=1.7.0",
     "h5py>=3.0.0",
+    "gdown>=5.2.2",
+    "pybind11>=2.6.0",
+    "setuptools>=77",
+    "torch>=2.0.0",
+    "wheel",
 ]
 
 [project.optional-dependencies]
@@ -106,6 +112,7 @@ Repository = "https://github.com/intellistream/SAGE-DB-Bench"
 
 [project.scripts]
 sage-bench = "run_benchmark:main"
+candor-deploy = "candor_tasks.deploy:main"
 candor-build-gammafresh = "candor_tasks.cli:build_gammafresh"
 candor-test = "candor_tasks.cli:run_tests"
 
@@ -114,3 +121,13 @@ py-modules = ["run_benchmark", "prepare_dataset"]
 
 [tool.setuptools.packages.find]
 include = ["bench*", "candor_tasks*", "datasets*"]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
