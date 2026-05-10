@@ -26,7 +26,7 @@ import _shared
 from _shared import load_dataset
 from _shared.gamma_py import HnswlibBackend
 from _shared.gamma_py_v2 import GammaPyHybridV2
-from _shared.gamma_py_rich import GammaPyHybridRich
+from _shared.ablations.gamma_py_rich import GammaPyHybridRich
 from _shared.workloads_rich import run_mixed_lifetime, run_zipfian_queries
 
 

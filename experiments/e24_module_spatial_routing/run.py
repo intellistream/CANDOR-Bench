@@ -26,7 +26,7 @@ import _shared
 from _shared import load_dataset, run_workload, make_pattern
 from _shared.gamma_py import HnswlibBackend
 from _shared.gamma_py_v2 import GammaPyHybridV2
-from _shared.gamma_py_spatial import GammaPyHybridSpatial
+from _shared.ablations.gamma_py_spatial import GammaPyHybridSpatial
 
 
 def main():
