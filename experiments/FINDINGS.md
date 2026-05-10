@@ -7,7 +7,30 @@ Last regenerated: see commit history.
 
 ---
 
-## TL;DR (after all 14 experiments)
+## TL;DR after e29 iso-rebuild baseline (the honest story)
+
+The peer-review subagent flagged that e25's wins might come entirely
+from the rebuild trigger, not from the buffer/absorb router. e29
+resolved this with a 4-variant comparison (3 seeds, mean ± std):
+
+| pattern | A direct | B direct+rebuild | C gamma_v2 | D gamma_v2+rebuild |
+|---|---|---|---|---|
+| cluster | 134.1 ± 3.6 | **49.0 ± 4.3** (-63%) | 100.4 ± 5.0 (-25%) | **41.4 ± 3.6 (-69%)** ★ |
+| random | 134.0 ± 4.7 | **51.1 ± 4.9** (-62%) | 101.4 ± 5.4 (-24%) | **42.8 ± 5.1 (-68%)** ★ |
+| sequential | 131.6 ± 8.3 | **46.6 ± 5.8** (-65%) | 153.2 ± 24.5 (+16%) | **55.3 ± 11.2 (-58%)** |
+| partial_reset | 102.6 ± 1.8 | **51.1 ± 3.3** (-50%) | 81.3 ± 3.6 (-21%) | **39.1 ± 2.8 (-62%)** ★ |
+
+**Honest reading**:
+1. **The tombstone-rebuild trigger is the dominant contribution** (-50%
+   to -65% vs hnswlib direct, on its own). This is a periodic full-rebuild
+   trigger applied to the unmodified hnswlib backend — engineering
+   improvement, not new architecture. Reviewers will rightly compare to
+   FreshDiskANN's DeleteList consolidation.
+2. **The buffer/absorb router adds 5-15% MORE on top of rebuild** on
+   cluster/random/partial_reset (D < B by that much). On sequential the
+   router slightly hurts even with rebuild (D 55.3s > B 46.6s).
+3. **The router alone (C) is dominated** — gamma_v2 without rebuild
+   trails gamma_v2 with rebuild by ~50% on every pattern.
 
 **Recommended drop-in design**: gamma_v2 (write-buffer + delete-absorption
 + lazy maintenance) **+ tombstone-rebuild trigger** (threshold=0.5).
