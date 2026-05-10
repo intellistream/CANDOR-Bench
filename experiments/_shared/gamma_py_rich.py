@@ -329,13 +329,9 @@ class GammaPyHybridRich:
             elif state.placement == "graph":
                 self.graphs[state.owner_partition_id].mark_deleted(id_int)
                 self.part_deleted_in_graph[state.owner_partition_id] += 1
-            elif state.placement == "hot":
-                # remove from hot tier; mark in graph as well if it was also there
+                # Hot tier is a parallel cache — drop entry too if present
                 self.hot_tier_ids.discard(id_int)
                 self.hot_tier_vecs.pop(id_int, None)
-                if id_int in self._graph_vecs:
-                    self.graphs[state.owner_partition_id].mark_deleted(id_int)
-                    self.part_deleted_in_graph[state.owner_partition_id] += 1
             del self.life_table[id_int]
             self.global_op += 1
 
@@ -428,40 +424,37 @@ class GammaPyHybridRich:
             alive_vecs = np.stack([self._graph_vecs[vid] for vid in alive_ids])
             self.graphs[p] = self.backend_factory(p)
             self.graphs[p].add(np.ascontiguousarray(alive_vecs), alive_arr)
-            # Drop dropped graph_vecs entries
-            owned = set(alive_ids)
+            # Drop only entries that are dead (no longer in life_table) — keep
+            # everything alive whether placement is graph (in this or any other
+            # partition) or hot (parallel cache, vector still in graph too).
             self._graph_vecs = {vid: v for vid, v in self._graph_vecs.items()
-                                if (st := self.life_table.get(vid)) is None
-                                or st.owner_partition_id != p
-                                or vid in owned}
+                                if vid in self.life_table}
             self.part_inserted[p] = len(alive_ids)
             self.part_deleted_in_graph[p] = 0
             self.rebuild_count += 1
 
     def _refresh_hot_tier(self):
-        # promote top-N most-queried vectors that aren't already hot
-        # Take all states with placement=graph and high query_hit_count
+        # Hot tier is a PARALLEL CACHE: vectors stay in graph too. Don't change
+        # placement; just maintain a separate dict of hot copies. (Old design
+        # changed placement to "hot" which then confused the rebuild filter
+        # — see bug fix in 2026-05-10.)
         candidates = sorted(
             (s for s in self.life_table.values()
              if s.placement == "graph" and s.query_hit_count >= self.hot_tier_promote_threshold),
             key=lambda s: s.query_hit_count, reverse=True
         )[:self.hot_tier_size]
         new_hot_ids = {s.id for s in candidates}
-        # demote old hot
+        # demote old hot (just drop from cache; vector still in graph)
         for vid in list(self.hot_tier_ids):
             if vid not in new_hot_ids:
                 self.hot_tier_ids.discard(vid)
                 self.hot_tier_vecs.pop(vid, None)
-                st = self.life_table.get(vid)
-                if st is not None and st.placement == "hot":
-                    st.placement = "graph"
-        # promote new hot
+        # promote new hot (just add copy to cache; vector still in graph)
         for s in candidates:
             if s.id not in self.hot_tier_ids:
                 self.hot_tier_ids.add(s.id)
                 if s.id in self._graph_vecs:
                     self.hot_tier_vecs[s.id] = self._graph_vecs[s.id]
-                    s.placement = "hot"
                     self.hot_promote_count += 1
 
     def search(self, queries, k):
