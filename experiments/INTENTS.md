@@ -210,7 +210,7 @@ but adds overhead with no benefit over hnswlib (because hnswlib's tombstone is a
 
 **Intent:** (a) Did Python overhead artificially inflate gamma's cost? (b) Does hnswlib's mark_deleted hold up under DIVERSE delete patterns (not just sequential)?
 
-**Method:** Vectorized buffer (`gamma_py_v2`); test sequential / random / cluster delete patterns.
+**Method:** Vectorized buffer (`router`); test sequential / random / cluster delete patterns.
 
 **Finding (BREAKTHROUGH):**
 - gamma_v2+hnswlib **WINS hnswlib direct on random AND cluster delete** by 26-47% time

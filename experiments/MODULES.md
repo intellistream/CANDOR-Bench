@@ -9,7 +9,7 @@ This file is the index of those module experiments.
 
 ---
 
-## Base: gamma_v2 (`experiments/_shared/gamma_py_v2.py`)
+## Base: gamma_v2 (`experiments/_shared/router.py`)
 
 The simplest hybrid router: write-buffer + delete-absorption + lazy
 flush on `maintain()`. e15-e23 already established this is the right
@@ -37,7 +37,7 @@ round_robin}; search_partitions = K/2.
 
 ---
 
-## Module 2: Tombstone rebuild trigger (e25, `gamma_py_rebuild.py`)
+## Module 2: Tombstone rebuild trigger (e25, `router_with_rebuild.py`)
 
 **C++ analogue**: GammaFresh maintenance pass that rebuilds segments
 when tombstone density crosses threshold; hnswlib's

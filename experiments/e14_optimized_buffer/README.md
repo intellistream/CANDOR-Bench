@@ -3,7 +3,7 @@
 **Two questions:**
 
 1. Did Python overhead artificially inflate gamma's cost in e13? If we
-   vectorize the buffer (`gamma_py_v2`), does gamma+hnswlib catch up?
+   vectorize the buffer (`router`), does gamma+hnswlib catch up?
 
 2. Does hnswlib's mark_deleted hold up under DIVERSE delete patterns?
    Maybe it's good at LRU/sequential but breaks on:

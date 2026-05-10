@@ -1,6 +1,6 @@
 # `ablations/` — per-experiment variant routers
 
-**Don't import these in new code.** Each file is a copy of `gamma_py_v2.py`
+**Don't import these in new code.** Each file is a copy of `router.py`
 with one mechanism added or replaced, used by exactly one experiment to
 measure that single mechanism's contribution.
 
@@ -15,8 +15,8 @@ measure that single mechanism's contribution.
 
 ## Empirical verdict (see `experiments/FINDINGS.md`)
 
-All of these were tested. None beat the canonical `gamma_py_v2 +
-gamma_py_rebuild` design at our test scales (SIFT/MSong/GloVe at
+All of these were tested. None beat the canonical `router +
+router_with_rebuild` design at our test scales (SIFT/MSong/GloVe at
 200K-1M). Some actively hurt (per-vector cost-admit added +29%-36% at
 1M mixed_lifetime; rich combined hurt +12% at 1M).
 
@@ -27,7 +27,7 @@ workloads we tested.
 
 ## How to add a new ablation
 
-1. Copy `gamma_py_v2.py` → `ablations/gamma_py_<your_module>.py`
+1. Copy `router.py` → `ablations/gamma_py_<your_module>.py`
 2. Change the relative import `from ..gamma_py import GraphBackend`
 3. Modify just the one mechanism you want to test
 4. In your experiment runner, `from _shared.ablations.gamma_py_<your_module> import ...`

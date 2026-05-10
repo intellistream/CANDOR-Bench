@@ -21,7 +21,7 @@ by stride. Per-partition buffers are pre-allocated to buf_capacity_per_part
 from __future__ import annotations
 import numpy as np
 from typing import Callable
-from ..gamma_py import GraphBackend
+from ..backends import GraphBackend
 
 
 class GammaPyHybridSpatial:
@@ -120,7 +120,7 @@ class GammaPyHybridSpatial:
         self._centroid_initialized = True
 
     # ------------------------------------------------------------------
-    # Public API: matches GammaPyHybridV2
+    # Public API: matches GammaRouter
     # ------------------------------------------------------------------
     def initial_load(self, ids, vectors):
         ids_arr = np.asarray(ids, dtype=np.int64)

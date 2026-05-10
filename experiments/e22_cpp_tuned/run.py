@@ -18,8 +18,8 @@ import os, sys, json, time, argparse
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import _shared
 from _shared import load_dataset, compute_gt, recall_at_k, make_pattern, run_workload
-from _shared.gamma_py import FaissHnswBackend
-from _shared.gamma_py_v2 import GammaPyHybridV2
+from _shared.backends import FaissHnswBackend
+from _shared.router import GammaRouter
 import numpy as np
 
 
@@ -146,7 +146,7 @@ def main():
     # Python POC reference (gamma_v2 + FaissHNSW backend)
     print(f"\n========== {args.pattern}/{args.scale} python_poc_v2 (gamma_v2+FaissHNSW)", flush=True)
     be = FaissHnswBackend(d, max_elements=n)
-    g = GammaPyHybridV2(be, d, buf_capacity=batch * 50)
+    g = GammaRouter(be, d, buf_capacity=batch * 50)
     r = run_workload(g, "python_poc_v2+FaissHNSW", data, queries, init_n,
                       batch, qstride, delete_fn,
                       use_gamma=True, has_mark_deleted=False)

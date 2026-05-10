@@ -13,8 +13,8 @@ import os, sys, json, argparse
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import _shared
 from _shared import load_dataset, run_workload, make_pattern
-from _shared.gamma_py_v2 import GammaPyHybridV2
-from _shared.gamma_py import HnswlibBackend
+from _shared.router import GammaRouter
+from _shared.backends import HnswlibBackend
 
 
 def main():
@@ -44,7 +44,7 @@ def main():
         print(f"\n========== sift/{args.scale}/{args.pattern} ratio={ratio} (del/batch={n_del_per})", flush=True)
 
         be = HnswlibBackend(d, max_elements=n)
-        g = GammaPyHybridV2(be, d, buf_capacity=batch * 50)
+        g = GammaRouter(be, d, buf_capacity=batch * 50)
         r = run_workload(g, f"gamma_v2+hnswlib", data, queries, init_n,
                           batch, qstride, delete_fn,
                           use_gamma=True, has_mark_deleted=False,

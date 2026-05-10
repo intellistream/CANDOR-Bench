@@ -3,7 +3,7 @@ import os, sys, time, json
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import _shared
 from _shared import load_dataset, compute_gt, recall_at_k, percentile_ms
-from _shared.gamma_py import GammaPyHybrid, HnswlibBackend, FaissHnswBackend
+from _shared.backends import GammaPyHybrid, HnswlibBackend, FaissHnswBackend
 import numpy as np
 
 

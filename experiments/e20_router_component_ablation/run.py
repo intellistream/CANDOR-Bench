@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 import _shared
 from _shared import load_dataset, run_workload, make_pattern
 from _shared.ablations.gamma_py_v3 import GammaPyHybridV3
-from _shared.gamma_py import HnswlibBackend
+from _shared.backends import HnswlibBackend
 
 
 VARIANTS = [

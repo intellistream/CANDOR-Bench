@@ -11,10 +11,10 @@ benefit is what we measure (not Python's slow loops).
 """
 from __future__ import annotations
 import numpy as np
-from .gamma_py import GraphBackend
+from .backends import GraphBackend
 
 
-class GammaPyHybridV2:
+class GammaRouter:
     def __init__(self, backend: GraphBackend, dim: int, buf_capacity: int):
         self.dim = dim
         self.graph = backend

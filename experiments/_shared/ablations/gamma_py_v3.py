@@ -1,4 +1,4 @@
-"""Component-toggleable variant of GammaPyHybridV2 — used for ablations.
+"""Component-toggleable variant of GammaRouter — used for ablations.
 
 Each toggle disables one mechanism of the router:
 
@@ -18,7 +18,7 @@ mechanism's contribution.
 """
 from __future__ import annotations
 import numpy as np
-from ..gamma_py import GraphBackend
+from ..backends import GraphBackend
 
 
 class GammaPyHybridV3:

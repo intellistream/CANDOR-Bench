@@ -1,4 +1,4 @@
-"""GammaPyHybridRebuild — gamma_v2 plus a tombstone-driven graph rebuild.
+"""GammaRouterWithRebuild — gamma_v2 plus a tombstone-driven graph rebuild.
 
 Inspired by:
   - C++ GammaFresh's full maintenance pass (which rebuilds segments when
@@ -27,10 +27,10 @@ Knobs:
 from __future__ import annotations
 import numpy as np
 from typing import Callable
-from .gamma_py import GraphBackend
+from .backends import GraphBackend
 
 
-class GammaPyHybridRebuild:
+class GammaRouterWithRebuild:
     def __init__(self, backend: GraphBackend, rebuild_factory: Callable[[], GraphBackend],
                  dim: int, buf_capacity: int,
                  *, rebuild_threshold: float = 0.5,

@@ -8,8 +8,8 @@ import os, sys, time, json
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import _shared
 from _shared import load_dataset, compute_gt, recall_at_k
-from _shared.gamma_py_v2 import GammaPyHybridV2
-from _shared.gamma_py import HnswlibBackend, FaissHnswBackend
+from _shared.router import GammaRouter
+from _shared.backends import HnswlibBackend, FaissHnswBackend
 import numpy as np
 
 
@@ -139,7 +139,7 @@ def main():
                                      ("faiss_hnsw", lambda: FaissHnswBackend(d, max_elements=n))]:
             # gamma_v2 + this backend
             be = be_factory()
-            g = GammaPyHybridV2(be, d, buf_capacity=batch * 50)
+            g = GammaRouter(be, d, buf_capacity=batch * 50)
             r = run_workload(g, f"gamma_v2+{be_name}", data, queries, init_n, batch, qstride,
                              delete_fn, use_gamma=True, has_maint=True, has_mark_deleted=False)
             rows.append({"pattern": pattern, **r})

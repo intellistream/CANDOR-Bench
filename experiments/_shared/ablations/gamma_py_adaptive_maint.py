@@ -18,7 +18,7 @@ query and higher migration burst.
 """
 from __future__ import annotations
 import numpy as np
-from ..gamma_py import GraphBackend
+from ..backends import GraphBackend
 
 
 class GammaPyHybridAdaptiveMaint:

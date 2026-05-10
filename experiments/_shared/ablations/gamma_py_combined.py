@@ -7,7 +7,7 @@ cost-admit). The hypothesis is that they're orthogonal:
 - rebuild prunes accumulated tombstones in the graph.
 
 Knobs:
-  rebuild_threshold      : float, same as gamma_py_rebuild
+  rebuild_threshold      : float, same as router_with_rebuild
   rebuild_factory        : callable, same
   admit_threshold_ops    : int, same as gamma_py_cost_admit
   history_window         : int, same
@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections import deque
 from typing import Callable
 import numpy as np
-from ..gamma_py import GraphBackend
+from ..backends import GraphBackend
 
 
 class GammaPyHybridCombined:

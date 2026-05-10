@@ -21,9 +21,9 @@ import os, sys, json, argparse
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import _shared
 from _shared import load_dataset, make_pattern
-from _shared.gamma_py import HnswlibBackend
-from _shared.gamma_py_v2 import GammaPyHybridV2
-from _shared.gamma_py_rebuild import GammaPyHybridRebuild
+from _shared.backends import HnswlibBackend
+from _shared.router import GammaRouter
+from _shared.router_with_rebuild import GammaRouterWithRebuild
 from _shared.workloads_instrumented import run_instrumented
 
 
@@ -64,7 +64,7 @@ def main():
         # 2. gamma_v2 (router only)
         print(f"\n========== {args.pattern}/{args.scale} seed={seed} gamma_v2 (router only)", flush=True)
         be = HnswlibBackend(d, max_elements=n)
-        g = GammaPyHybridV2(be, d, buf_capacity=batch * 50)
+        g = GammaRouter(be, d, buf_capacity=batch * 50)
         r = run_instrumented(g, "gamma_v2", data, queries, init_n,
                               batch, qstride, delete_fn,
                               use_gamma=True, has_mark_deleted=False, seed=seed)
@@ -76,7 +76,7 @@ def main():
         # 3. gamma_v2 + tombstone rebuild (recommended drop-in)
         print(f"\n========== {args.pattern}/{args.scale} seed={seed} gamma_v2+rebuild", flush=True)
         be = HnswlibBackend(d, max_elements=n)
-        g = GammaPyHybridRebuild(be, rebuild_factory, d, buf_capacity=batch * 50,
+        g = GammaRouterWithRebuild(be, rebuild_factory, d, buf_capacity=batch * 50,
                                    rebuild_threshold=0.5)
         r = run_instrumented(g, "gamma_v2+rebuild", data, queries, init_n,
                               batch, qstride, delete_fn,

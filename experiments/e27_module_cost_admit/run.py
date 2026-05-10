@@ -16,8 +16,8 @@ import os, sys, json, argparse
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import _shared
 from _shared import load_dataset, run_workload, make_pattern
-from _shared.gamma_py import HnswlibBackend
-from _shared.gamma_py_v2 import GammaPyHybridV2
+from _shared.backends import HnswlibBackend
+from _shared.router import GammaRouter
 from _shared.ablations.gamma_py_cost_admit import GammaPyHybridCostAdmit
 
 
@@ -44,7 +44,7 @@ def main():
     # Reference: gamma_v2
     print(f"\n========== {args.pattern}/{args.scale} reference: gamma_v2", flush=True)
     be = HnswlibBackend(d, max_elements=n)
-    g = GammaPyHybridV2(be, d, buf_capacity=batch * 50)
+    g = GammaRouter(be, d, buf_capacity=batch * 50)
     r = run_workload(g, "gamma_v2", data, queries, init_n,
                       batch, qstride, delete_fn,
                       use_gamma=True, has_mark_deleted=False)

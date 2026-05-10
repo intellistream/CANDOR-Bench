@@ -3,25 +3,25 @@
 ## ★ The paper's algorithm — these 3 files
 
 ```
-gamma_py.py            (~90 lines)  — backend wrappers (HnswlibBackend, FaissHnswBackend)
-gamma_py_v2.py         (~115 lines) — the simple router (buffer + delete-absorption + lazy maint)
-gamma_py_rebuild.py    (~200 lines) — gamma_v2 + tombstone-rebuild trigger ★ recommended drop-in
+backends.py            (~90 lines)  — backend wrappers (HnswlibBackend, FaissHnswBackend)
+router.py         (~115 lines) — the simple router (buffer + delete-absorption + lazy maint)
+router_with_rebuild.py    (~200 lines) — gamma_v2 + tombstone-rebuild trigger ★ recommended drop-in
 ```
 
 Reading order to understand the paper algorithm:
-1. `gamma_py.py` — abstract `GraphBackend` + 2 implementations (hnswlib, Faiss HNSW). Both forced single-thread for fair comparison.
-2. `gamma_py_v2.py` — `GammaPyHybridV2`. The 3 mechanisms: buffer add, cancel-in-buffer on delete, lazy flush in maintain.
-3. `gamma_py_rebuild.py` — `GammaPyHybridRebuild`. Adds the periodic full-rebuild trigger that is the dominant performance contributor (e25, e29).
+1. `backends.py` — abstract `GraphBackend` + 2 implementations (hnswlib, Faiss HNSW). Both forced single-thread for fair comparison.
+2. `router.py` — `GammaRouter`. The 3 mechanisms: buffer add, cancel-in-buffer on delete, lazy flush in maintain.
+3. `router_with_rebuild.py` — `GammaRouterWithRebuild`. Adds the periodic full-rebuild trigger that is the dominant performance contributor (e25, e29).
 
 ## Use this for any new code
 
 ```python
-from experiments._shared.gamma_py import HnswlibBackend
-from experiments._shared.gamma_py_rebuild import GammaPyHybridRebuild
+from experiments._shared.backends import HnswlibBackend
+from experiments._shared.router_with_rebuild import GammaRouterWithRebuild
 
 backend = HnswlibBackend(dim=128, max_elements=200000)
 rebuild_factory = lambda: HnswlibBackend(dim=128, max_elements=200000)
-idx = GammaPyHybridRebuild(
+idx = GammaRouterWithRebuild(
     backend, rebuild_factory,
     dim=128, buf_capacity=125000,
     rebuild_threshold=0.5,
@@ -45,7 +45,7 @@ idx = GammaPyHybridRebuild(
 
 ## Ablation variants (`ablations/`)
 
-These files exist for the per-experiment ablations. **Do not use them for new code.** Each is a copy of `gamma_py_v2.py` with one mechanism added or replaced, used to measure that single mechanism's contribution.
+These files exist for the per-experiment ablations. **Do not use them for new code.** Each is a copy of `router.py` with one mechanism added or replaced, used to measure that single mechanism's contribution.
 
 | file | used by | what it adds |
 |---|---|---|
@@ -56,7 +56,7 @@ These files exist for the per-experiment ablations. **Do not use them for new co
 | `ablations/gamma_py_combined.py` | e28 | rebuild + cost-admit combined |
 | `ablations/gamma_py_rich.py` | e30 | full rich version: per-vector life-table + heat-tracker + hot tier + γ-aware migration + per-partition rebuild |
 
-The ablation results (in `experiments/FINDINGS.md`) showed all of these except `gamma_py_rebuild.py` either don't add measurable value at our test scales or actively hurt. The simple router is sufficient.
+The ablation results (in `experiments/FINDINGS.md`) showed all of these except `router_with_rebuild.py` either don't add measurable value at our test scales or actively hurt. The simple router is sufficient.
 
 ## Other utilities
 

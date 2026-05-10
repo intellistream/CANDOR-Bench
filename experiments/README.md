@@ -118,11 +118,11 @@ uv run python experiments/_shared/plot.py
 | `workloads.py` | the standard streaming workload runner + 4 delete-pattern functions |
 | `workloads_rich.py` | mixed_lifetime + zipfian_queries workload runners (for e30) |
 | `workloads_instrumented.py` | per-op latency timing (for e31) |
-| `gamma_py.py` | base graph backends (HnswlibBackend, FaissHnswBackend) — both forced single-thread |
-| `gamma_py_v2.py` | the canonical simplified router: buffer + delete-absorb + lazy maint |
+| `backends.py` | base graph backends (HnswlibBackend, FaissHnswBackend) — both forced single-thread |
+| `router.py` | the canonical simplified router: buffer + delete-absorb + lazy maint |
 | `gamma_py_v3.py` | v2 with 4 component toggles (for e20) |
 | `gamma_py_spatial.py` | K-partition spatial routing (for e24) |
-| `gamma_py_rebuild.py` | tombstone-rebuild trigger (for e25) |
+| `router_with_rebuild.py` | tombstone-rebuild trigger (for e25) |
 | `gamma_py_adaptive_maint.py` | buffer-fill auto-maint (for e26) |
 | `gamma_py_cost_admit.py` | per-batch lifetime-EMA admit (for e27) |
 | `gamma_py_combined.py` | rebuild + cost-admit combined (for e28) |

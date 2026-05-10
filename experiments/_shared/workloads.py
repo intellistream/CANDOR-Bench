@@ -75,7 +75,7 @@ def run_workload(idx, name, data, queries, init_n, batch, qstride,
     batch : insert batch size per step.
     qstride : query every `qstride` inserted-rows.
     delete_fn : function (alive_set, n_to_del, rng, data, deleted_so_far, batch_idx=...) → np.ndarray of ids.
-    use_gamma : True for GammaPyHybridV2 (id-first add API), False for direct backend.
+    use_gamma : True for GammaRouter (id-first add API), False for direct backend.
     has_mark_deleted : True if backend supports mark_deleted (skip delete otherwise).
     max_deletes_per_batch : if set, override `batch` as the per-step delete count.
     seed : RNG seed for reproducible delete patterns.

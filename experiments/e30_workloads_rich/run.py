@@ -24,8 +24,8 @@ import os, sys, json, argparse
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import _shared
 from _shared import load_dataset
-from _shared.gamma_py import HnswlibBackend
-from _shared.gamma_py_v2 import GammaPyHybridV2
+from _shared.backends import HnswlibBackend
+from _shared.router import GammaRouter
 from _shared.ablations.gamma_py_rich import GammaPyHybridRich
 from _shared.workloads_rich import run_mixed_lifetime, run_zipfian_queries
 
@@ -76,7 +76,7 @@ def main():
         # V1: gamma_v2
         print(f"\n========== {args.workload}/{args.scale} seed={seed} V1 gamma_v2", flush=True)
         be1 = HnswlibBackend(d, max_elements=n)
-        g1 = GammaPyHybridV2(be1, d, buf_capacity=batch * 50)
+        g1 = GammaRouter(be1, d, buf_capacity=batch * 50)
         r = run_fn(g1, "V1_gamma_v2", seed=seed, use_gamma_rich=False,
                     has_mark_deleted=False)
         rows.append({"workload": args.workload, "scale": args.scale, "seed": seed,
