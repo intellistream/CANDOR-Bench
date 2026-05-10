@@ -24,6 +24,7 @@ from datasets.base import Dataset
 
 DEFAULT_GAMMA_DIM = 32
 DEFAULT_GAMMA_THREADS = 1
+DEFAULT_MAINTAIN_INTERVAL = 1000
 
 
 @dataclass(frozen=True)
@@ -48,6 +49,7 @@ class GammaSweepConfig:
     threads: int
     compute_recall: bool = True
     algorithm_dataset_key: str = "random-xs"
+    maintain_interval: int = DEFAULT_MAINTAIN_INTERVAL
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "GammaSweepConfig":
@@ -82,6 +84,7 @@ class GammaSweepConfig:
             threads=int(data.get("threads", DEFAULT_GAMMA_THREADS)),
             compute_recall=bool(data.get("compute_recall", True)),
             algorithm_dataset_key=str(data.get("algorithm_dataset_key", "random-xs")),
+            maintain_interval=int(data.get("maintain_interval", DEFAULT_MAINTAIN_INTERVAL)),
         )
         cfg.validate()
         return cfg
@@ -109,6 +112,8 @@ class GammaSweepConfig:
             raise ValueError("gamma_sweep.delete_ratio must be in [0, 1]")
         if self.threads <= 0:
             raise ValueError("gamma_sweep.threads must be > 0")
+        if self.maintain_interval < 0:
+            raise ValueError("gamma_sweep.maintain_interval must be >= 0")
 
 
 class _GammaVectorDataset(Dataset):
@@ -184,6 +189,7 @@ def generate_gamma_operation_sequence(
 
     write_prob = 1.0 if gamma == 0.0 else 1.0 / (1.0 + gamma)
     query_weights = _zipf_weights(cfg.dataset_size, cfg.zipf_alpha)
+    writes_since_maintain = 0
 
     for _ in range(cfg.operations):
         if rng.random() >= write_prob:
@@ -209,6 +215,7 @@ def generate_gamma_operation_sequence(
             active_ids.pop()
             available_ids.append(target_id)
             operations.append(GammaOperation("delete", target_id, "measurement"))
+            writes_since_maintain += 1
         elif available_ids:
             pos = int(rng.integers(0, len(available_ids)))
             target_id = available_ids[pos]
@@ -216,6 +223,7 @@ def generate_gamma_operation_sequence(
             available_ids.pop()
             active_ids.append(target_id)
             operations.append(GammaOperation("insert", target_id, "measurement"))
+            writes_since_maintain += 1
         else:
             operations.append(
                 GammaOperation(
@@ -224,6 +232,11 @@ def generate_gamma_operation_sequence(
                     "measurement",
                 )
             )
+            continue
+
+        if cfg.maintain_interval > 0 and writes_since_maintain >= cfg.maintain_interval:
+            operations.append(GammaOperation("maintain", -1, "measurement"))
+            writes_since_maintain = 0
 
     return operations
 
@@ -340,6 +353,16 @@ def plot_gamma_sweep(run_dir: str | Path) -> list[Path]:
             y_label="Average delete latency (ms)",
             title="Gamma Sweep Delete Latency",
             empty_message="No delete latency data available",
+        )
+    )
+    outputs.append(
+        _plot_gamma_latency(
+            latencies,
+            figures_dir / "gamma_vs_maintain_latency.png",
+            op_type="maintain_latency",
+            y_label="Average maintain latency (ms)",
+            title="Gamma Sweep Maintain Latency",
+            empty_message="No maintain latency data available",
         )
     )
 
@@ -476,7 +499,7 @@ def _run_one_index_gamma(
     recall_eval_duration = float(sequence_result.get("recall_eval_duration_sec", 0.0))
     op_counts = sequence_result["op_counts"]
     op_latencies = sequence_result["op_latencies"]
-    total_measurement_ops = sum(op_counts.values())
+    total_measurement_ops = op_counts["insert"] + op_counts["delete"] + op_counts["query"]
     system_ops_per_sec = total_measurement_ops / duration if duration > 0 else 0.0
 
     run_row = {
@@ -502,6 +525,7 @@ def _run_one_index_gamma(
         "insert_count": op_counts["insert"],
         "delete_count": op_counts["delete"],
         "query_count": op_counts["query"],
+        "maintain_count": op_counts["maintain"],
         "system_ops_per_sec": system_ops_per_sec,
         "recall": sequence_result["recall"],
     }
@@ -516,6 +540,7 @@ def _run_one_index_gamma(
         {"run_id": run_id, "key": "measurement_insert_count", "value": op_counts["insert"]},
         {"run_id": run_id, "key": "measurement_delete_count", "value": op_counts["delete"]},
         {"run_id": run_id, "key": "measurement_query_count", "value": op_counts["query"]},
+        {"run_id": run_id, "key": "measurement_maintain_count", "value": op_counts["maintain"]},
         {"run_id": run_id, "key": "final_live_count", "value": sequence_result["final_live_count"]},
         {"run_id": run_id, "key": "mean_recall", "value": sequence_result["recall"]},
         {"run_id": run_id, "key": "algorithm_duration_sec", "value": duration},
@@ -660,11 +685,13 @@ def _write_manifest(
             "threads": cfg.threads,
             "compute_recall": cfg.compute_recall,
             "algorithm_dataset_key": cfg.algorithm_dataset_key,
+            "maintain_interval": cfg.maintain_interval,
         },
         "notes": [
             "This CANDOR-Bench runner uses the algorithm registry and BaseStreamingANN API.",
             "GammaFresh internals are not modified by this experiment path.",
             "threads is recorded in this first version; execution is serial.",
+            "maintain operations are inserted after every maintain_interval measurement insert/delete operations; 0 disables insertion.",
             (
                 "recall is exact dynamic Recall@k against the live vector set at each measurement query; "
                 "recall evaluation time is reported separately and excluded from throughput."
@@ -699,6 +726,7 @@ BENCHMARK_RUN_FIELDS = [
     "insert_count",
     "delete_count",
     "query_count",
+    "maintain_count",
     "system_ops_per_sec",
     "recall",
 ]

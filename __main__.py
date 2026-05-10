@@ -24,19 +24,19 @@ def main():
     parser.add_argument('--config', type=str, required=True, help='Path to config YAML file')
     parser.add_argument('--output', type=str, default=None, help='Output directory')
     parser.add_argument('--plot', action='store_true', help='Generate plots')
-    
+
     args = parser.parse_args()
-    
+
     # 加载配置
     print(f"Loading configuration from {args.config}")
     config = load_config(args.config)
-    
+
     # 准备数据集
     dataset_name = config['dataset']['name']
     print(f"\nPreparing dataset: {dataset_name}")
     dataset = prepare_dataset(dataset_name)
     print(f"Dataset: {dataset}")
-    
+
     # 获取算法
     algo_config = config['algorithm']
     algo_name = algo_config['name']
@@ -44,11 +44,11 @@ def main():
     print(f"\nInitializing algorithm: {algo_name}")
     algorithm = get_algorithm(algo_name, **algo_params)
     print(f"Algorithm: {algorithm}")
-    
+
     # 创建测试配置
     test_config = config['test']
     stress_config = StressTestConfig.from_dict(config.get('stress_test', {}))
-    
+
     # 创建 runner
     print(f"\nCreating benchmark runner...")
     runner = BenchmarkRunner(
@@ -58,22 +58,22 @@ def main():
         k=test_config.get('k', 10),
         num_workers=test_config.get('num_workers', 1)
     )
-    
+
     # 运行测试
     print(f"\nStarting benchmark...")
     metrics = runner.run_stress_test()
-    
+
     # 保存结果
     output_config = config.get('output', {})
     output_dir = args.output or output_config.get('output_dir', 'results')
-    
+
     import os
     os.makedirs(output_dir, exist_ok=True)
-    
+
     if output_config.get('save_timestamps', True):
         timestamp_file = os.path.join(output_dir, 'timestamps.csv')
         runner.save_results(timestamp_file)
-    
+
     if output_config.get('save_results', True):
         from benchmark_anns.utils.io import save_results
         results_file = os.path.join(output_dir, 'metrics.json')
@@ -89,7 +89,7 @@ def main():
             }
         }
         save_results(results, results_file)
-    
+
     # 生成图表
     if args.plot or output_config.get('plot_results', False):
         timestamp_file = os.path.join(output_dir, 'timestamps.csv')
@@ -97,7 +97,7 @@ def main():
             plot_file = os.path.join(output_dir, 'results.png')
             print(f"\nGenerating plots...")
             plot_results(timestamp_file, plot_file)
-    
+
     print(f"\n✓ Benchmark complete! Results saved to {output_dir}")
 
 

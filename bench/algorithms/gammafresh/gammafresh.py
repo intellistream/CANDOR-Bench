@@ -160,6 +160,16 @@ class Gammafresh(BaseStreamingANN):
         assert self.index is not None
         self.index.delete(np.ascontiguousarray(ids, dtype=np.uint64))
 
+    def maintain(self, vector_budget=0, time_budget_ms=0, force=True):
+        assert self.index is not None
+        if not hasattr(self.index, "maintain"):
+            return {}
+        return self.index.maintain(
+            vector_budget=int(vector_budget),
+            time_budget_ms=int(time_budget_ms),
+            force=bool(force),
+        )
+
     def query(self, X, k):
         assert self.index is not None
         ids, dists = self.index.search(np.ascontiguousarray(X, dtype=np.float32), k)

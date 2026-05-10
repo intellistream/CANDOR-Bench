@@ -100,3 +100,12 @@ temp/
 /build-pycandy/
 /.deps/
 results/
+
+# 代码迁移
+CODEX_GAMMA_HANDOFF.md
+DiskANN/
+GAMMA_CODE_REVIEW.md
+GAMMA_MIGRATION_ISSUES.md
+gamma_migration_conversation.md
+prompt.md
+algorithms_impl/*

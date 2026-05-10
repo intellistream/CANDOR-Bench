@@ -70,6 +70,25 @@ def test_gamma_config_accepts_algorithms_alias() -> None:
     assert cfg.dim == 32
     assert cfg.threads == 1
     assert cfg.compute_recall is True
+    assert cfg.maintain_interval == 1000
+
+
+def test_gamma_config_accepts_maintain_interval() -> None:
+    cfg = GammaSweepConfig.from_dict(
+        {
+            "dataset_size": 100,
+            "operations": 10,
+            "topk": 2,
+            "gamma_values": [1.0],
+            "algorithms": ["dummy"],
+            "random_seed": 1,
+            "prefill_ratio": 0.5,
+            "zipf_alpha": 0.0,
+            "delete_ratio": 0.5,
+            "maintain_interval": 7,
+        }
+    )
+    assert cfg.maintain_interval == 7
 
 
 def test_gamma_config_can_disable_recall() -> None:
@@ -99,6 +118,36 @@ def test_gamma_operation_sequence_is_deterministic() -> None:
     assert len(first) == int(cfg.dataset_size * cfg.prefill_ratio) + cfg.operations
     assert any(op.op_type == "query" for op in first if op.phase == "measurement")
     assert any(op.op_type in {"insert", "delete"} for op in first if op.phase == "measurement")
+
+
+def test_gamma_operation_sequence_inserts_maintain_after_write_interval() -> None:
+    cfg = GammaSweepConfig(
+        dataset_size=20,
+        operations=6,
+        dim=4,
+        topk=2,
+        gamma_values=[0.0],
+        indices=["dummy"],
+        random_seed=5,
+        prefill_ratio=0.5,
+        zipf_alpha=0.0,
+        delete_ratio=0.5,
+        threads=1,
+        maintain_interval=2,
+    )
+
+    sequence = generate_gamma_operation_sequence(cfg, gamma=0.0)
+    measurement = [op.op_type for op in sequence if op.phase == "measurement"]
+
+    assert measurement.count("maintain") == 3
+    writes_since_maintain = 0
+    for op_type in measurement:
+        if op_type in {"insert", "delete"}:
+            writes_since_maintain += 1
+            continue
+        if op_type == "maintain":
+            assert writes_since_maintain == 2
+            writes_since_maintain = 0
 
 
 def test_benchmark_runner_executes_generated_operation_sequence() -> None:
@@ -133,12 +182,59 @@ def test_benchmark_runner_executes_generated_operation_sequence() -> None:
         compute_recall=True,
     )
 
-    assert result["op_counts"] == {"insert": 1, "delete": 1, "query": 1}
+    assert result["op_counts"] == {"insert": 1, "delete": 1, "query": 1, "maintain": 0}
     assert result["final_live_count"] == 1
     assert result["recall"] == 1.0
     # 2 inserts (prefill + measurement) + 1 query + 1 recall_eval + 1 delete
     # = 5 timeseries entries (recall_eval split was added in commit 0c0dc625)
     assert len(result["timeseries"]) == 5
+    assert any(row["op_type"] == "recall_eval_latency" for row in result["timeseries"])
+
+
+def test_benchmark_runner_executes_maintain_operation() -> None:
+    class MaintainTrackingANN(DummyStreamingANN):
+        def __init__(self):
+            super().__init__()
+            self.maintain_calls = 0
+
+        def maintain(self, vector_budget=0, time_budget_ms=0, force=False):
+            self.maintain_calls += 1
+            assert force is True
+            return {"maintained": 1}
+
+    vectors = np.asarray(
+        [
+            [0.0, 0.0],
+            [1.0, 0.0],
+        ],
+        dtype="float32",
+    )
+    dataset = _GammaVectorDataset(vectors, "unit-gamma-maintain")
+    algorithm = MaintainTrackingANN()
+    runner = BenchmarkRunner(
+        algorithm=algorithm,
+        dataset=dataset,
+        k=1,
+        save_timestamps=False,
+        use_worker=False,
+    )
+
+    result = runner.run_operation_sequence(
+        [
+            {"type": "insert", "target_id": 0, "phase": "prefill"},
+            {"type": "insert", "target_id": 1, "phase": "measurement"},
+            {"type": "maintain", "target_id": -1, "phase": "measurement"},
+            {"type": "query", "target_id": 0, "phase": "measurement"},
+        ],
+        vectors,
+        run_id="unit-maintain-run",
+        index_name="dummy",
+    )
+
+    assert algorithm.maintain_calls == 1
+    assert result["op_counts"] == {"insert": 1, "delete": 0, "query": 1, "maintain": 1}
+    assert len(result["op_latencies"]["maintain_latency"]) == 1
+    assert any(row["op_type"] == "maintain_latency" for row in result["timeseries"])
 
 
 def test_benchmark_runner_records_recall_eval_latency_separately(monkeypatch) -> None:
@@ -228,7 +324,7 @@ def test_benchmark_runner_batches_prefill_initial_load() -> None:
     )
 
     assert algorithm.initial_load_sizes == [2]
-    assert result["op_counts"] == {"insert": 0, "delete": 0, "query": 1}
+    assert result["op_counts"] == {"insert": 0, "delete": 0, "query": 1, "maintain": 0}
     assert result["final_live_count"] == 2
     assert len(result["timeseries"]) == 3
 
@@ -256,6 +352,7 @@ def test_gamma_sweep_writes_standard_outputs_and_plots(tmp_path: Path) -> None:
     assert runs["compute_recall"].eq(True).all()
     assert runs["recall"].notna().all()
     assert (runs["recall"] == 1.0).all()
+    assert "maintain_count" in runs.columns
     assert {"query_latency", "insert_latency", "delete_latency"} & set(latencies["op_type"])
     assert not timeseries.empty
 
@@ -266,6 +363,7 @@ def test_gamma_sweep_writes_standard_outputs_and_plots(tmp_path: Path) -> None:
         "gamma_vs_query_latency.png",
         "gamma_vs_insert_latency.png",
         "gamma_vs_delete_latency.png",
+        "gamma_vs_maintain_latency.png",
     }
     for path in plot_outputs:
         assert path.exists(), path

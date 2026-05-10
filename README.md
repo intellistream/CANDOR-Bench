@@ -372,6 +372,7 @@ uv run sage-bench \
 | `prefill_ratio` | 初始插入比例 |
 | `zipf_alpha` | query target 的 Zipf skew，`0.0` 表示 uniform |
 | `delete_ratio` | write operation 中 delete 的目标比例 |
+| `maintain_interval` | 每经过多少次 measurement 阶段的 insert/delete 后插入一次 `maintain`；默认 `1000`，设为 `0` 可关闭 |
 | `threads` | 可省略，默认 `1`；当前版本记录该字段但串行执行 |
 
 `algorithm_dataset_key` 通常不需要写入 runbook；默认是 `random-xs`，传入 `--dataset` 时会使用命令行指定的数据集名。
@@ -391,6 +392,7 @@ uv run sage-bench \
 | `figures/main/gamma_vs_query_latency.png` | gamma vs query latency |
 | `figures/main/gamma_vs_insert_latency.png` | gamma vs insert latency |
 | `figures/main/gamma_vs_delete_latency.png` | gamma vs delete latency |
+| `figures/main/gamma_vs_maintain_latency.png` | gamma vs maintain latency |
 
 可以用命令行覆盖 sweep 范围：
 

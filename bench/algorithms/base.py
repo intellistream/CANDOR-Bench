@@ -203,6 +203,20 @@ class BaseStreamingANN(BaseANN):
         """
         self.delete(ids)
         self.insert(X, ids)
+
+    def maintain(
+        self,
+        vector_budget: int = 0,
+        time_budget_ms: int = 0,
+        force: bool = False,
+    ) -> dict:
+        """
+        执行索引维护。
+
+        默认实现为 no-op，支持没有维护接口的算法参与同一 workload。
+        需要真实维护逻辑的算法可以覆盖该方法。
+        """
+        return {}
     
     def get_results(self) -> Optional[np.ndarray]:
         """

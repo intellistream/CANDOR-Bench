@@ -11,6 +11,7 @@ import time
 import random
 import tracemalloc
 import os
+import inspect
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 
@@ -142,6 +143,23 @@ def _operation_field(operation: Any, *names: str, default: Any = _MISSING) -> An
     if default is not _MISSING:
         return default
     raise ValueError(f"operation missing required field: {' or '.join(names)}")
+
+
+def _invoke_algorithm_maintain(algo: Any) -> Any:
+    """Call an algorithm's maintain hook if it exists."""
+    maintain = getattr(algo, "maintain", None)
+    if maintain is None:
+        return {}
+
+    try:
+        signature = inspect.signature(maintain)
+    except (TypeError, ValueError):
+        return maintain()
+
+    kwargs = {}
+    if "force" in signature.parameters:
+        kwargs["force"] = True
+    return maintain(**kwargs)
 
 
 def _exact_dynamic_recall(
@@ -346,9 +364,10 @@ class BenchmarkRunner:
             "insert_latency": [],
             "delete_latency": [],
             "query_latency": [],
+            "maintain_latency": [],
             "recall_eval_latency": [],
         }
-        op_counts = {"insert": 0, "delete": 0, "query": 0}
+        op_counts = {"insert": 0, "delete": 0, "query": 0, "maintain": 0}
         query_recalls: List[float] = []
 
         measurement_start: Optional[float] = None
@@ -360,10 +379,10 @@ class BenchmarkRunner:
             seq_idx = op_index + 1
             operation = operations[op_index]
             op_type = _operation_field(operation, "op_type", "type")
-            target_id = int(_operation_field(operation, "target_id"))
             phase = str(_operation_field(operation, "phase", default="measurement"))
+            target_id = int(_operation_field(operation, "target_id", default=-1))
 
-            if target_id < 0 or target_id >= vectors.shape[0]:
+            if op_type != "maintain" and (target_id < 0 or target_id >= vectors.shape[0]):
                 raise ValueError(f"operation target_id out of range: {target_id}")
 
             if op_type == "insert" and phase == "prefill":
@@ -444,6 +463,10 @@ class BenchmarkRunner:
                         )
                         recall_elapsed_ms = (time.perf_counter() - recall_start) * 1000.0
                 metric_type = "query_latency"
+            elif op_type == "maintain":
+                _invoke_algorithm_maintain(self.algo)
+                metric_type = "maintain_latency"
+                elapsed_ms = (time.perf_counter() - start) * 1000.0
             else:
                 raise ValueError(f"unknown operation type: {op_type}")
 
@@ -490,15 +513,19 @@ class BenchmarkRunner:
             sum(op_latencies["insert_latency"])
             + sum(op_latencies["delete_latency"])
             + sum(op_latencies["query_latency"])
+            + sum(op_latencies["maintain_latency"])
         ) / 1000.0
         recall_eval_duration_sec = sum(op_latencies["recall_eval_latency"]) / 1000.0
 
         self.counts["insert"] += op_counts["insert"]
         self.counts["delete"] += op_counts["delete"]
         self.counts["search"] += op_counts["query"]
+        self.counts["maintenance_rebuild"] += op_counts["maintain"]
         self.attrs["latencyInsert"].extend([v * 1000.0 for v in op_latencies["insert_latency"]])
         self.attrs["latencyDelete"].extend([v * 1000.0 for v in op_latencies["delete_latency"]])
         self.attrs["latencyQuery"].extend([v / 1000.0 for v in op_latencies["query_latency"]])
+        self.attrs["maintenanceLatency"] += sum(op_latencies["maintain_latency"]) / 1000.0
+        self.attrs["maintenanceRebuilds"] += op_counts["maintain"]
 
         finite_recalls = [value for value in query_recalls if not np.isnan(value)]
 
@@ -590,6 +617,8 @@ class BenchmarkRunner:
                 self._execute_search(op)
             elif op_type == 'maintenance_rebuild':
                 self._execute_maintenance_rebuild(op)
+            elif op_type == 'maintain':
+                self._execute_maintain(op)
             elif op_type == 'waitPending':
                 self._wait_pending()
             elif op_type == 'endHPC':
@@ -1366,6 +1395,39 @@ class BenchmarkRunner:
             print(f"  ✓ 重建完成: {rebuild_elapsed:.2f}s")
         else:
             print(f"  ✗ 重建失败或超预算")
+
+    def _execute_maintain(self, op: Dict):
+        """执行算法自带维护钩子。"""
+        print("  执行 maintain")
+        if self.use_worker:
+            self._wait_pending()
+
+        target_algo = self.base_algo
+        lock = getattr(self.worker, "m_mut", None) if self.use_worker and self.worker else None
+
+        start = time.time()
+        if lock is not None:
+            while not lock.acquire(blocking=False):
+                pass
+            try:
+                report = _invoke_algorithm_maintain(target_algo)
+            finally:
+                lock.release()
+        else:
+            report = _invoke_algorithm_maintain(target_algo)
+        elapsed = time.time() - start
+
+        self.counts["maintenance_rebuild"] += 1
+        self.attrs["maintenanceLatency"] += elapsed
+        self.attrs["maintenanceRebuilds"] += 1
+        self.attrs["maintenanceEvents"].append(
+            {
+                "time": time.time(),
+                "duration_ms": elapsed * 1000.0,
+                "report": report if isinstance(report, dict) else {},
+            }
+        )
+        print(f"  ✓ maintain 完成: {elapsed * 1000.0:.2f}ms")
     
     def _wait_pending(self):
         """等待待处理操作完成（用于工作线程模式）"""
