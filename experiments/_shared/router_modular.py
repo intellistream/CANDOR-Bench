@@ -26,6 +26,21 @@ Strategies
     centroids on the alive set. Tests "even the cluster identities
     are stale; periodic full rebuild handles it".
 
+"lifetime_aware_migrate"
+    *Cluster-buffer only*. Per-cluster decision based on observed
+    cluster_avg_lifetime (EMA from absorbed deletes). Clusters whose
+    expected lifetime exceeds `lifetime_horizon` migrate to graph
+    (vectors will live long enough to amortize the migration cost);
+    clusters with shorter expected lifetime are kept in buffer
+    (vectors will likely be absorbed before next maintain). This is
+    the C++ GammaFresh team's intended mechanism, finally given a
+    workload that has lifetime structure (see e35 / workloads_lifetime.py).
+
+"lifetime_aware_migrate_with_rebuild"
+    *Cluster-buffer only*. lifetime_aware_migrate + tombstone-rebuild
+    safety net. Combined variant — does the rebuild trigger still help
+    when admission is already lifetime-aware?
+
 "no_op"
     Do nothing. Used to confirm what happens if the buffer just keeps
     growing (worst-case sanity).
@@ -50,7 +65,12 @@ class ModularRouter:
                  # in_place_migrate knobs
                  migrate_min_inserts: int = 256,
                  migrate_min_query_hits: int = 4,
-                 migrate_dead_drop_fraction: float = 0.7):
+                 migrate_dead_drop_fraction: float = 0.7,
+                 # lifetime_aware_migrate knobs
+                 lifetime_horizon: float = 5000.0,
+                 lifetime_min_observations: int = 5,
+                 lifetime_min_alive: int = 32,
+                 lifetime_migrate_top_fraction: float = 0.5):
         self.dim = dim
         self.buffer = buffer
         self.backend = backend
@@ -61,6 +81,10 @@ class ModularRouter:
         self.migrate_min_inserts = int(migrate_min_inserts)
         self.migrate_min_query_hits = int(migrate_min_query_hits)
         self.migrate_dead_drop_fraction = float(migrate_dead_drop_fraction)
+        self.lifetime_horizon = float(lifetime_horizon)
+        self.lifetime_min_observations = int(lifetime_min_observations)
+        self.lifetime_min_alive = int(lifetime_min_alive)
+        self.lifetime_migrate_top_fraction = float(lifetime_migrate_top_fraction)
 
         # State the router needs in order to rebuild
         self._graph_vecs: dict[int, np.ndarray] = {}      # id → vec (alive in graph)
@@ -70,12 +94,24 @@ class ModularRouter:
         self.rebuild_count = 0
         self.cluster_migrate_count = 0
         self.cluster_drop_count = 0
+        self.lifetime_kept_in_buffer_count = 0
 
-        if maintain_strategy in ("in_place_migrate", "cluster_rebuild"):
+        cluster_only_strategies = (
+            "in_place_migrate",
+            "cluster_rebuild",
+            "lifetime_aware_migrate",
+            "lifetime_aware_migrate_with_rebuild",
+        )
+        rebuild_strategies = (
+            "rebuild",
+            "cluster_rebuild",
+            "lifetime_aware_migrate_with_rebuild",
+        )
+        if maintain_strategy in cluster_only_strategies:
             if not isinstance(buffer, ClusterBuffer):
                 raise ValueError(
                     f"maintain_strategy='{maintain_strategy}' requires ClusterBuffer")
-        if maintain_strategy in ("rebuild", "cluster_rebuild") and backend_factory is None:
+        if maintain_strategy in rebuild_strategies and backend_factory is None:
             raise ValueError(
                 f"maintain_strategy='{maintain_strategy}' requires backend_factory")
 
@@ -136,6 +172,11 @@ class ModularRouter:
         elif s == "cluster_rebuild":
             self._flush_all_alive()
             self._maybe_rebuild_backend(refit_buffer_centroids=True)
+        elif s == "lifetime_aware_migrate":
+            self._lifetime_aware_migrate()
+        elif s == "lifetime_aware_migrate_with_rebuild":
+            self._lifetime_aware_migrate()
+            self._maybe_rebuild_backend()
         else:
             raise ValueError(f"unknown maintain_strategy: {s}")
 
@@ -209,6 +250,63 @@ class ModularRouter:
             self.cluster_drop_count += len(clusters_to_drop)
 
         # Migrate high-value clusters into graph
+        if clusters_to_migrate:
+            ids, vecs = cb.drain_clusters(clusters_to_migrate)
+            if len(ids):
+                self.backend.add(np.ascontiguousarray(vecs), ids)
+                for i, v in zip(ids, vecs):
+                    self._graph_vecs[int(i)] = v
+            self.cluster_migrate_count += len(clusters_to_migrate)
+
+    def _lifetime_aware_migrate(self):
+        """Per-cluster admission via *comparative* lifetime ranking.
+
+        Of the eligible clusters (alive >= lifetime_min_alive), migrate
+        the top `lifetime_migrate_top_fraction` ranked by observed
+        avg_lifetime EMA. Clusters with insufficient observations get
+        the horizon as a neutral default rank (so they're not
+        permanently boxed out of migration before any signal arrives).
+
+        Why comparative rather than absolute threshold? An absolute
+        threshold can collapse to "migrate nothing" or "migrate
+        everything" depending on workload mean, which collapses the
+        experiment into "no admission" vs "always migrate" and tells
+        us nothing about whether the lifetime *signal* is useful. The
+        comparative rule isolates the question: given we're going to
+        migrate ~half of the clusters per maintain, is the lifetime
+        ranking the right one to pick by?
+        """
+        assert isinstance(self.buffer, ClusterBuffer)
+        cb = self.buffer
+        K = cb.K
+        avg_life = cb.cluster_avg_lifetime           # (K,)
+        n_obs = cb.cluster_n_observed                # (K,)
+        per_alive = cb.per_cluster_alive()           # (K,)
+
+        # For unobserved clusters: use horizon as neutral default
+        eff_life = np.where(
+            n_obs >= self.lifetime_min_observations,
+            avg_life,
+            self.lifetime_horizon,
+        )
+
+        eligible_mask = per_alive >= self.lifetime_min_alive
+        if not eligible_mask.any():
+            return
+        eligible_idx = np.where(eligible_mask)[0]
+        eligible_life = eff_life[eligible_mask]
+
+        n_total = len(eligible_idx)
+        n_top = max(1, int(np.ceil(self.lifetime_migrate_top_fraction * n_total)))
+        # argpartition with -eligible_life picks the n_top largest values
+        if n_top >= n_total:
+            top_within = np.arange(n_total)
+        else:
+            top_within = np.argpartition(-eligible_life, n_top - 1)[:n_top]
+        clusters_to_migrate = eligible_idx[top_within].tolist()
+
+        self.lifetime_kept_in_buffer_count += (n_total - n_top)
+
         if clusters_to_migrate:
             ids, vecs = cb.drain_clusters(clusters_to_migrate)
             if len(ids):

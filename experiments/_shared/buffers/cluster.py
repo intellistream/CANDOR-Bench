@@ -49,6 +49,19 @@ class ClusterBuffer(Buffer):
         self.cluster_query_hits = np.zeros(self.K, dtype=np.int64)
         self.cluster_inserts = np.zeros(self.K, dtype=np.int64)
 
+        # Per-vector lifetime tracking (for lifetime_aware_migrate strategy).
+        # We treat one add() of a single vector as 1 op; insert_op[v] is the
+        # global op_id at which v entered. On absorbed delete we know its
+        # lifetime exactly. We deliberately do NOT track lifetime for
+        # vectors that exited via migration (we'd need a graph-side delete
+        # observer). Under-counting biases EMA downward for clusters that
+        # are migrated quickly — which is acceptable for an admission-time
+        # decision (those clusters get their migration confirmed).
+        self._next_op_id = 0
+        self._id_to_insert_op: dict[int, int] = {}
+        self.cluster_total_lifetime = np.zeros(self.K, dtype=np.float64)
+        self.cluster_n_observed = np.zeros(self.K, dtype=np.int64)
+
     # ----- centroid mgmt -----
     def fit_centroids(self, sample_vecs: np.ndarray) -> None:
         """Run faiss KMeans on `sample_vecs` to set centroids."""
@@ -100,6 +113,9 @@ class ClusterBuffer(Buffer):
         if len(ids) == 0:
             return
         cluster_ids = self._assign(vecs)
+        # Assign monotone op_ids to this batch
+        base_op = self._next_op_id
+        self._next_op_id += len(ids)
         for k in range(self.K):
             mask = cluster_ids == k
             if not mask.any():
@@ -107,16 +123,28 @@ class ClusterBuffer(Buffer):
             self.clusters[k].add(ids[mask], vecs[mask])
             kn = int(mask.sum())
             self.cluster_inserts[k] += kn
-            for i in ids[mask]:
-                self._id_to_cluster[int(i)] = k
+            ids_k = ids[mask]
+            # mask -> position within original batch
+            pos_in_batch = np.where(mask)[0]
+            for offset, i in zip(pos_in_batch, ids_k):
+                vid = int(i)
+                self._id_to_cluster[vid] = k
+                self._id_to_insert_op[vid] = base_op + int(offset)
 
     def delete(self, id_int: int) -> bool:
-        k = self._id_to_cluster.get(int(id_int), -1)
+        vid = int(id_int)
+        k = self._id_to_cluster.get(vid, -1)
         if k < 0:
             return False
-        ok = self.clusters[k].delete(id_int)
+        ok = self.clusters[k].delete(vid)
         if ok:
-            del self._id_to_cluster[int(id_int)]
+            del self._id_to_cluster[vid]
+            ins_op = self._id_to_insert_op.pop(vid, -1)
+            if ins_op >= 0:
+                # Lifetime in #ops; current op = self._next_op_id (next add() will use it)
+                lifetime = float(self._next_op_id - ins_op)
+                self.cluster_total_lifetime[k] += lifetime
+                self.cluster_n_observed[k] += 1
         return ok
 
     def search(self, queries: np.ndarray, k: int):
@@ -177,6 +205,12 @@ class ClusterBuffer(Buffer):
             if len(ids):
                 all_ids.append(ids)
                 all_vecs.append(vecs)
+        # Drained vectors leave the buffer; clear their tracking entries
+        # (lifetime EMA accumulates from absorbed deletes, which already
+        # popped their entries; remaining ones leave with no observation)
+        for vid_list in all_ids:
+            for vid in vid_list:
+                self._id_to_insert_op.pop(int(vid), None)
         self._id_to_cluster.clear()
         if not all_ids:
             return (np.empty(0, dtype=np.int64),
@@ -207,14 +241,29 @@ class ClusterBuffer(Buffer):
             cb = self.clusters[int(cid)]
             ids, vecs = cb.drain_alive()
             for i in ids:
-                self._id_to_cluster.pop(int(i), None)
+                vid = int(i)
+                self._id_to_cluster.pop(vid, None)
+                self._id_to_insert_op.pop(vid, None)
             if len(ids):
                 out_ids.append(ids)
                 out_vecs.append(vecs)
-            # Reset telemetry for the drained cluster
+            # Reset per-cluster telemetry for the drained cluster
             self.cluster_query_hits[int(cid)] = 0
             self.cluster_inserts[int(cid)] = 0
+            # Lifetime EMA is INTENTIONALLY preserved across drains —
+            # the cluster identity persists (centroid stays) so future
+            # admissions to that cluster can use the historical signal.
         if not out_ids:
             return (np.empty(0, dtype=np.int64),
                     np.empty((0, self.dim), dtype=np.float32))
         return np.concatenate(out_ids), np.concatenate(out_vecs)
+
+    @property
+    def cluster_avg_lifetime(self) -> np.ndarray:
+        """Per-cluster mean observed lifetime (in #ops). Returns 0 for
+        clusters with no observations yet."""
+        return np.where(
+            self.cluster_n_observed > 0,
+            self.cluster_total_lifetime / np.maximum(self.cluster_n_observed, 1),
+            0.0,
+        )
