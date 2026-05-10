@@ -1,6 +1,6 @@
 # All experiment results (auto-generated)
 
-Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **811**.
+Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **909**.
 
 ## e01_write_throughput
 
@@ -952,4 +952,117 @@ Auto-generated from `experiments/_shared/aggregate.py`. Total rows: **811**.
 | gamma_v2+rebuild | 200K | sequential | 70.0 | 0.9994 | 0.216 | 22500 | 177500 |
 | gamma_v2+cost_admit | 200K | sequential | 144.7 | 0.9984 | 1.002 | 22500 | 177500 |
 | gamma_v2+rebuild+cost_admit | 200K | sequential | 53.1 | 0.9994 | 0.188 | 22500 | 177500 |
+
+## e29_iso_rebuild_baseline
+
+| name | scale | pattern | total_s | recall | query_latency_ms_p95 | n_alive | n_delete |
+|---|---|---|---|---|---|---|---|
+| A_hnswlib_direct | 200K | cluster | 131.2 | 0.9996 | 0.937 | 22500 | 177500 |
+| B_hnswlib_direct+rebuild | 200K | cluster | 47.2 | 0.9996 | 0.163 | 22500 | 177500 |
+| C_gamma_v2 | 200K | cluster | 99.8 | 0.9992 | 0.749 | 22500 | 177500 |
+| D_gamma_v2+rebuild | 200K | cluster | 42.3 | 0.9990 | 0.147 | 22500 | 177500 |
+| A_hnswlib_direct | 200K | cluster | 138.2 | 0.9990 | 0.994 | 22500 | 177500 |
+| B_hnswlib_direct+rebuild | 200K | cluster | 53.9 | 0.9990 | 0.180 | 22500 | 177500 |
+| C_gamma_v2 | 200K | cluster | 105.7 | 0.9986 | 0.786 | 22500 | 177500 |
+| D_gamma_v2+rebuild | 200K | cluster | 44.4 | 0.9986 | 0.161 | 22500 | 177500 |
+| A_hnswlib_direct | 200K | cluster | 133.1 | 0.9992 | 0.936 | 22500 | 177500 |
+| B_hnswlib_direct+rebuild | 200K | cluster | 45.9 | 0.9990 | 0.148 | 22500 | 177500 |
+| C_gamma_v2 | 200K | cluster | 95.7 | 0.9992 | 0.721 | 22500 | 177500 |
+| D_gamma_v2+rebuild | 200K | cluster | 37.4 | 0.9994 | 0.132 | 22500 | 177500 |
+| A_hnswlib_direct | 200K | partial_reset | 101.3 | 0.9970 | 0.803 | 40000 | 160000 |
+| B_hnswlib_direct+rebuild | 200K | partial_reset | 47.6 | 0.9972 | 0.158 | 40000 | 160000 |
+| C_gamma_v2 | 200K | partial_reset | 77.4 | 0.9972 | 0.642 | 40000 | 160000 |
+| D_gamma_v2+rebuild | 200K | partial_reset | 38.7 | 0.9976 | 0.144 | 40000 | 160000 |
+| A_hnswlib_direct | 200K | partial_reset | 101.9 | 0.9976 | 0.844 | 40000 | 160000 |
+| B_hnswlib_direct+rebuild | 200K | partial_reset | 54.2 | 0.9976 | 0.178 | 40000 | 160000 |
+| C_gamma_v2 | 200K | partial_reset | 84.5 | 0.9978 | 0.681 | 40000 | 160000 |
+| D_gamma_v2+rebuild | 200K | partial_reset | 42.1 | 0.9974 | 0.162 | 40000 | 160000 |
+| A_hnswlib_direct | 200K | partial_reset | 104.7 | 0.9972 | 0.826 | 40000 | 160000 |
+| B_hnswlib_direct+rebuild | 200K | partial_reset | 51.7 | 0.9966 | 0.168 | 40000 | 160000 |
+| C_gamma_v2 | 200K | partial_reset | 81.9 | 0.9968 | 0.665 | 40000 | 160000 |
+| D_gamma_v2+rebuild | 200K | partial_reset | 36.6 | 0.9972 | 0.141 | 40000 | 160000 |
+| A_hnswlib_direct | 200K | random | 131.3 | 0.9992 | 0.950 | 22500 | 177500 |
+| B_hnswlib_direct+rebuild | 200K | random | 49.5 | 0.9992 | 0.159 | 22500 | 177500 |
+| C_gamma_v2 | 200K | random | 101.7 | 0.9990 | 0.749 | 22500 | 177500 |
+| D_gamma_v2+rebuild | 200K | random | 45.1 | 0.9990 | 0.158 | 22500 | 177500 |
+| A_hnswlib_direct | 200K | random | 139.4 | 0.9988 | 1.016 | 22500 | 177500 |
+| B_hnswlib_direct+rebuild | 200K | random | 56.5 | 0.9990 | 0.186 | 22500 | 177500 |
+| C_gamma_v2 | 200K | random | 106.6 | 0.9990 | 0.793 | 22500 | 177500 |
+| D_gamma_v2+rebuild | 200K | random | 46.4 | 0.9992 | 0.168 | 22500 | 177500 |
+| A_hnswlib_direct | 200K | random | 131.4 | 0.9992 | 0.908 | 22500 | 177500 |
+| B_hnswlib_direct+rebuild | 200K | random | 47.2 | 0.9990 | 0.145 | 22500 | 177500 |
+| C_gamma_v2 | 200K | random | 95.9 | 0.9994 | 0.706 | 22500 | 177500 |
+| D_gamma_v2+rebuild | 200K | random | 37.0 | 0.9992 | 0.121 | 22500 | 177500 |
+| A_hnswlib_direct | 200K | sequential | 132.2 | 0.9984 | 0.952 | 22500 | 177500 |
+| B_hnswlib_direct+rebuild | 200K | sequential | 46.5 | 0.9982 | 0.170 | 22500 | 177500 |
+| C_gamma_v2 | 200K | sequential | 164.9 | 0.9990 | 0.993 | 22500 | 177500 |
+| D_gamma_v2+rebuild | 200K | sequential | 65.3 | 0.9994 | 0.196 | 22500 | 177500 |
+| A_hnswlib_direct | 200K | sequential | 139.5 | 0.9984 | 0.994 | 22500 | 177500 |
+| B_hnswlib_direct+rebuild | 200K | sequential | 52.5 | 0.9982 | 0.187 | 22500 | 177500 |
+| C_gamma_v2 | 200K | sequential | 169.7 | 0.9990 | 0.999 | 22500 | 177500 |
+| D_gamma_v2+rebuild | 200K | sequential | 57.5 | 0.9994 | 0.173 | 22500 | 177500 |
+| A_hnswlib_direct | 200K | sequential | 123.0 | 0.9984 | 0.886 | 22500 | 177500 |
+| B_hnswlib_direct+rebuild | 200K | sequential | 40.9 | 0.9982 | 0.145 | 22500 | 177500 |
+| C_gamma_v2 | 200K | sequential | 125.0 | 0.9990 | 0.754 | 22500 | 177500 |
+| D_gamma_v2+rebuild | 200K | sequential | 43.1 | 0.9994 | 0.120 | 22500 | 177500 |
+
+## e30_workloads_rich
+
+| name | scale | total_s | recall | query_latency_ms_p95 | n_alive | n_delete |
+|---|---|---|---|---|---|---|
+| V0_hnswlib_direct | 200K | 64.9 | 0.9984 | 0.371 | 44481 | 155519 |
+| V1_gamma_v2 | 200K | 25.2 | 0.9970 | 0.231 | 44481 | 155519 |
+| V2_gamma_rich(off) | 200K | 24.7 | 0.9970 | 0.261 | 44481 | 155519 |
+| V3_+per_vector_cost | 200K | 26.0 | 0.9972 | 0.273 | 44481 | 155519 |
+| V4_+hot_tier | 200K | 25.5 | 0.9970 | 0.335 | 44481 | 155519 |
+| V5_+tombstone_rebuild | 200K | 26.0 | 0.9972 | 0.188 | 44481 | 155519 |
+| V6_+ALL | 200K | 26.1 | 0.8706 | 0.267 | 44481 | 155519 |
+| V0_hnswlib_direct | 200K | 51.0 | 0.9952 | 0.216 | 110000 | 90000 |
+| V1_gamma_v2 | 200K | 51.1 | 0.9946 | 0.209 | 110000 | 90000 |
+| V2_gamma_rich(off) | 200K | 51.4 | 0.9946 | 0.241 | 110000 | 90000 |
+| V3_+per_vector_cost | 200K | 51.1 | 0.9952 | 0.235 | 110000 | 90000 |
+| V4_+hot_tier | 200K | 48.1 | 0.9946 | 0.290 | 110000 | 90000 |
+| V5_+tombstone_rebuild | 200K | 45.0 | 0.9946 | 0.217 | 110000 | 90000 |
+| V6_+ALL | 200K | 45.9 | 0.9952 | 0.294 | 110000 | 90000 |
+
+## e31_op_latency_decomposition
+
+| name | scale | pattern | total_s | recall | query_latency_ms_p95 | n_alive | n_delete |
+|---|---|---|---|---|---|---|---|
+| hnswlib_direct | 200K | cluster | 132.6 | 0.9996 | 0.950 | 22500 | 177500 |
+| gamma_v2 | 200K | cluster | 100.3 | 0.9992 | 0.753 | 22500 | 177500 |
+| gamma_v2+rebuild | 200K | cluster | 42.5 | 0.9990 | 0.150 | 22500 | 177500 |
+| hnswlib_direct | 200K | cluster | 130.2 | 0.9990 | 0.938 | 22500 | 177500 |
+| gamma_v2 | 200K | cluster | 100.5 | 0.9986 | 0.756 | 22500 | 177500 |
+| gamma_v2+rebuild | 200K | cluster | 42.8 | 0.9986 | 0.154 | 22500 | 177500 |
+| hnswlib_direct | 200K | cluster | 130.2 | 0.9992 | 0.883 | 22500 | 177500 |
+| gamma_v2 | 200K | cluster | 95.8 | 0.9992 | 0.717 | 22500 | 177500 |
+| gamma_v2+rebuild | 200K | cluster | 38.4 | 0.9994 | 0.133 | 22500 | 177500 |
+| hnswlib_direct | 200K | partial_reset | 101.4 | 0.9970 | 0.801 | 40000 | 160000 |
+| gamma_v2 | 200K | partial_reset | 79.0 | 0.9972 | 0.637 | 40000 | 160000 |
+| gamma_v2+rebuild | 200K | partial_reset | 38.4 | 0.9976 | 0.144 | 40000 | 160000 |
+| hnswlib_direct | 200K | partial_reset | 98.5 | 0.9976 | 0.789 | 40000 | 160000 |
+| gamma_v2 | 200K | partial_reset | 79.0 | 0.9978 | 0.641 | 40000 | 160000 |
+| gamma_v2+rebuild | 200K | partial_reset | 38.8 | 0.9974 | 0.146 | 40000 | 160000 |
+| hnswlib_direct | 200K | partial_reset | 99.6 | 0.9972 | 0.791 | 40000 | 160000 |
+| gamma_v2 | 200K | partial_reset | 80.0 | 0.9968 | 0.643 | 40000 | 160000 |
+| gamma_v2+rebuild | 200K | partial_reset | 38.4 | 0.9972 | 0.143 | 40000 | 160000 |
+| hnswlib_direct | 200K | random | 126.3 | 0.9992 | 0.893 | 22500 | 177500 |
+| gamma_v2 | 200K | random | 97.4 | 0.9990 | 0.717 | 22500 | 177500 |
+| gamma_v2+rebuild | 200K | random | 42.7 | 0.9990 | 0.147 | 22500 | 177500 |
+| hnswlib_direct | 200K | random | 124.9 | 0.9988 | 0.917 | 22500 | 177500 |
+| gamma_v2 | 200K | random | 97.3 | 0.9990 | 0.739 | 22500 | 177500 |
+| gamma_v2+rebuild | 200K | random | 42.6 | 0.9992 | 0.144 | 22500 | 177500 |
+| hnswlib_direct | 200K | random | 125.5 | 0.9992 | 0.901 | 22500 | 177500 |
+| gamma_v2 | 200K | random | 90.8 | 0.9994 | 0.711 | 22500 | 177500 |
+| gamma_v2+rebuild | 200K | random | 40.3 | 0.9992 | 0.137 | 22500 | 177500 |
+| hnswlib_direct | 200K | sequential | 134.5 | 0.9984 | 0.975 | 22500 | 177500 |
+| gamma_v2 | 200K | sequential | 166.3 | 0.9990 | 0.961 | 22500 | 177500 |
+| gamma_v2+rebuild | 200K | sequential | 60.5 | 0.9994 | 0.183 | 22500 | 177500 |
+| hnswlib_direct | 200K | sequential | 133.7 | 0.9984 | 0.980 | 22500 | 177500 |
+| gamma_v2 | 200K | sequential | 166.4 | 0.9990 | 0.968 | 22500 | 177500 |
+| gamma_v2+rebuild | 200K | sequential | 56.5 | 0.9994 | 0.165 | 22500 | 177500 |
+| hnswlib_direct | 200K | sequential | 120.0 | 0.9984 | 0.806 | 22500 | 177500 |
+| gamma_v2 | 200K | sequential | 128.6 | 0.9990 | 0.797 | 22500 | 177500 |
+| gamma_v2+rebuild | 200K | sequential | 44.2 | 0.9994 | 0.122 | 22500 | 177500 |
 
