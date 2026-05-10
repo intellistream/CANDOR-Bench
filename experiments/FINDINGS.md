@@ -7,7 +7,39 @@ Last regenerated: see commit history.
 
 ---
 
-## TL;DR after e29 iso-rebuild baseline (the honest story)
+## TL;DR after e31 op-latency decomposition (the mechanism story) ⭐⭐
+
+The peer-review subagent and the user's question "buffer's job is to make
+insert/delete fast — did you actually measure that?" forced us to
+instrument per-op timing. Mean ± std over 3 seeds, SIFT 200K:
+
+| op | hnswlib direct | gamma_v2 | gamma_v2+rebuild | meaning |
+|---|---|---|---|---|
+| **insert/vec** | 530-696 μs | **0.19-0.24 μs** | 0.19-0.22 μs | gamma **2200-3500× faster** ⭐ |
+| delete/vec | 0.36-0.60 μs | 0.42-0.96 μs | 0.52-0.96 μs | comparable (sub-μs) |
+| **maintain (total)** | 0 | 75-149 s | 37-52 s | gamma's cost |
+| **search/q** | 414-519 μs | 345-488 μs | **105-109 μs** | gamma+rebuild **4-5× faster** ⭐ |
+
+**Mechanism explanation**:
+1. Buffer makes insert ~3000× faster (numpy append + dict update vs HNSW
+   graph-traversal insert).
+2. Buffer makes delete-on-recent-insert ~zero-cost (cancel via dict pop)
+   instead of mark_deleted that pollutes the graph.
+3. Cost: periodic maintain pass moves alive buffer entries to graph.
+   Without rebuild this eats 60-100% of insert savings.
+4. With tombstone-rebuild (threshold 0.5) the graph stays clean →
+   search 4-5× faster → that's where the bulk of the wall-time win
+   actually comes from.
+
+The paper claim is now mechanism-rigorous: "we trade O(N) per-vector
+graph-insertion work for O(1) buffer-append plus an O(N_buf) periodic
+flush; the trade is favorable when insertions dominate (which they do
+on streaming workloads). We additionally trigger graph-rebuild at
+tombstone-fraction 0.5 to keep search-side latency low."
+
+---
+
+## TL;DR after e29 iso-rebuild baseline (the contribution decomposition)
 
 The peer-review subagent flagged that e25's wins might come entirely
 from the rebuild trigger, not from the buffer/absorb router. e29
