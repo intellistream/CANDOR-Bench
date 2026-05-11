@@ -1,0 +1,62 @@
+[
+  {
+    "variant": "V4_cluster_rebuild",
+    "rebuild_count": 4,
+    "admit_to_graph": 0,
+    "admit_to_buffer": 0,
+    "name": "V4_cluster_rebuild",
+    "total_s": 42.968856962397695,
+    "n_delete": 173564,
+    "n_alive": 26436,
+    "query_latency_ms_p95": 0.11687386209145187,
+    "recall": 0.9998799999999999
+  },
+  {
+    "variant": "V10_admission_no_fix",
+    "rebuild_count": 4,
+    "admit_to_graph": 0,
+    "admit_to_buffer": 180000,
+    "name": "V10_admission_no_fix",
+    "total_s": 43.4955309452489,
+    "n_delete": 173564,
+    "n_alive": 26436,
+    "query_latency_ms_p95": 0.1208024364337325,
+    "recall": 0.9998799999999999
+  },
+  {
+    "variant": "V13_admission_both_fixes",
+    "rebuild_count": 4,
+    "admit_to_graph": 33467,
+    "admit_to_buffer": 146533,
+    "name": "V13_admission_both_fixes",
+    "total_s": 45.38332332856953,
+    "n_delete": 173564,
+    "n_alive": 26436,
+    "query_latency_ms_p95": 0.11871431056410073,
+    "recall": 0.9999400000000002
+  },
+  {
+    "variant": "V13_full_probe",
+    "rebuild_count": 4,
+    "admit_to_graph": 33467,
+    "admit_to_buffer": 146533,
+    "name": "V13_full_probe",
+    "total_s": 43.79528436623514,
+    "n_delete": 173564,
+    "n_alive": 26436,
+    "query_latency_ms_p95": 0.11911594110541045,
+    "recall": 0.9999400000000002
+  },
+  {
+    "variant": "V4_full_probe",
+    "rebuild_count": 4,
+    "admit_to_graph": 0,
+    "admit_to_buffer": 0,
+    "name": "V4_full_probe",
+    "total_s": 42.06285255309194,
+    "n_delete": 173564,
+    "n_alive": 26436,
+    "query_latency_ms_p95": 0.11561323225498199,
+    "recall": 0.9998799999999999
+  }
+]
