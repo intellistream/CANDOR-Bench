@@ -267,3 +267,51 @@ class ClusterBuffer(Buffer):
             self.cluster_total_lifetime / np.maximum(self.cluster_n_observed, 1),
             0.0,
         )
+
+    def cluster_avg_lifetime_with_alive(self, current_op: int = None) -> np.ndarray:
+        """FIX A — augmented EMA that includes alive-vector ages as
+        lower bounds.
+
+        The plain EMA above is biased: it only sees vectors that
+        died IN THE BUFFER (absorbed deletes). Long-lived vectors
+        get migrated out and never contribute, so the EMA is
+        capped at one maintain interval and cannot distinguish
+        long from short clusters (e37 finding).
+
+        This method also includes (current_op - insert_op) for every
+        currently-alive vector. Each alive vector has lived AT LEAST
+        that long, so its age is a lower bound on its lifetime.
+        Including alive vectors in the average biases it up for
+        long-lived clusters (where alive vectors have larger ages on
+        average).
+        """
+        if current_op is None:
+            current_op = self._next_op_id
+
+        alive_total = np.zeros(self.K, dtype=np.float64)
+        alive_count = np.zeros(self.K, dtype=np.int64)
+
+        for k in range(self.K):
+            cb = self.clusters[k]
+            if cb.size == 0:
+                continue
+            mask = cb.alive[:cb.size]
+            if not mask.any():
+                continue
+            ids_alive = cb.ids[:cb.size][mask]
+            for vid in ids_alive:
+                ins_op = self._id_to_insert_op.get(int(vid), -1)
+                if ins_op >= 0:
+                    alive_total[k] += float(current_op - ins_op)
+                    alive_count[k] += 1
+
+        total_lifetime = self.cluster_total_lifetime + alive_total
+        n_total = self.cluster_n_observed + alive_count
+        return np.where(n_total > 0, total_lifetime / np.maximum(n_total, 1), 0.0)
+
+    def cluster_n_observations_with_alive(self) -> np.ndarray:
+        """Companion to cluster_avg_lifetime_with_alive — counts both
+        observed deaths and currently-alive vectors. Used by the
+        router to decide whether the EMA has enough samples to trust."""
+        alive = np.array([c.n_alive for c in self.clusters], dtype=np.int64)
+        return self.cluster_n_observed + alive

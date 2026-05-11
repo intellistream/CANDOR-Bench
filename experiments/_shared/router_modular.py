@@ -74,7 +74,11 @@ class ModularRouter:
                  # lifetime_aware_admission knobs (per-cluster admission at insert time)
                  use_lifetime_admission: bool = False,
                  admission_horizon: float = None,
-                 admission_min_observations: int = 5):
+                 admission_min_observations: int = 5,
+                 # FIX A: augment EMA with alive-vector ages as lower bounds
+                 use_alive_age_for_admission: bool = False,
+                 # FIX B: track migrated-vector lifetimes via graph delete
+                 track_migrated_lifetimes: bool = False):
         self.dim = dim
         self.buffer = buffer
         self.backend = backend
@@ -92,6 +96,11 @@ class ModularRouter:
         self.use_lifetime_admission = bool(use_lifetime_admission)
         self.admission_horizon = float(admission_horizon) if admission_horizon is not None else float(lifetime_horizon)
         self.admission_min_observations = int(admission_min_observations)
+        self.use_alive_age_for_admission = bool(use_alive_age_for_admission)
+        self.track_migrated_lifetimes = bool(track_migrated_lifetimes)
+        # FIX B state: track insert_op + cluster_id for migrated/direct-admitted vecs
+        self._graph_insert_op: dict[int, int] = {}
+        self._graph_id_to_cluster: dict[int, int] = {}
 
         # State the router needs in order to rebuild
         self._graph_vecs: dict[int, np.ndarray] = {}      # id → vec (alive in graph)
@@ -164,8 +173,13 @@ class ModularRouter:
             return
 
         cluster_ids = cb._assign(vecs)
-        avg_life = cb.cluster_avg_lifetime
-        n_obs = cb.cluster_n_observed
+        # FIX A: use alive-augmented EMA if requested
+        if self.use_alive_age_for_admission:
+            avg_life = cb.cluster_avg_lifetime_with_alive()
+            n_obs = cb.cluster_n_observations_with_alive()
+        else:
+            avg_life = cb.cluster_avg_lifetime
+            n_obs = cb.cluster_n_observed
 
         direct_mask = np.zeros(len(ids), dtype=bool)
         for i, c in enumerate(cluster_ids):
@@ -177,9 +191,16 @@ class ModularRouter:
         if direct_mask.any():
             d_ids = ids[direct_mask]
             d_vecs = vecs[direct_mask]
+            d_clusters = cluster_ids[direct_mask]
             self.backend.add(np.ascontiguousarray(d_vecs), d_ids)
-            for i, v in zip(d_ids, d_vecs):
-                self._graph_vecs[int(i)] = v
+            base_op = cb._next_op_id  # NOTE: cb hasn't been updated yet for these
+            for offset, (vid, v) in enumerate(zip(d_ids, d_vecs)):
+                self._graph_vecs[int(vid)] = v
+                if self.track_migrated_lifetimes:
+                    self._graph_insert_op[int(vid)] = base_op + offset
+                    self._graph_id_to_cluster[int(vid)] = int(d_clusters[offset])
+            # Direct admit also consumes op_ids — bump cb counter
+            cb._next_op_id += int(direct_mask.sum())
             self.admit_to_graph_count += int(direct_mask.sum())
 
         if (~direct_mask).any():
@@ -189,6 +210,8 @@ class ModularRouter:
             self.admit_to_buffer_count += int((~direct_mask).sum())
 
     def delete(self, ids):
+        cb = self.buffer
+        is_cluster_buf = isinstance(cb, ClusterBuffer)
         for i in ids:
             id_int = int(i)
             absorbed = self.buffer.delete(id_int)
@@ -196,6 +219,14 @@ class ModularRouter:
                 self.backend.mark_deleted(id_int)
                 self._tombstones += 1
                 del self._graph_vecs[id_int]
+                # FIX B: contribute lifetime to original cluster's EMA
+                if (self.track_migrated_lifetimes and is_cluster_buf
+                        and id_int in self._graph_insert_op):
+                    ins_op = self._graph_insert_op.pop(id_int)
+                    cluster_id = self._graph_id_to_cluster.pop(id_int)
+                    lifetime = float(cb._next_op_id - ins_op)
+                    cb.cluster_total_lifetime[cluster_id] += lifetime
+                    cb.cluster_n_observed[cluster_id] += 1
 
     def search(self, queries, k):
         queries = np.ascontiguousarray(queries, dtype=np.float32)
@@ -242,7 +273,33 @@ class ModularRouter:
             raise ValueError(f"unknown maintain_strategy: {s}")
 
     # ----- internals -----
+    def _capture_migration_metadata(self, ids):
+        """FIX B: capture insert_op + cluster_id for vecs about to be
+        migrated, so on graph delete we can contribute their lifetime
+        to the original cluster's EMA."""
+        if not self.track_migrated_lifetimes:
+            return
+        if not isinstance(self.buffer, ClusterBuffer):
+            return
+        cb = self.buffer
+        for vid in ids:
+            vid = int(vid)
+            ins_op = cb._id_to_insert_op.get(vid, -1)
+            if ins_op >= 0:
+                self._graph_insert_op[vid] = ins_op
+                self._graph_id_to_cluster[vid] = cb._id_to_cluster.get(vid, -1)
+
     def _flush_all_alive(self):
+        # FIX B: capture metadata BEFORE drain (drain clears it)
+        if self.track_migrated_lifetimes and isinstance(self.buffer, ClusterBuffer):
+            cb = self.buffer
+            alive_ids = []
+            for cl in cb.clusters:
+                if cl.size == 0: continue
+                mask = cl.alive[:cl.size]
+                if mask.any():
+                    alive_ids.extend(int(i) for i in cl.ids[:cl.size][mask])
+            self._capture_migration_metadata(alive_ids)
         ids, vecs = self.buffer.drain_alive()
         if len(ids):
             self.backend.add(np.ascontiguousarray(vecs), ids)
@@ -312,6 +369,16 @@ class ModularRouter:
 
         # Migrate high-value clusters into graph
         if clusters_to_migrate:
+            # FIX B: capture before drain
+            if self.track_migrated_lifetimes:
+                alive_ids_to_migrate = []
+                for cid in clusters_to_migrate:
+                    cl = cb.clusters[cid]
+                    if cl.size == 0: continue
+                    mask = cl.alive[:cl.size]
+                    if mask.any():
+                        alive_ids_to_migrate.extend(int(i) for i in cl.ids[:cl.size][mask])
+                self._capture_migration_metadata(alive_ids_to_migrate)
             ids, vecs = cb.drain_clusters(clusters_to_migrate)
             if len(ids):
                 self.backend.add(np.ascontiguousarray(vecs), ids)
@@ -369,6 +436,16 @@ class ModularRouter:
         self.lifetime_kept_in_buffer_count += (n_total - n_top)
 
         if clusters_to_migrate:
+            # FIX B: capture before drain
+            if self.track_migrated_lifetimes:
+                alive_ids_to_migrate = []
+                for cid in clusters_to_migrate:
+                    cl = cb.clusters[cid]
+                    if cl.size == 0: continue
+                    mask = cl.alive[:cl.size]
+                    if mask.any():
+                        alive_ids_to_migrate.extend(int(i) for i in cl.ids[:cl.size][mask])
+                self._capture_migration_metadata(alive_ids_to_migrate)
             ids, vecs = cb.drain_clusters(clusters_to_migrate)
             if len(ids):
                 self.backend.add(np.ascontiguousarray(vecs), ids)
