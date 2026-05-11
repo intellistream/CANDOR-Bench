@@ -1,0 +1,104 @@
+[
+  {
+    "variant": "V4",
+    "buf_delay": 0,
+    "seed": 42,
+    "total_s": 62.16123433317989,
+    "recall": 0.99975,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "buf_delay": 0,
+    "seed": 42,
+    "total_s": 64.8329385817051,
+    "recall": 0.9999,
+    "admit_graph": 33467,
+    "delta_pct_vs_V4": 4.298023160552208
+  },
+  {
+    "variant": "V4",
+    "buf_delay": 0,
+    "seed": 43,
+    "total_s": 64.1613478846848,
+    "recall": 0.99739,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "buf_delay": 0,
+    "seed": 43,
+    "total_s": 65.69203982595354,
+    "recall": 0.99984,
+    "admit_graph": 33060,
+    "delta_pct_vs_V4": 2.3856916846881195
+  },
+  {
+    "variant": "V4",
+    "buf_delay": 200,
+    "seed": 42,
+    "total_s": 99.7438512146473,
+    "recall": 0.99975,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "buf_delay": 200,
+    "seed": 42,
+    "total_s": 95.63368205726147,
+    "recall": 0.9999,
+    "admit_graph": 33467,
+    "delta_pct_vs_V4": -4.120724342737481
+  },
+  {
+    "variant": "V4",
+    "buf_delay": 200,
+    "seed": 43,
+    "total_s": 99.13027137052268,
+    "recall": 0.99739,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "buf_delay": 200,
+    "seed": 43,
+    "total_s": 94.93458477500826,
+    "recall": 0.99984,
+    "admit_graph": 33060,
+    "delta_pct_vs_V4": -4.232497840979424
+  },
+  {
+    "variant": "V4",
+    "buf_delay": 1000,
+    "seed": 42,
+    "total_s": 245.25951386149973,
+    "recall": 0.99975,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "buf_delay": 1000,
+    "seed": 42,
+    "total_s": 213.52067609876394,
+    "recall": 0.9999,
+    "admit_graph": 33467,
+    "delta_pct_vs_V4": -12.940920114788696
+  },
+  {
+    "variant": "V4",
+    "buf_delay": 1000,
+    "seed": 43,
+    "total_s": 247.36344447918236,
+    "recall": 0.99739,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "buf_delay": 1000,
+    "seed": 43,
+    "total_s": 212.1766107585281,
+    "recall": 0.99984,
+    "admit_graph": 33060,
+    "delta_pct_vs_V4": -14.224750870016084
+  }
+]

@@ -1,0 +1,230 @@
+[
+  {
+    "variant": "V4",
+    "M": 4,
+    "ef_c": 80,
+    "seed": 42,
+    "total_s": 26.795906092971563,
+    "recall": 0.9457300000000001,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "M": 4,
+    "ef_c": 80,
+    "seed": 42,
+    "total_s": 26.703810485079885,
+    "recall": 0.94895,
+    "admit_graph": 33467,
+    "delta_pct_vs_V4": -0.3436928296887674
+  },
+  {
+    "variant": "V4",
+    "M": 4,
+    "ef_c": 80,
+    "seed": 43,
+    "total_s": 26.020439746789634,
+    "recall": 0.9543200000000001,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "M": 4,
+    "ef_c": 80,
+    "seed": 43,
+    "total_s": 27.01629325002432,
+    "recall": 0.9517899999999999,
+    "admit_graph": 33060,
+    "delta_pct_vs_V4": 3.827197053260991
+  },
+  {
+    "variant": "V4",
+    "M": 4,
+    "ef_c": 80,
+    "seed": 44,
+    "total_s": 26.63741294015199,
+    "recall": 0.9331900000000002,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "M": 4,
+    "ef_c": 80,
+    "seed": 44,
+    "total_s": 30.2030660379678,
+    "recall": 0.9109,
+    "admit_graph": 32593,
+    "delta_pct_vs_V4": 13.385883628515263
+  },
+  {
+    "variant": "V4",
+    "M": 8,
+    "ef_c": 80,
+    "seed": 42,
+    "total_s": 32.41574385762215,
+    "recall": 0.9973199999999999,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "M": 8,
+    "ef_c": 80,
+    "seed": 42,
+    "total_s": 32.36838078405708,
+    "recall": 0.9988400000000002,
+    "admit_graph": 33467,
+    "delta_pct_vs_V4": -0.1461113271782256
+  },
+  {
+    "variant": "V4",
+    "M": 8,
+    "ef_c": 80,
+    "seed": 43,
+    "total_s": 32.4037562739104,
+    "recall": 0.99556,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "M": 8,
+    "ef_c": 80,
+    "seed": 43,
+    "total_s": 33.7024203510955,
+    "recall": 0.9967699999999999,
+    "admit_graph": 33060,
+    "delta_pct_vs_V4": 4.007757823529558
+  },
+  {
+    "variant": "V4",
+    "M": 8,
+    "ef_c": 80,
+    "seed": 44,
+    "total_s": 32.15710811223835,
+    "recall": 0.99321,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "M": 8,
+    "ef_c": 80,
+    "seed": 44,
+    "total_s": 36.129630223847926,
+    "recall": 0.9979599999999998,
+    "admit_graph": 32593,
+    "delta_pct_vs_V4": 12.353480598268462
+  },
+  {
+    "variant": "V4",
+    "M": 16,
+    "ef_c": 128,
+    "seed": 42,
+    "total_s": 48.76192332431674,
+    "recall": 0.99972,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "M": 16,
+    "ef_c": 128,
+    "seed": 42,
+    "total_s": 49.84051628783345,
+    "recall": 0.9999,
+    "admit_graph": 33467,
+    "delta_pct_vs_V4": 2.2119573839263147
+  },
+  {
+    "variant": "V4",
+    "M": 16,
+    "ef_c": 128,
+    "seed": 43,
+    "total_s": 51.243344019167125,
+    "recall": 0.99759,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "M": 16,
+    "ef_c": 128,
+    "seed": 43,
+    "total_s": 49.879771180450916,
+    "recall": 0.9998299999999999,
+    "admit_graph": 33060,
+    "delta_pct_vs_V4": -2.660975517534875
+  },
+  {
+    "variant": "V4",
+    "M": 16,
+    "ef_c": 128,
+    "seed": 44,
+    "total_s": 48.674416677094996,
+    "recall": 0.9998299999999999,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "M": 16,
+    "ef_c": 128,
+    "seed": 44,
+    "total_s": 50.27690414804965,
+    "recall": 0.99985,
+    "admit_graph": 32593,
+    "delta_pct_vs_V4": 3.2922581930165147
+  },
+  {
+    "variant": "V4",
+    "M": 32,
+    "ef_c": 256,
+    "seed": 42,
+    "total_s": 87.70548057649285,
+    "recall": 0.99995,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "M": 32,
+    "ef_c": 256,
+    "seed": 42,
+    "total_s": 87.97979407943785,
+    "recall": 0.99998,
+    "admit_graph": 33467,
+    "delta_pct_vs_V4": 0.3127666608083423
+  },
+  {
+    "variant": "V4",
+    "M": 32,
+    "ef_c": 256,
+    "seed": 43,
+    "total_s": 85.35632667690516,
+    "recall": 0.9999600000000001,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "M": 32,
+    "ef_c": 256,
+    "seed": 43,
+    "total_s": 87.18271999806166,
+    "recall": 0.99995,
+    "admit_graph": 33060,
+    "delta_pct_vs_V4": 2.1397281165458923
+  },
+  {
+    "variant": "V4",
+    "M": 32,
+    "ef_c": 256,
+    "seed": 44,
+    "total_s": 85.5998866558075,
+    "recall": 0.9999199999999999,
+    "admit_graph": 0
+  },
+  {
+    "variant": "V13",
+    "M": 32,
+    "ef_c": 256,
+    "seed": 44,
+    "total_s": 87.83074122481048,
+    "recall": 0.9999100000000001,
+    "admit_graph": 32593,
+    "delta_pct_vs_V4": 2.6061419660205054
+  }
+]
