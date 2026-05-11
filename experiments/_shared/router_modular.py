@@ -70,7 +70,11 @@ class ModularRouter:
                  lifetime_horizon: float = 5000.0,
                  lifetime_min_observations: int = 5,
                  lifetime_min_alive: int = 32,
-                 lifetime_migrate_top_fraction: float = 0.5):
+                 lifetime_migrate_top_fraction: float = 0.5,
+                 # lifetime_aware_admission knobs (per-cluster admission at insert time)
+                 use_lifetime_admission: bool = False,
+                 admission_horizon: float = None,
+                 admission_min_observations: int = 5):
         self.dim = dim
         self.buffer = buffer
         self.backend = backend
@@ -85,6 +89,9 @@ class ModularRouter:
         self.lifetime_min_observations = int(lifetime_min_observations)
         self.lifetime_min_alive = int(lifetime_min_alive)
         self.lifetime_migrate_top_fraction = float(lifetime_migrate_top_fraction)
+        self.use_lifetime_admission = bool(use_lifetime_admission)
+        self.admission_horizon = float(admission_horizon) if admission_horizon is not None else float(lifetime_horizon)
+        self.admission_min_observations = int(admission_min_observations)
 
         # State the router needs in order to rebuild
         self._graph_vecs: dict[int, np.ndarray] = {}      # id → vec (alive in graph)
@@ -95,6 +102,8 @@ class ModularRouter:
         self.cluster_migrate_count = 0
         self.cluster_drop_count = 0
         self.lifetime_kept_in_buffer_count = 0
+        self.admit_to_graph_count = 0
+        self.admit_to_buffer_count = 0
 
         cluster_only_strategies = (
             "in_place_migrate",
@@ -114,6 +123,8 @@ class ModularRouter:
         if maintain_strategy in rebuild_strategies and backend_factory is None:
             raise ValueError(
                 f"maintain_strategy='{maintain_strategy}' requires backend_factory")
+        if self.use_lifetime_admission and not isinstance(buffer, ClusterBuffer):
+            raise ValueError("use_lifetime_admission requires ClusterBuffer")
 
     # ----- standard router API (matches router.GammaRouter) -----
     def initial_load(self, ids, vecs):
@@ -125,7 +136,57 @@ class ModularRouter:
             self._graph_vecs[int(i)] = v
 
     def add(self, ids, vecs):
-        self.buffer.add(ids, vecs)
+        if self.use_lifetime_admission:
+            self._lifetime_aware_add(ids, vecs)
+        else:
+            self.buffer.add(ids, vecs)
+
+    def _lifetime_aware_add(self, ids, vecs):
+        """Per-cluster admission decision: vectors going to long-lived
+        clusters are inserted directly into the backend graph (paying
+        the higher per-insert cost but avoiding future migration);
+        vectors going to short-lived clusters go into the buffer where
+        they will likely be absorbed by delete before any migrate cost.
+
+        For clusters with insufficient observations (< admission_min_observations),
+        default to buffer (the safer/faster path). This is the C++ team's
+        intended use of the lifetime EMA — admission, not maintenance.
+        """
+        cb = self.buffer
+        ids = np.asarray(ids, dtype=np.int64)
+        vecs = np.asarray(vecs, dtype=np.float32)
+        if len(ids) == 0:
+            return
+        # Bootstrap: if no centroids yet, admit all to buffer
+        if cb.centroids is None:
+            cb.add(ids, vecs)
+            self.admit_to_buffer_count += len(ids)
+            return
+
+        cluster_ids = cb._assign(vecs)
+        avg_life = cb.cluster_avg_lifetime
+        n_obs = cb.cluster_n_observed
+
+        direct_mask = np.zeros(len(ids), dtype=bool)
+        for i, c in enumerate(cluster_ids):
+            c = int(c)
+            if (n_obs[c] >= self.admission_min_observations
+                    and avg_life[c] >= self.admission_horizon):
+                direct_mask[i] = True
+
+        if direct_mask.any():
+            d_ids = ids[direct_mask]
+            d_vecs = vecs[direct_mask]
+            self.backend.add(np.ascontiguousarray(d_vecs), d_ids)
+            for i, v in zip(d_ids, d_vecs):
+                self._graph_vecs[int(i)] = v
+            self.admit_to_graph_count += int(direct_mask.sum())
+
+        if (~direct_mask).any():
+            b_ids = ids[~direct_mask]
+            b_vecs = vecs[~direct_mask]
+            cb.add(b_ids, b_vecs)
+            self.admit_to_buffer_count += int((~direct_mask).sum())
 
     def delete(self, ids):
         for i in ids:

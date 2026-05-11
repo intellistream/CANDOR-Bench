@@ -1,0 +1,57 @@
+[
+  {
+    "variant": "V0_hnswlib_direct",
+    "name": "V0_hnswlib_direct",
+    "total_s": 113.02565637975931,
+    "n_delete": 173564,
+    "n_alive": 26436,
+    "query_latency_ms_p95": 0.5092725185677409,
+    "recall": 1.0
+  },
+  {
+    "variant": "V2_flat_rebuild",
+    "rebuild_count": 4,
+    "name": "V2_flat_rebuild",
+    "total_s": 33.291794617660344,
+    "n_delete": 173564,
+    "n_alive": 26436,
+    "query_latency_ms_p95": 0.11589584266766906,
+    "recall": 1.0
+  },
+  {
+    "variant": "V4_cluster_rebuild",
+    "K": 16,
+    "rebuild_count": 4,
+    "name": "V4_cluster_rebuild",
+    "total_s": 31.459351805970073,
+    "n_delete": 173564,
+    "n_alive": 26436,
+    "query_latency_ms_p95": 0.11385205527767539,
+    "recall": 1.0
+  },
+  {
+    "variant": "V9_lifetime_admission",
+    "K": 16,
+    "admit_to_graph": 0,
+    "admit_to_buffer": 180000,
+    "name": "V9_lifetime_admission",
+    "total_s": 51.39641990605742,
+    "n_delete": 173564,
+    "n_alive": 26436,
+    "query_latency_ms_p95": 0.3703828969970345,
+    "recall": 1.0
+  },
+  {
+    "variant": "V10_lifetime_admission_rebuild",
+    "K": 16,
+    "rebuild_count": 4,
+    "admit_to_graph": 0,
+    "admit_to_buffer": 180000,
+    "name": "V10_lifetime_admission_rebuild",
+    "total_s": 31.805333135649562,
+    "n_delete": 173564,
+    "n_alive": 26436,
+    "query_latency_ms_p95": 0.11245706463232637,
+    "recall": 1.0
+  }
+]
