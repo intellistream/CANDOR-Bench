@@ -1,0 +1,54 @@
+[
+  {
+    "num_threads": 1,
+    "variant": "V2_flat_rebuild",
+    "total_s": 47.18054867070168,
+    "recall": 0.9984
+  },
+  {
+    "num_threads": 1,
+    "variant": "V4_cluster_rebuild",
+    "total_s": 45.903564592823386,
+    "recall": 0.998,
+    "delta_vs_V2": -2.706590139065682
+  },
+  {
+    "num_threads": 4,
+    "variant": "V2_flat_rebuild",
+    "total_s": 15.802320501767099,
+    "recall": 0.9987999999999999
+  },
+  {
+    "num_threads": 4,
+    "variant": "V4_cluster_rebuild",
+    "total_s": 15.259397771209478,
+    "recall": 0.9978,
+    "delta_vs_V2": -3.4357152197799556
+  },
+  {
+    "num_threads": 8,
+    "variant": "V2_flat_rebuild",
+    "total_s": 8.893645660951734,
+    "recall": 0.9985999999999999
+  },
+  {
+    "num_threads": 8,
+    "variant": "V4_cluster_rebuild",
+    "total_s": 8.44239922054112,
+    "recall": 0.9976,
+    "delta_vs_V2": -5.073807273341773
+  },
+  {
+    "num_threads": 16,
+    "variant": "V2_flat_rebuild",
+    "total_s": 5.22263967897743,
+    "recall": 0.9985999999999999
+  },
+  {
+    "num_threads": 16,
+    "variant": "V4_cluster_rebuild",
+    "total_s": 5.510410379618406,
+    "recall": 0.9974000000000001,
+    "delta_vs_V2": 5.5100623119633
+  }
+]
