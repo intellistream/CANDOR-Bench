@@ -100,3 +100,16 @@ temp/
 /build-pycandy/
 /.deps/
 results/
+
+# Paper drafts and strategic writeups — never commit to public branches
+experiments/PAPER_DRAFT_*.md
+experiments/PAPER_OUTLINE.md
+experiments/FINDINGS*.md
+experiments/COST_ANALYSIS.md
+experiments/RELATED_WORK.md
+experiments/REVIEWER_CRITIQUE.md
+experiments/STATUS.md
+experiments/CPP_ANALYSIS.md
+experiments/HONEST_ASSESSMENT.md
+experiments/figures/fig[1-9]_*.png
+experiments/figures/make_figures.py
