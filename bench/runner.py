@@ -336,6 +336,7 @@ class BenchmarkRunner:
         *,
         run_id: str = "",
         index_name: Optional[str] = None,
+        gamma: Optional[float] = None,
         setup_algorithm: bool = True,
         compute_recall: bool = False,
     ) -> Dict[str, Any]:
@@ -358,6 +359,7 @@ class BenchmarkRunner:
             self.algo.setup(dtype, int(vectors.shape[0]), int(vectors.shape[1]))
 
         resolved_index_name = index_name or self.metrics.algorithm_name
+        gamma_label = "unknown" if gamma is None else f"{gamma:g}"
         live_ids: set[int] = set()
         timeseries: List[Dict[str, Any]] = []
         op_latencies: Dict[str, List[float]] = {
@@ -401,9 +403,22 @@ class BenchmarkRunner:
                     op_index += 1
 
                 ids_array = np.asarray(batch_ids, dtype=np.uint32)
+                if gamma is not None:
+                    print(
+                        f"[gamma_sweep] prefill_start algorithm={resolved_index_name} "
+                        f"gamma={gamma_label} count={len(batch_ids)} run_id={run_id}",
+                        flush=True,
+                    )
                 start = time.perf_counter()
                 self.algo.initial_load(vectors[ids_array], ids_array)
                 elapsed_ms = (time.perf_counter() - start) * 1000.0
+                if gamma is not None:
+                    print(
+                        f"[gamma_sweep] prefill_end algorithm={resolved_index_name} "
+                        f"gamma={gamma_label} count={len(batch_ids)} "
+                        f"elapsed_sec={elapsed_ms / 1000.0:.6f} run_id={run_id}",
+                        flush=True,
+                    )
                 per_item_elapsed_ms = elapsed_ms / len(batch_ids) if batch_ids else 0.0
 
                 for offset, prefill_target_id in enumerate(batch_ids):

@@ -460,6 +460,11 @@ def _run_one_index_gamma(
     dataset_label: str,
     sequence: list[GammaOperation],
 ) -> dict[str, list[dict[str, Any]] | dict[str, Any]]:
+    gamma_label = f"{gamma:g}"
+    print(
+        f"[gamma_sweep] run_start algorithm={index_name} gamma={gamma_label}",
+        flush=True,
+    )
     algorithm_params = get_algorithm_params_from_config(
         index_name,
         dataset=cfg.algorithm_dataset_key,
@@ -491,12 +496,18 @@ def _run_one_index_gamma(
         vectors,
         run_id=run_id,
         index_name=index_name,
+        gamma=gamma,
         compute_recall=cfg.compute_recall,
     )
 
     duration = float(sequence_result["algorithm_duration_sec"])
     wall_duration = float(sequence_result.get("wall_duration_sec", duration))
     recall_eval_duration = float(sequence_result.get("recall_eval_duration_sec", 0.0))
+    print(
+        f"[gamma_sweep] run_end algorithm={index_name} gamma={gamma_label} "
+        f"algorithm_duration_sec={duration:.6f} wall_duration_sec={wall_duration:.6f}",
+        flush=True,
+    )
     op_counts = sequence_result["op_counts"]
     op_latencies = sequence_result["op_latencies"]
     total_measurement_ops = op_counts["insert"] + op_counts["delete"] + op_counts["query"]
