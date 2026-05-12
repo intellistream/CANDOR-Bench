@@ -24,7 +24,7 @@ from datasets.base import Dataset
 
 DEFAULT_GAMMA_DIM = 32
 DEFAULT_GAMMA_THREADS = 1
-DEFAULT_MAINTAIN_INTERVAL = 1000
+DEFAULT_MAINTAIN_INTERVAL = 0
 
 
 @dataclass(frozen=True)

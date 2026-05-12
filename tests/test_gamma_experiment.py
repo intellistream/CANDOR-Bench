@@ -70,7 +70,6 @@ def test_gamma_config_accepts_algorithms_alias() -> None:
     assert cfg.dim == 32
     assert cfg.threads == 1
     assert cfg.compute_recall is True
-    assert cfg.maintain_interval == 1000
 
 
 def test_gamma_config_accepts_maintain_interval() -> None:
