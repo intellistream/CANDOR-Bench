@@ -1,18 +1,24 @@
-\begin{abstract}
-Approximate Nearest Neighbor Search (ANNS) is a core primitive in modern data systems, 
-but most high-performance graph-based indices are optimized for static workloads 
-rather than continuously evolving data. Under streaming insertions and deletions, 
-pre-computed search guidance quickly becomes stale, causing either lower query efficiency 
-or expensive re-optimization. To address this challenge, we present BriskSeed, 
-a pluggable optimization module for dynamic ANNS.
-Its key idea is to turn past successful search outcomes into reusable search primitives, referred to as \textit{seeds}, while controlling the overhead and risk of stale reuse under evolving data.
-Specifically, BriskSeed integrates seed storage, seed-guided search, and reliability control into a unified online workflow: it organizes seeds in a two-tier utility-aware 
-storage scheme, activates them through exact lookup and bounded semantic probing, and validates them through 
-a lightweight acceptance-and-fallback policy.
-This design preserves a compact set of high-value seeds under distribution drift while remaining compatible with existing ANNS backends.
-We evaluate BriskSeed on
-\textbf{CANDOR-Bench}, a streaming ANNS benchmark framework, across multiple ANNS backends under a unified plugin interface.
-Experimental results show that BriskSeed 
-consistently improves end-to-end search efficiency while sustaining 
-competitive recall under high update rates.
+% \begin{abstract}
+% Approximate Nearest Neighbor Search (ANNS) is a core primitive in modern data systems, 
+% but most high-performance graph-based indices are optimized for static workloads 
+% rather than continuously evolving data. Under dynamic updates, 
+% pre-computed search hints quickly become stale, causing either lower query efficiency 
+% or expensive re-optimization. To address this challenge, we present \system, 
+% a pluggable optimization module for dynamic ANNS.
+% Its key idea is to turn past successful search outcomes into reusable search states, referred to as \textit{seeds}, while controlling the overhead and risk of stale reuse under evolving data.
+% Specifically, \system integrates seed storage, seed-guided search, and reliability control into a unified online workflow: it organizes seeds in a two-tier utility-aware 
+% storage scheme, activates them through exact lookup and bounded semantic probing, and validates them through 
+% a lightweight acceptance-and-fallback policy.
+% This design preserves a compact set of high-value seeds while remaining compatible with existing ANNS backends.
+% We evaluate \system on
+% \textbf{CANDOR-Bench}, a streaming ANNS benchmark framework, across multiple ANNS backends under a unified plugin interface.
+% Experimental results show that \system 
+% consistently improves end-to-end search efficiency while sustaining 
+% competitive recall under high update rates.
+% \end{abstract}
+
+\begin{abstract} 
+Approximate Nearest Neighbor Search (ANNS) is a core primitive in modern data systems.
+Graph-based indices can deliver high search efficiency on static datasets, but sustaining such performance becomes challenging when the indexed data continuously evolve. 
+As insertions and deletions reshape the local graph structure, auxiliary information used at search time, such as quantization encodings, pruning statistics, and routing hints, can quickly lose utility. Reusing them blindly may hurt recall or waste search effort, while rebuilding them online introduces non-trivial overhead. In this paper, we present \system, a pluggable optimization layer for dynamic ANNS that reuses past successful search outcomes as lightweight search states, called \textit{seeds}, to improve search performance under continuous updates. Instead of discarding stale auxiliary information or refreshing it after every update, \system judiciously stores, retrieves, and validates seeds through a unified online workflow. Specifically, it maintains a compact two-tier seed storage guided by utility, retrieves seeds via exact-key and signature-based access paths, and validates each reuse decision with a lightweight acceptance-and-fallback policy. This design allows \system to accelerate the search without modifying the underlying ANNS index or assuming a specific graph backend. We evaluate \system using \textbf{CANDOR-Bench}, a streaming ANNS benchmark framework, across multiple dynamic ANNS backends through a unified plugin interface. Experiments show that \system consistently improves end-to-end search efficiency under high update rates while preserving competitive recall, demonstrating that stale-aware search-state reuse is an effective optimization primitive for dynamic ANNS. 
 \end{abstract}

@@ -47,10 +47,18 @@ struct SearchParametersHNSWIncremental : SearchParameters {
     int efSearch = 16;
     bool check_relative_distance = true;
     int streamseed_mode = 1;
+    int hint_level1_only = 0;
+    int hint_adaptive_gate_mode = 0;
     int hint_hops = 1;
     int hint_max_candidates = 256;
     float hint_gate = -1.0f;
+    float hint_qual_gate = -1.0f;
+    float hint_cons_gate = -1.0f;
+    float hint_gate_m_quantile = 0.25f;
+    float hint_gate_o_quantile = 0.30f;
+    int hint_gate_min_samples = 128;
     int hint_table_slots = 1024;
+    int hint_slot_capacity = 2;
 
     ~SearchParametersHNSWIncremental() {}
 };

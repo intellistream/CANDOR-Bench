@@ -1,0 +1,81 @@
+random-xs:
+  streamseed_hybrid:
+    module: benchmark_anns.bench.algorithms.streamseed_hybrid.streamseed_hybrid
+    constructor: StreamSeedHybrid
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"efConstruction": 120, "indexkey": "HNSWIncremental16"}]
+        query-args: |
+          [{"ef": 40, "streamseed_mode": "streamseed_core", "hint_level1_only": 0, "hint_adaptive_gate_mode": 0, "hint_hops": 1, "hint_max_candidates": 256, "hint_gate": -1.0, "hint_qual_gate": -1.0, "hint_cons_gate": -1.0, "hint_gate_m_quantile": 0.25, "hint_gate_o_quantile": 0.30, "hint_gate_min_samples": 128, "hint_table_slots": 256, "hint_slot_capacity": 2}]
+
+sift:
+  streamseed_hybrid:
+    module: benchmark_anns.bench.algorithms.streamseed_hybrid.streamseed_hybrid
+    constructor: StreamSeedHybrid
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"efConstruction": 120, "indexkey": "HNSWIncremental16", "verbose": true}]
+        query-args: |
+          [{"ef": 120, "streamseed_mode": "off", "hint_level1_only": 1, "hint_adaptive_gate_mode": 1, "hint_hops": 1, "hint_max_candidates": 4000, "hint_gate": -1.0, "hint_qual_gate": -1.0, "hint_cons_gate": -1.0, "hint_gate_m_quantile": 0.25, "hint_gate_o_quantile": 0.30, "hint_gate_min_samples": 128, "hint_table_slots": 10000, "hint_slot_capacity": 70}]
+
+  streamseed_hybrid_symphonyqg:
+    module: benchmark_anns.bench.algorithms.streamseed_hybrid.streamseed_hybrid
+    constructor: StreamSeedHybrid
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"backend": "symphonyqg", "index_type": "QG", "degree_bound": 32, "efConstruction": 120, "num_iter": 3, "num_threads": 0, "enable_batch_search": true, "rebuild_every_n_updates": 26, "rebuild_on_query_if_dirty": false, "verbose": true}]
+        query-args: |
+          [{"ef": 120, "streamseed_mode": "off", "hint_level1_only": 1, "hint_adaptive_gate_mode": 1, "hint_hops": 1, "hint_max_candidates": 4000, "hint_gate": -1.0, "hint_qual_gate": -1.0, "hint_cons_gate": -1.0, "hint_gate_m_quantile": 0.25, "hint_gate_o_quantile": 0.30, "hint_gate_min_samples": 128, "hint_table_slots": 10000, "hint_slot_capacity": 70}]
+
+msong:
+  streamseed_hybrid:
+    module: benchmark_anns.bench.algorithms.streamseed_hybrid.streamseed_hybrid
+    constructor: StreamSeedHybrid
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"efConstruction": 120, "indexkey": "HNSWIncremental16", "verbose": true}]
+        query-args: |
+          [{"ef": 120, "streamseed_mode": "off", "hint_level1_only": 1, "hint_adaptive_gate_mode": 1, "hint_hops": 1, "hint_max_candidates": 4000, "hint_gate": -1.0, "hint_qual_gate": -1.0, "hint_cons_gate": -1.0, "hint_gate_m_quantile": 0.25, "hint_gate_o_quantile": 0.30, "hint_gate_min_samples": 128, "hint_table_slots": 10000, "hint_slot_capacity": 70}]
+
+  streamseed_hybrid_symphonyqg:
+    module: benchmark_anns.bench.algorithms.streamseed_hybrid.streamseed_hybrid
+    constructor: StreamSeedHybrid
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"backend": "symphonyqg", "index_type": "QG", "degree_bound": 32, "efConstruction": 120, "num_iter": 3, "num_threads": 0, "enable_batch_search": true, "rebuild_every_n_updates": 10, "rebuild_on_query_if_dirty": false, "verbose": true}]
+        query-args: |
+          [{"ef": 120, "streamseed_mode": "off", "hint_level1_only": 1, "hint_adaptive_gate_mode": 1, "hint_hops": -1, "hint_max_candidates": 4000, "hint_gate": -1.0, "hint_qual_gate": -1.0, "hint_cons_gate": -1.0, "hint_gate_m_quantile": 0.25, "hint_gate_o_quantile": 0.30, "hint_gate_min_samples": 128, "hint_table_slots": 10000, "hint_slot_capacity": 70}]
+
+
+glove:
+  streamseed_hybrid:
+    module: benchmark_anns.bench.algorithms.streamseed_hybrid.streamseed_hybrid
+    constructor: StreamSeedHybrid
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"efConstruction": 120, "indexkey": "HNSWIncremental16", "verbose": true}]
+        query-args: |
+          [{"ef": 120, "streamseed_mode": "streamseed_core", "hint_level1_only": 1, "hint_adaptive_gate_mode": 1, "hint_hops": 1, "hint_max_candidates": 4000, "hint_gate": -1.0, "hint_qual_gate": -1.0, "hint_cons_gate": -1.0, "hint_gate_m_quantile": 0.25, "hint_gate_o_quantile": 0.30, "hint_gate_min_samples": 128, "hint_table_slots": 10000, "hint_slot_capacity": 70}]
+
+  streamseed_hybrid_symphonyqg:
+    module: benchmark_anns.bench.algorithms.streamseed_hybrid.streamseed_hybrid
+    constructor: StreamSeedHybrid
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"backend": "symphonyqg", "index_type": "QG", "degree_bound": 32, "efConstruction": 120, "num_iter": 3, "num_threads": 0, "enable_batch_search": true, "rebuild_every_n_updates": 10, "rebuild_on_query_if_dirty": false, "verbose": true}]
+        query-args: |
+          [{"ef": 120, "streamseed_mode": "off", "hint_level1_only": 1, "hint_adaptive_gate_mode": 1, "hint_hops": 1, "hint_max_candidates": 4000, "hint_gate": -1.0, "hint_qual_gate": -1.0, "hint_cons_gate": -1.0, "hint_gate_m_quantile": 0.25, "hint_gate_o_quantile": 0.30, "hint_gate_min_samples": 128, "hint_table_slots": 10000, "hint_slot_capacity": 70}]

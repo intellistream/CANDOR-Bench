@@ -281,8 +281,19 @@ def get_algorithm(name: str, dataset: str = 'random-xs', **kwargs) -> BaseANN:
     Returns:
         算法实例
     """
+    factory_name = name
     if name not in ALGORITHMS:
-        raise ValueError(f"Unknown algorithm: {name}. Available: {list(ALGORITHMS.keys())}")
+        # Allow algorithm aliases with suffixes, e.g. faiss_hnsw_streamseed_symphonyqg
+        # to reuse the base algorithm factory while loading params from alias key in config.
+        parts = name.split('_')
+        for i in range(len(parts) - 1, 0, -1):
+            candidate = '_'.join(parts[:i])
+            if candidate in ALGORITHMS:
+                factory_name = candidate
+                break
+
+        if factory_name not in ALGORITHMS:
+            raise ValueError(f"Unknown algorithm: {name}. Available: {list(ALGORITHMS.keys())}")
     
     # 尝试从配置文件读取默认参数
     default_params = _load_algorithm_config(name, dataset)
@@ -290,7 +301,7 @@ def get_algorithm(name: str, dataset: str = 'random-xs', **kwargs) -> BaseANN:
     # 合并参数：命令行参数优先
     merged_params = {**default_params, **kwargs}
     
-    factory = ALGORITHMS[name]
+    factory = ALGORITHMS[factory_name]
     return factory(**merged_params) if merged_params else factory()
 
 

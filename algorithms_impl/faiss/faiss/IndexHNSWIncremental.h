@@ -84,11 +84,16 @@ struct IndexHNSWIncremental : Index {
 
     // Shared query-hint table for StreamSeed-Core
     mutable std::vector<std::vector<idx_t>> warm_seed_dictionary;
+    mutable std::vector<std::vector<idx_t>> warm_seed_dictionary_owner_query;
+    mutable std::vector<std::vector<uint64_t>> warm_seed_dictionary_owner_signature;
     mutable idx_t warm_seed_dictionary_k = 0;
-    mutable std::vector<float> warm_seed_dictionary_score;
-    mutable std::vector<uint64_t> warm_seed_dictionary_age;
+    mutable std::vector<std::vector<float>> warm_seed_dictionary_score;
+    mutable std::vector<std::vector<uint64_t>> warm_seed_dictionary_age;
     mutable std::vector<omp_lock_t> warm_seed_dictionary_locks;
     mutable uint64_t warm_seed_dictionary_clock = 0;
+    mutable uint64_t warm_seed_dictionary_round = 0;
+    mutable float warm_seed_adaptive_m_gate = 0.0f;
+    mutable float warm_seed_adaptive_o_gate = 0.0f;
 
     explicit IndexHNSWIncremental(int d = 0, int M = 32, MetricType metric = METRIC_L2);
     explicit IndexHNSWIncremental(Index* storage, int M = 32);

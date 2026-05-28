@@ -471,14 +471,14 @@ class CongestionDropWorker(AbstractThread):
         Returns:
             查询结果 (neighbors_ids, distances) 或 neighbors_ids
         """
-        # 记录查询开始时间（包括锁等待）
-        query_start = time.time()
+        # 使用单调时钟避免系统时间回拨导致负耗时
+        query_start = time.perf_counter()
         
         # 获取锁，确保查询时索引状态一致
-        lock_acquire_start = time.time()
+        lock_acquire_start = time.perf_counter()
         while not self.m_mut.acquire(blocking=False):
             pass
-        lock_wait_time = (time.time() - lock_acquire_start) * 1e6  # 微秒
+        lock_wait_time = (time.perf_counter() - lock_acquire_start) * 1e6  # 微秒
         
         try:
             # 启动 cache profiling（如果启用）
@@ -487,9 +487,9 @@ class CongestionDropWorker(AbstractThread):
                 cache_profiler_started = self.cache_profiler.start()
             
             # 执行真正的查询
-            query_exec_start = time.time()
+            query_exec_start = time.perf_counter()
             result = self.my_index_algo.query(X, k)
-            query_exec_time = (time.time() - query_exec_start) * 1e6  # 微秒
+            query_exec_time = (time.perf_counter() - query_exec_start) * 1e6  # 微秒
             
             # 停止 cache profiling 并记录统计数据
             if cache_profiler_started:
@@ -504,7 +504,16 @@ class CongestionDropWorker(AbstractThread):
             self.res = self.my_index_algo.res
             
             # 记录查询时间统计（所有时间单位为微秒）
-            total_time = (time.time() - query_start) * 1e6  # 微秒
+            total_time = (time.perf_counter() - query_start) * 1e6  # 微秒
+
+            # 理论上 perf_counter 不会回退，这里仅做健壮性保护
+            if lock_wait_time < 0:
+                lock_wait_time = 0.0
+            if query_exec_time < 0:
+                query_exec_time = 0.0
+            if total_time < 0:
+                total_time = 0.0
+
             self.query_timestamps.append({
                 'total_time': total_time,           # 总时间（包括锁等待，微秒）
                 'lock_wait_time': lock_wait_time,   # 锁等待时间（微秒）

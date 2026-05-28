@@ -70,7 +70,7 @@ def plot_repeated_percent(files, out_path: str, show: bool, title: str):
     all_df = pd.concat(rows, ignore_index=True)
 
     sns.set_theme(style="whitegrid", context="talk")
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(8, 5))
     ax = sns.lineplot(
         data=all_df,
         x="batch_id",
@@ -81,18 +81,19 @@ def plot_repeated_percent(files, out_path: str, show: bool, title: str):
         err_kws={"alpha": 0.12},
         linewidth=2.2,
     )
-    plt.xlabel("batch_id (1w->10w expansion, batchsize=2500)", fontsize=LABEL_FONTSIZE)
-    plt.ylabel("repeated_percent (%)", fontsize=LABEL_FONTSIZE)
+    ax = plt.gca()
+    ax.tick_params(axis='both', labelsize=18)
+    plt.xlabel("Batch ID", fontsize=22)
+    plt.ylabel("Overlap Percent (%)", fontsize=22)
     plt.title(title, fontsize=TITLE_FONTSIZE)
-    ax.tick_params(axis="both", labelsize=TICK_FONTSIZE)
     plt.grid(True)
     plt.tight_layout()
 
     output = Path(out_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output)
+    plt.savefig(output, dpi=300, bbox_inches='tight', pad_inches=0.1)
     try:
-        plt.savefig(output.with_suffix(".pdf"))
+        plt.savefig(output.with_suffix(".pdf"), bbox_inches='tight', pad_inches=0.02)
     except Exception:
         pass
     if show:
@@ -120,7 +121,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--title",
-        default="repeated_percent vs batch_id (mean with 95% CI)",
+        default="",
         help="Figure title",
     )
     parser.add_argument("--show", action="store_true", help="Show plot interactively")

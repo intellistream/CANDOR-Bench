@@ -325,6 +325,8 @@ void IndexHNSWIncremental::search(
     double search_block_t0 = getmillisecs();
         streamseed::prepare_dictionary_if_needed(
             warm_seed_dictionary,
+            warm_seed_dictionary_owner_query,
+            warm_seed_dictionary_owner_signature,
             warm_seed_dictionary_k,
             warm_seed_dictionary_score,
             warm_seed_dictionary_age,
@@ -335,16 +337,22 @@ void IndexHNSWIncremental::search(
         std::unique_ptr<ISeedSource> seed_source = streamseed::create_seed_source(
             optimization_config,
             warm_seed_dictionary,
+            warm_seed_dictionary_owner_query,
+            warm_seed_dictionary_owner_signature,
             warm_seed_dictionary_score,
             warm_seed_dictionary_age,
             warm_seed_dictionary_locks,
-            warm_seed_dictionary_clock);
+            warm_seed_dictionary_clock,
+            warm_seed_dictionary_round,
+            warm_seed_adaptive_m_gate,
+            warm_seed_adaptive_o_gate);
 
         std::unique_ptr<IHintStrategy> hint_strategy =
             streamseed::create_streamseed_strategy(optimization_config);
 
     size_t n1 = 0, n2 = 0, n3 = 0, ndis = 0, nreorder = 0;
     size_t hint_used = 0;
+    size_t level1_hits = 0;
 
     idx_t check_period =
             InterruptCallback::get_period_hint(
@@ -352,6 +360,13 @@ void IndexHNSWIncremental::search(
 
     for (idx_t i0 = 0; i0 < n; i0 += check_period) {
         idx_t i1 = std::min(i0 + check_period, n);
+        std::vector<uint32_t> slot_hits;
+        if (optimization_config.streamseed_enabled() && verbose &&
+            optimization_config.hint_table_slots > 0) {
+            slot_hits.assign(
+                    static_cast<size_t>(optimization_config.hint_table_slots),
+                    0);
+        }
 
 #pragma omp parallel
         {
@@ -360,19 +375,41 @@ void IndexHNSWIncremental::search(
             std::unique_ptr<DistanceComputer> dis(
                     storage_distance_computer(storage));
 
-#pragma omp for reduction(+ : n1, n2, n3, ndis, nreorder, hint_used) schedule(guided)
+#pragma omp for reduction(+ : n1, n2, n3, ndis, nreorder, hint_used, level1_hits) schedule(guided)
             for (idx_t i = i0; i < i1; i++) {
                 idx_t* idxi = labels + i * k;
                 float* simi = distances + i * k;
                 dis->set_query(x + i * d);
+                const idx_t slot_key = streamseed::compute_semantic_slot_key(
+                    x + i * d,
+                    d,
+                    optimization_config.hint_table_slots,
+                    i);
+                if (!slot_hits.empty()) {
+#pragma omp atomic
+                    slot_hits[static_cast<size_t>(slot_key)] += 1;
+                }
+                const uint64_t owner_signature =
+                    streamseed::compute_semantic_signature(x + i * d, d);
 
                 HintSearchResult hint_result;
-                if (hint_strategy && seed_source->available(i)) {
-                    const auto& cache_ids = seed_source->get(i);
+                if (hint_strategy && seed_source->available(i, slot_key)) {
+                    bool level1_hit = false;
+                    const auto& cache_ids =
+                        seed_source->get(
+                            i,
+                            slot_key,
+                            x + i * d,
+                            d,
+                            &level1_hit);
+                    if (level1_hit) {
+                    level1_hits += 1;
+                    }
                     HintSearchContext hint_ctx{
                             k,
                             idxi,
                             simi,
+                            level1_hit,
                             cache_ids,
                             vt,
                             *dis,
@@ -418,7 +455,8 @@ void IndexHNSWIncremental::search(
                     maxheap_reorder(k_reorder, simi, idxi);
                 }
 
-                seed_source->writeback({i, k, idxi, simi});
+                seed_source->writeback(
+                        {i, slot_key, owner_signature, used_hint, k, idxi, simi});
             }
         }
         if (optimization_config.streamseed_enabled() && verbose) {
@@ -427,7 +465,48 @@ void IndexHNSWIncremental::search(
                    static_cast<size_t>(i1 - i0),
                    static_cast<int64_t>(i0),
                    static_cast<int64_t>(i1));
+             printf("streamseed_level1_hit %zu/%zu queries in chunk [%" PRId64 ", %" PRId64 ")\n",
+                 level1_hits,
+                 static_cast<size_t>(i1 - i0),
+                 static_cast<int64_t>(i0),
+                 static_cast<int64_t>(i1));
+            if (!slot_hits.empty()) {
+                size_t occupied_slots = 0;
+                size_t collisions = 0;
+                size_t max_load = 0;
+                size_t overflow_slots = 0;
+                size_t overflow_queries = 0;
+                const size_t capacity =
+                        static_cast<size_t>(std::max(1, optimization_config.hint_slot_capacity));
+                for (size_t s = 0; s < slot_hits.size(); ++s) {
+                    const size_t h = static_cast<size_t>(slot_hits[s]);
+                    if (h == 0) {
+                        continue;
+                    }
+                    occupied_slots += 1;
+                    if (h > 1) {
+                        collisions += (h - 1);
+                    }
+                    if (h > max_load) {
+                        max_load = h;
+                    }
+                    if (h > capacity) {
+                        overflow_slots += 1;
+                        overflow_queries += (h - capacity);
+                    }
+                }
+                printf("streamseed_slot_hash occupied=%zu/%zu collisions=%zu max_load=%zu overflow_slots=%zu overflow_queries=%zu in chunk [%" PRId64 ", %" PRId64 ")\n",
+                       occupied_slots,
+                       slot_hits.size(),
+                       collisions,
+                       max_load,
+                       overflow_slots,
+                       overflow_queries,
+                       static_cast<int64_t>(i0),
+                       static_cast<int64_t>(i1));
+            }
         }
+        seed_source->on_batch_end(verbose, static_cast<int64_t>(i0), static_cast<int64_t>(i1));
         InterruptCallback::check();
     }
     if (verbose) {
@@ -465,11 +544,16 @@ void IndexHNSWIncremental::reset() {
     storage->reset();
     ntotal = 0;
     warm_seed_dictionary.clear();
+    warm_seed_dictionary_owner_query.clear();
+    warm_seed_dictionary_owner_signature.clear();
     warm_seed_dictionary_k = 0;
     warm_seed_dictionary_score.clear();
     warm_seed_dictionary_age.clear();
     streamseed::clear_dictionary_locks(warm_seed_dictionary_locks);
     warm_seed_dictionary_clock = 0;
+    warm_seed_dictionary_round = 0;
+    warm_seed_adaptive_m_gate = 0.0f;
+    warm_seed_adaptive_o_gate = 0.0f;
 }
 
 void IndexHNSWIncremental::reconstruct(idx_t key, float* recons) const {

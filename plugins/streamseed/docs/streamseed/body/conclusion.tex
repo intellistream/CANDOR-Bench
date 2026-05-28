@@ -1,9 +1,2 @@
 \section{Conclusion}
-This paper presented BriskSeed, a pluginized optimization module for dynamic ANNS under streaming updates.
-By introducing Query Hint Reuse (QHR) with Adaptive Query Hint Control (AQHC), BriskSeed unifies hint construction, online usage control, and state updates within a single policy loop.
-The proposed design addresses the stale-hint challenge in dynamic workloads and improves amortized end-to-end efficiency while preserving recall safety through controlled fallback.
-
-Implemented in CANDOR-Bench, BriskSeed enables runbook-driven and backend-comparable evaluation within a reproducible workflow.
-Empirical results and ablations indicate that unified hint control is a key ingredient for robust performance under high update rates and distribution drift.
-
-Future work includes deeper backend co-design for dynamic HNSW internals, stronger drift-aware policy learning, and broader cross-dataset generalization studies.
+In this work, we study query acceleration for ANNS under dynamic updates. Existing acceleration methods face a fundamental tension: search hints constructed for static snapshots quickly become stale as updates arrive, while frequent global re-optimization incurs high maintenance overhead and can offset the intended throughput gains. To address this challenge, we propose \system, a lightweight dynamic acceleration plugin that turns static hinting into an online reuse--validate--refresh loop. \system maintains bounded reusable seed states and combines exact reuse on hot paths with semantic retrieval, bounded neighbor expansion, and fallback validation to preserve recall while improving end-to-end efficiency. We further present an analytical model for practical parameter instantiation under budget constraints. Extensive experiments show that \system consistently improves throughput, preserves competitive recall, and delivers robust performance under dynamic update workloads.

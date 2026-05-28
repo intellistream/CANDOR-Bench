@@ -1,0 +1,23 @@
+random-xs:
+  Wolverine:
+    module: benchmark_anns.bench.algorithms.Wolverine.Wolverine
+    constructor: Wolverine
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"M": 16, "efConstruction": 120, "delete_model": 4, "new_link_size": 16, "num_threads": 8}]
+        query-args: |
+          [{"ef": 40}]
+
+sift:
+  Wolverine:
+    module: benchmark_anns.bench.algorithms.Wolverine.Wolverine
+    constructor: Wolverine
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"M": 16, "efConstruction": 120, "delete_model": 4, "new_link_size": 16, "num_threads": 16}]
+        query-args: |
+          [{"ef": 40}]

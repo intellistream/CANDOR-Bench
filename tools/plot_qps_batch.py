@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 import pandas as pd
 import seaborn as sns
 
@@ -87,7 +88,7 @@ def load_all_rows(files, algo_label):
 
 def plot_files(algo_to_files, out_path, show):
     sns.set_theme(style='whitegrid', context='talk')
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(8, 5))
     found_total = 0
     all_rows = []
     for algo_label, files in algo_to_files.items():
@@ -103,7 +104,8 @@ def plot_files(algo_to_files, out_path, show):
         # Darker line colors; CI band will be light via alpha
         palette = {
             algo_labels[0]: '#D62828',
-            algo_labels[1]: '#1B9E77'
+            #algo_labels[1]: '#1B9E77'
+            algo_labels[1]: '#0057B7'
         }
     # Mean across tests with 95% CI band
     sns.lineplot(
@@ -117,18 +119,26 @@ def plot_files(algo_to_files, out_path, show):
         err_kws={'alpha': 0.12},
         linewidth=2.2
     )
-    plt.xlabel('batch_id (1w->10w expansion, batchsize=2500)')
-    plt.ylabel('qps')
-    plt.title('qps vs batch_id (mean with 95% CI)')
+    ax = plt.gca()
+    ax.tick_params(axis='both', labelsize=18)
+    plt.xlabel('Batch ID', fontsize=20)
+    plt.ylabel('QPS',fontsize=20)
+    plt.title('QPS vs Batch ID (mean with 95% CI)', fontsize=22)
+    # Format y-axis ticks in thousands for readability, e.g. 50000 -> 50k.
+    plt.gca().yaxis.set_major_formatter(
+        FuncFormatter(lambda x, _: f'{x / 1000:g}k' if abs(x) >= 1000 else f'{x:g}')
+    )
+    # Reduce default inner whitespace so the plotting area uses more canvas.
+    #plt.margins(x=0.01)
     plt.grid(True)
-    plt.legend(title='algorithm')
+    plt.legend()
     plt.tight_layout()
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(out_path)
+    plt.savefig(out_path, dpi=300, bbox_inches='tight', pad_inches=0.1)
     # also save pdf
     try:
-        plt.savefig(out_path.with_suffix('.pdf'))
+        plt.savefig(out_path.with_suffix('.pdf'), bbox_inches='tight', pad_inches=0.02)
     except Exception:
         pass
     if show:
@@ -139,7 +149,7 @@ def main():
     parser = argparse.ArgumentParser(description='Plot qps vs batch_id for multiple tests')
     parser.add_argument(
         '--base-dirs',
-        default='/home/ghr/SAGE-DB-NEW/SAGE-DB-Bench/results/sift/faiss_HNSW,/home/ghr/SAGE-DB-NEW/SAGE-DB-Bench/results/sift/faiss_HNSW_Frequent_reoptimization',
+        default='/home/ghr/SAGE-DB-NEW/SAGE-DB-Bench/results/sift/faiss_HNSW,/home/ghr/SAGE-DB-NEW/SAGE-DB-Bench/results/sift/faiss_HNSW_One_shot_optimization',
         help='comma-separated algorithm directories containing test*_result folders'
     )
     parser.add_argument(

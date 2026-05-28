@@ -96,21 +96,29 @@ class BenchmarkMetrics:
             'num_searches': self.num_searches,
             'private_queries': self.private_queries,
         }
-    
-    def mean_query_throughput(self) -> float:
-        """计算平均查询吞吐量 (queries/second)"""
-        # 使用周期性查询计算吞吐量
-        # continuous_query_latencies 存储的是每次批量查询的总延迟（秒）
+
+    def _valid_continuous_query_latencies_seconds(self) -> List[float]:
+        """展平并过滤连续查询延迟（单位：秒）。"""
         if not self.continuous_query_latencies or len(self.continuous_query_latencies) == 0:
-            return 0.0
-        
-        all_latencies = []
+            return []
+
+        all_latencies: List[float] = []
         for batch in self.continuous_query_latencies:
             if isinstance(batch, (list, np.ndarray)):
                 all_latencies.extend(batch)
             else:
                 all_latencies.append(batch)
-        
+
+        return [
+            float(lat) for lat in all_latencies
+            if np.isfinite(lat) and 0 < float(lat) <= 3600
+        ]
+    
+    def mean_query_throughput(self) -> float:
+        """计算平均查询吞吐量 (queries/second)"""
+        # 使用周期性查询计算吞吐量
+        # continuous_query_latencies 存储的是每次批量查询的总延迟（秒）
+        all_latencies = self._valid_continuous_query_latencies_seconds()
         if len(all_latencies) == 0:
             return 0.0
         
@@ -142,16 +150,7 @@ class BenchmarkMetrics:
         continuous_query_latencies 存储的是每次批量查询的总延迟（秒）
         返回的是批量查询的平均延迟，而不是单个查询向量的延迟
         """
-        if not self.continuous_query_latencies or len(self.continuous_query_latencies) == 0:
-            return 0.0
-        
-        all_latencies = []
-        for batch in self.continuous_query_latencies:
-            if isinstance(batch, (list, np.ndarray)):
-                all_latencies.extend(batch)
-            else:
-                all_latencies.append(batch)
-        
+        all_latencies = self._valid_continuous_query_latencies_seconds()
         if len(all_latencies) == 0:
             return 0.0
         
@@ -166,16 +165,7 @@ class BenchmarkMetrics:
         
         基于周期性查询延迟计算，P50 是所有批量查询延迟的中位数
         """
-        if not self.continuous_query_latencies or len(self.continuous_query_latencies) == 0:
-            return 0.0
-        
-        all_latencies = []
-        for batch in self.continuous_query_latencies:
-            if isinstance(batch, (list, np.ndarray)):
-                all_latencies.extend(batch)
-            else:
-                all_latencies.append(batch)
-        
+        all_latencies = self._valid_continuous_query_latencies_seconds()
         if len(all_latencies) == 0:
             return 0.0
         
@@ -189,16 +179,7 @@ class BenchmarkMetrics:
         
         基于周期性查询延迟计算，P95 是所有批量查询延迟的 95 百分位
         """
-        if not self.continuous_query_latencies or len(self.continuous_query_latencies) == 0:
-            return 0.0
-        
-        all_latencies = []
-        for batch in self.continuous_query_latencies:
-            if isinstance(batch, (list, np.ndarray)):
-                all_latencies.extend(batch)
-            else:
-                all_latencies.append(batch)
-        
+        all_latencies = self._valid_continuous_query_latencies_seconds()
         if len(all_latencies) == 0:
             return 0.0
         
@@ -212,16 +193,7 @@ class BenchmarkMetrics:
         
         基于周期性查询延迟计算，P99 是所有批量查询延迟的 99 百分位
         """
-        if not self.continuous_query_latencies or len(self.continuous_query_latencies) == 0:
-            return 0.0
-        
-        all_latencies = []
-        for batch in self.continuous_query_latencies:
-            if isinstance(batch, (list, np.ndarray)):
-                all_latencies.extend(batch)
-            else:
-                all_latencies.append(batch)
-        
+        all_latencies = self._valid_continuous_query_latencies_seconds()
         if len(all_latencies) == 0:
             return 0.0
         

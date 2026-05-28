@@ -3,10 +3,10 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 CSV_PATHS = [
-    Path("/home/ghr/candor-bench/SAGE-DB-Bench/results/sift/faiss_HNSW/ef-120-test-goodfordraw/ef-120_batch_query_qps.csv"),
-    Path("/home/ghr/candor-bench/SAGE-DB-Bench/results/sift/faiss_HNSW_Optimized/ef-120/ef-120_batch_query_qps.csv"),
+    Path("/home/ghr/SAGE-DB-NEW/SAGE-DB-Bench/results/sift/streamseed_hybrid/ef-120/ef-120_batch_query_qps.csv"),
+    Path("/home/ghr/SAGE-DB-NEW/SAGE-DB-Bench/results/sift/streamseed_hybrid_off/ef-120/ef-120_batch_query_qps.csv"),
 ]
-OUTPUT_PATH = Path("/home/ghr/candor-bench/SAGE-DB-Bench/tools/qps_vs_batch_idx.png")
+OUTPUT_PATH = Path("/home/ghr/SAGE-DB-NEW/SAGE-DB-Bench/tools/qps_vs_batch_idx.png")
 
 
 def load_qps(csv_path: Path):

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Iterable, Tuple
+from typing import Tuple
 
 import h5py
 import matplotlib.pyplot as plt
@@ -20,8 +20,18 @@ import numpy as np
 import seaborn as sns
 
 
-FIGSIZE = (8, 6)
+FIGSIZE = (8, 5)
 DASHBOARD_FIGSIZE = (18, 5)
+FAISS_HNSW_COLOR = "#D62828"
+AXIS_LABEL_FONTSIZE = 22
+TICK_LABEL_FONTSIZE = 18
+PLOT_LINEWIDTH = 2.2
+
+
+def style_axis(ax: plt.Axes, xlabel: str, ylabel: str) -> None:
+    ax.tick_params(axis="both", labelsize=TICK_LABEL_FONTSIZE)
+    ax.set_xlabel(xlabel, fontsize=AXIS_LABEL_FONTSIZE)
+    ax.set_ylabel(ylabel, fontsize=AXIS_LABEL_FONTSIZE)
 
 
 def load_neighbors(h5_path: Path, dataset: str = "auto") -> Tuple[np.ndarray, str]:
@@ -96,11 +106,14 @@ def parse_top_fracs(s: str) -> list[float]:
 
 
 def save_fig(fig: plt.Figure, png_path: Path) -> None:
+    # Keep a compact layout while preserving suptitle space for dashboard figure.
     fig.tight_layout()
+    if fig._suptitle is not None:
+        fig.subplots_adjust(top=0.90)
     png_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(png_path, dpi=220)
+    fig.savefig(png_path, dpi=300, bbox_inches="tight", pad_inches=0.1)
     try:
-        fig.savefig(png_path.with_suffix(".pdf"))
+        fig.savefig(png_path.with_suffix(".pdf"), bbox_inches="tight", pad_inches=0.02)
     except Exception:
         pass
 
@@ -180,12 +193,10 @@ def main() -> None:
     # Rank-frequency plot
     fig1 = plt.figure(figsize=FIGSIZE)
     ax1 = fig1.add_subplot(111)
-    ax1.plot(rank, counts_desc, color="#D62828", linewidth=1.8)
+    ax1.plot(rank, counts_desc, color=FAISS_HNSW_COLOR, linewidth=PLOT_LINEWIDTH)
     ax1.set_xscale("log")
     ax1.set_yscale("log")
-    ax1.set_xlabel("hit ID rank (log scale)")
-    ax1.set_ylabel("hit frequency (log scale)")
-    ax1.set_title("Rank-Frequency of Top-k Hit IDs")
+    style_axis(ax1, "Retrieved Neighbor ID Rank (log scale)", "Count (log scale)")
     ax1.grid(True)
     save_fig(fig1, out_dir / "rank_frequency.png")
 
@@ -199,10 +210,15 @@ def main() -> None:
 
     fig2 = plt.figure(figsize=FIGSIZE)
     ax2 = fig2.add_subplot(111)
-    ax2.plot(cum_ids_share, cum_hits_share, color="#D62828", linewidth=2.0, label=f"Lorenz (Gini={gini:.3f})")
+    ax2.plot(
+        cum_ids_share,
+        cum_hits_share,
+        color=FAISS_HNSW_COLOR,
+        linewidth=PLOT_LINEWIDTH,
+        label=f"Lorenz (Gini={gini:.3f})",
+    )
     ax2.plot([0, 1], [0, 1], color="gray", linestyle="--", linewidth=1.2, label="Uniform")
-    ax2.set_xlabel("cumulative share of hit IDs")
-    ax2.set_ylabel("cumulative share of top-k hits")
+    style_axis(ax2, "Cumulative Share of Hit IDs", "Cumulative Share of Top-k Hits")
     ax2.set_title("Lorenz Curve of Hit Concentration")
     ax2.legend(frameon=True)
     ax2.grid(True)
@@ -233,12 +249,11 @@ def main() -> None:
         ax3.plot(
             x_vals,
             coverage,
-            linewidth=2.0,
+            linewidth=PLOT_LINEWIDTH,
             label=f"Top {frac * 100:.1f}% hotspot IDs",
         )
 
-    ax3.set_xlabel("batch_id")
-    ax3.set_ylabel("coverage by hotspot IDs (%)")
+    style_axis(ax3, "Batch ID", "Coverage by Hotspot IDs (%)")
     ax3.set_title("Per-Batch Coverage by Global Hotspot IDs")
     ax3.grid(True)
     ax3.legend(frameon=True)
@@ -247,18 +262,16 @@ def main() -> None:
     # Dashboard figure
     fig4, axes = plt.subplots(1, 3, figsize=DASHBOARD_FIGSIZE)
 
-    axes[0].plot(rank, counts_desc, color="#D62828", linewidth=1.6)
+    axes[0].plot(rank, counts_desc, color=FAISS_HNSW_COLOR, linewidth=PLOT_LINEWIDTH)
     axes[0].set_xscale("log")
     axes[0].set_yscale("log")
-    axes[0].set_xlabel("rank (log)")
-    axes[0].set_ylabel("frequency (log)")
+    style_axis(axes[0], "Rank (log)", "Frequency (log)")
     axes[0].set_title("Rank-Frequency")
     axes[0].grid(True)
 
-    axes[1].plot(cum_ids_share, cum_hits_share, color="#D62828", linewidth=1.8)
+    axes[1].plot(cum_ids_share, cum_hits_share, color=FAISS_HNSW_COLOR, linewidth=PLOT_LINEWIDTH)
     axes[1].plot([0, 1], [0, 1], color="gray", linestyle="--", linewidth=1.0)
-    axes[1].set_xlabel("cum. ID share")
-    axes[1].set_ylabel("cum. hit share")
+    style_axis(axes[1], "Cum. ID Share", "Cum. Hit Share")
     axes[1].set_title(f"Lorenz (Gini={gini:.3f})")
     axes[1].grid(True)
 
@@ -273,9 +286,8 @@ def main() -> None:
             c = (np.isin(valid, hotspot_ids).sum() / valid.size * 100.0) if valid.size else 0.0
             coverage.append(float(c))
             x_vals.append(int(b))
-        axes[2].plot(x_vals, coverage, linewidth=1.8, label=f"Top {frac * 100:.1f}%")
-    axes[2].set_xlabel("batch_id")
-    axes[2].set_ylabel("coverage (%)")
+        axes[2].plot(x_vals, coverage, linewidth=PLOT_LINEWIDTH, label=f"Top {frac * 100:.1f}%")
+    style_axis(axes[2], "Batch ID", "Coverage (%)")
     axes[2].set_title("Hotspot Coverage")
     axes[2].legend(frameon=True)
     axes[2].grid(True)

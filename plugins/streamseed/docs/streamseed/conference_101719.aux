@@ -1,0 +1,139 @@
+\relax 
+\citation{Zhong20255017}
+\citation{Jayaram2019,Malkov2020824}
+\citation{Gou2025,Wang2025,Zhong20255017}
+\citation{Chen20233225,Gao202327,Song2025}
+\citation{microsoft2025fraud,aws2024memorydbvector}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:stale-hint}{{1a}{1}}
+\newlabel{sub@fig:stale-hint}{{(a)}{a}}
+\newlabel{fig:reopt-cost}{{1b}{1}}
+\newlabel{sub@fig:reopt-cost}{{(b)}{b}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Trade-offs in dynamic ANNS: one-shot optimization provides only short-term gains, while aggressive frequent re-optimization hurts overall query throughput.\relax }}{1}{}\protected@file@percent }
+\newlabel{fig:motivation}{{1}{1}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces {One-shot optimization}}}{1}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces {Frequent re-optimization}}}{1}{}\protected@file@percent }
+\citation{Wang202627}
+\citation{Wang202627}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Summary of terminologies\relax }}{2}{}\protected@file@percent }
+\newlabel{tab:symbols}{{I}{2}}
+\@writefile{toc}{\contentsline {section}{\numberline {II}Problem Formulation and Motivation}{2}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}Problem Statement}{2}{}\protected@file@percent }
+\newlabel{fig:repeat results}{{2a}{3}}
+\newlabel{sub@fig:repeat results}{{(a)}{a}}
+\newlabel{fig:skewness}{{2b}{3}}
+\newlabel{sub@fig:skewness}{{(b)}{b}}
+\newlabel{fig:per-query difference}{{2c}{3}}
+\newlabel{sub@fig:per-query difference}{{(c)}{c}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Key observations in dynamic ANNS workloads.\relax }}{3}{}\protected@file@percent }
+\newlabel{fig:observation}{{2}{3}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces {Top-$k$ overlap across rounds}}}{3}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces {Skewness of returned vector IDs}}}{3}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(c)}{\ignorespaces {Per-query top-$k$ overlap}}}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Key Observations}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-C}}Design Challenges}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {III}BriskSeed Design}{4}{}\protected@file@percent }
+\newlabel{sec:briskseed-design}{{III}{4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Design Overview}{4}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces BriskSeed design overview.\relax }}{4}{}\protected@file@percent }
+\newlabel{fig:briskseed-design-overview}{{3}{4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Unified Online Reuse Pipeline}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-B}1}Seed Representation and Storage}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {III-B}1a}Seed representation}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {III-B}1b}Query signature}{5}{}\protected@file@percent }
+\newlabel{eq:Ham}{{6}{5}}
+\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {III-B}1c}Two-tier seed storage}{5}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Symbols used in BriskSeed design.\relax }}{5}{}\protected@file@percent }
+\newlabel{tab:pipeline-symbols}{{II}{5}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-B}2}Seed-guided Search}{5}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {III-B}2a}Seed retrieval}{5}{}\protected@file@percent }
+\newlabel{eg:scoring}{{7}{5}}
+\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {III-B}2b}Candidate collection}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-B}3}Candidate Validation}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {III-B}3a}Top-$k$ boundary gap}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {III-B}3b}Overlap with the selected seed}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {III-B}3c}Acceptance rule}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-B}4}Writeback Mechanism and Seed Update}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Theoretical Analysis}{7}{}\protected@file@percent }
+\newlabel{subsec:briskseed-complexity}{{\mbox  {III-C}}{7}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}1}Time Complexity Comparison}{7}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Instantiation of BriskSeed}{7}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Performance Model}{7}{}\protected@file@percent }
+\newlabel{eq:exp-latency}{{17}{7}}
+\newlabel{eq:hot-latency}{{18}{7}}
+\newlabel{eq:semantic-latency}{{19}{7}}
+\newlabel{eq:compact-objective}{{21}{8}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Analytical Instantiation}{8}{}\protected@file@percent }
+\newlabel{eq:ph-exact}{{23}{8}}
+\newlabel{eq:ph-approx}{{24}{8}}
+\newlabel{eq:budget}{{25}{8}}
+\newlabel{eq:opt-problem}{{26}{8}}
+\newlabel{eq:quadratic-surrogate}{{29}{8}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Implementation}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Plugin Architecture}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Limitations}{8}{}\protected@file@percent }
+\citation{Wang202627}
+\citation{Malkov2020824}
+\citation{Gou2025}
+\citation{Liu20252268}
+\citation{Coleman202238488}
+\citation{Yue20254337}
+\citation{Gou2025}
+\citation{Wang2025}
+\citation{Zhong20255017}
+\citation{Gao202327}
+\citation{Yang20251098}
+\citation{Deng2024812}
+\citation{Song2025}
+\citation{Chen20233225}
+\citation{Singh2021}
+\citation{Jayaram2019}
+\citation{Pan20235987}
+\citation{Liu20252268}
+\citation{Yang20251825}
+\citation{Ono20231659}
+\citation{Voruganti2025}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Datasets used in evaluation.\relax }}{9}{}\protected@file@percent }
+\newlabel{tab:eval-datasets}{{III}{9}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Evaluation}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Experimental Setup}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}QPS Performance and Recall}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Memory Usage}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-D}}Ablation Study}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-E}}Parameter Study}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-F}}Scaling-up Study}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Related Work}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-A}}Acceleration Technique for Graph-based ANNS}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-B}}Dynamic Graph-based ANNS}{9}{}\protected@file@percent }
+\bibstyle{IEEEtran}
+\bibdata{reference}
+\bibcite{Zhong20255017}{1}
+\bibcite{Jayaram2019}{2}
+\bibcite{Malkov2020824}{3}
+\bibcite{Gou2025}{4}
+\bibcite{Wang2025}{5}
+\bibcite{Chen20233225}{6}
+\bibcite{Gao202327}{7}
+\bibcite{Song2025}{8}
+\bibcite{microsoft2025fraud}{9}
+\bibcite{aws2024memorydbvector}{10}
+\bibcite{Wang202627}{11}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces QPS and Recall comparison between the baseline and \textit  {BriskSeed}\xspace  on three datasets.\relax }}{10}{}\protected@file@percent }
+\newlabel{fig:qps-recall-three-datasets}{{4}{10}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces {SIFT}}}{10}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces {Msong}}}{10}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(c)}{\ignorespaces {Glove}}}{10}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}Conclusion}{10}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{References}{10}{}\protected@file@percent }
+\bibcite{Liu20252268}{12}
+\bibcite{Coleman202238488}{13}
+\bibcite{Yue20254337}{14}
+\bibcite{Yang20251098}{15}
+\bibcite{Deng2024812}{16}
+\bibcite{Singh2021}{17}
+\bibcite{Pan20235987}{18}
+\bibcite{Yang20251825}{19}
+\bibcite{Ono20231659}{20}
+\bibcite{Voruganti2025}{21}
+\gdef \@abspage@last{11}

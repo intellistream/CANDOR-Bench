@@ -118,7 +118,7 @@ class OpenImagesDataset(Dataset):
 
     def __init__(self):
         super().__init__()
-        self.nb = 9000000
+        self.nb = 1000000
         self.nq = 10000
         self.d = 512
         self.basedir = "raw_data/openimages/"
@@ -283,8 +283,8 @@ class GloveDataset(Dataset):
 
     def __init__(self):
         super().__init__()
-        self.nb = 1183514
-        self.nq = 10000
+        self.nb = 1192514
+        self.nq = 200
         self.d = 100
         self.basedir = "raw_data/glove/"
 

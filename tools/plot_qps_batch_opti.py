@@ -199,7 +199,7 @@ def main():
     parser = argparse.ArgumentParser(description='Plot qps vs batch_id for multiple tests')
     parser.add_argument(
         '--base-dirs',
-        default='results/sift/faiss_HNSW1, results/sift/faiss_hnsw_incremental1',
+        default='results/sift/faiss_HNSW, results/sift/faiss_HNSW_Frequent_reoptimization',
         help='comma-separated algorithm directories containing test*_result folders'
     )
     parser.add_argument(

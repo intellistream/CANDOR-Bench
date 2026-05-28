@@ -1,18 +1,20 @@
 \section{Related Work}
+\subsection{Acceleration Technique for Graph-based ANNS}
+Existing work can be divided into two categories. The first category preserves the original graph search and improves efficiency through system-level optimization. GraphReorder~\cite{Coleman202238488} improves cache locality by reordering vertices based on their access frequency, while MARGO~\cite{Yue20254337} optimizes graph layout by weighting edges according to their importance along monotonic search paths. However, such methods usually require expensive reconstruction and are therefore difficult to apply repeatedly in dynamic scenarios. SymphonyQG~\cite{Gou2025}, FLASH~\cite{Wang2025}, and VSAG~\cite{Zhong20255017} improve efficiency through redundant neighborhood storage and quantization-based encoding. Nevertheless, their reliance on offline-learned codebooks or centroids makes them costly to maintain under continuous updates and prone to recall degradation. The second category accelerates search by explicitly reducing distance computation. 
+ADSampling~\cite{Gao202327}, DDC~\cite{Yang20251098}, and DADE~\cite{Deng2024812} employ partial-dimensional distances to determine whether full distance computation can be skipped. 
+SkipComputing~\cite{Song2025} further improves pruning accuracy through lower-bound verification, while Finger~\cite{Chen20233225} applies the residual-based approximation. Although these methods directly target the dominant cost of high-dimensional search, they introduce branch-heavy execution or additional preprocessing dependencies, limiting robustness in dynamic settings.
 
-\subsection{Most Directly Related: Dynamic and Graph-based ANNS}
-Graph-based methods such as HNSW and its variants are widely adopted for high-recall and low-latency vector search.
-Most designs, however, are optimized for static or slowly changing datasets, where index quality and auxiliary search artifacts are built offline.
-Recent dynamic ANNS studies explore incremental index maintenance and update-aware operations.
-In contrast, BriskSeed focuses on policy-level control of query hint reuse and provides a pluginized path to integrate with existing dynamic backends.
 
-\subsection{Indirectly Related: System and Algorithm Acceleration}
-Prior system works improve ANNS throughput via hardware-conscious layouts, vector quantization, and SIMD-friendly distance computation.
-These approaches are complementary to BriskSeed: they optimize execution efficiency but do not directly address online staleness of reusable query guidance.
-Algorithmic methods reduce unnecessary distance evaluations through pruning, lower-bound estimation, or partial-dimension strategies.
-While effective in static contexts, they usually rely on assumptions that weaken under high-rate updates and distribution drift.
 
-\subsection{Other: Positioning of This Work}
-BriskSeed is orthogonal to both system-only and algorithm-only accelerations.
-Its contribution is a unified online control loop (AQHC) that jointly manages hint construction, usage, and update,
-bridging algorithmic reuse opportunities with systems-level deployability in streaming settings.
+
+
+
+\subsection{Dynamic Graph-based ANNS}
+Recent studies on dynamic graph-based ANNS can be broadly divided into two categories. The first category focuses on efficiently maintaining index freshness under continuous updates. 
+FreshDiskANN~\cite{Singh2021} extends DiskANN~\cite{Jayaram2019} to dynamic settings by repairing connectivity loss in a fully connected manner. By relaxing edge trimming, it preserves newly added edges and maintains index accuracy after updates.
+LM-DiskANN~\cite{Pan20235987} further reduces the memory footprint of disk-native dynamic graph indexing by storing complete routing information in each node.
+Wolverine~\cite{Liu20252268} repairs monotonic search paths disrupted by deletions to maintain search quality during updates. These systems primarily aim to support efficient updates while maintaining connectivity and recall in dynamic scenarios. The second category focuses on reducing graph construction cost. 
+Yang et al.~\cite{Yang20251825} revisit the construction pipelines of RNG and NSWG and accelerate graph construction through a refinement-before-search strategy. 
+Relative NN-Descent~\cite{Ono20231659} combines NN-Descent with RNG-style edge selection to directly construct a search graph more efficiently. 
+MIRAGE-ANNS~\cite{Voruganti2025} combines incremental and refinement-based strategies to balance construction speed and search quality. While these methods effectively reduce the cost of building graph indices, they do not target query acceleration after updates. 
+In contrast, our work focuses on improving post-update query efficiency in dynamic settings by exploiting historical search information.

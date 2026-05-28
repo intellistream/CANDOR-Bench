@@ -734,7 +734,10 @@ class BenchmarkRunner:
             # 提取纯查询时间（微秒转秒）
             for ts in new_query_timestamps:
                 cq_latency = ts['query_time'] / 1e6  # 转换为秒
-                continuous_query_latencies.append(cq_latency)
+                if np.isfinite(cq_latency) and 0 < cq_latency <= 3600:
+                    continuous_query_latencies.append(cq_latency)
+                else:
+                    print(f"       ⚠️  跳过异常查询延迟: {cq_latency:.6f}s")
         
         # 更新状态
         self.counts['batch_insert'] += count
@@ -1026,7 +1029,12 @@ class BenchmarkRunner:
             if query_ts_count_after > query_ts_count_before:
                 # 获取本次查询的时间戳
                 latest_ts = self.worker.query_timestamps[-1]
-                query_latency = latest_ts['query_time'] / 1e6  # 微秒转秒
+                latest_query_time_us = latest_ts['query_time']
+                candidate_latency = latest_query_time_us / 1e6  # 微秒转秒
+                if np.isfinite(candidate_latency) and 0 < candidate_latency <= 3600:
+                    query_latency = candidate_latency
+                else:
+                    print(f"    ⚠️  跳过异常查询延迟: {candidate_latency:.6f}s")
         
         # 如果没有从 worker 获取到延迟（可能未使用 worker），使用 0
         throughput = count / query_latency if query_latency > 0 else 0

@@ -1,106 +1,18 @@
 \section{Implementation}
-\label{sec:implementation}
+In this section, we describe the implementation of \system and discuss its remaining limitations.
+\subsection{Plugin Architecture}
+We implement \system as a backend-agnostic plugin layer rather than tightly integrating it into a specific ANNS backend.
+The plugin exposes a unified interface for index setup, insertion, deletion, and query execution, while each backend is connected through a lightweight adapter that maps backend-specific operations to this interface.
+This design keeps integration minimally invasive: \system does not modify the index construction, update policy, or native search procedure of the backend, and all seed management logic is implemented outside the backend core. The same benchmark pipeline is used to evaluate both the original backend and its \system-enabled variant under identical workload and system settings.
+All deployment parameters are externalized in configuration files, e.g., the high-utility layer capacity, the number of semantic-shared buckets, and the per-bucket seed capacity.
+An explicit switch, \texttt{BriskSeed\_mode}, enables or disables \system on the same backend, and the benchmark runner logs the effective configuration with the dataset, batch settings, and backend identifier at startup.
+This separation between system logic and experiment configuration enables deterministic reruns and fair comparisons across different ANNS backends.
 
-To make the design-to-system path explicit, Table~\ref{tab:design-impl-map} summarizes how the two design aspects in Chapter~3 map to implementation focus in this chapter.
 
-\begin{table}[t]
-\centering
-\caption{Mapping from design aspects to implementation mechanisms.}
-\label{tab:design-impl-map}
-\begin{tabular}{p{0.38\linewidth} p{0.56\linewidth}}
-\hline
-\textbf{Design Aspect} & \textbf{Implementation Focus} \\
-\hline
-Workload-aligned reuse under drift & Bounded hint state, online utility-aware gating, warm-start seed adaptation, and fallback-on-drift safety. \\
-Backend-decoupled control interface & Policy/Adapter/Runtime layering, backend-agnostic control signals, and runbook-configurable reproducible execution. \\
-\hline
-\end{tabular}
-\end{table}
-
-\subsection{Algorithm for BriskSeed}
-
-Algorithm~\ref{alg:briskseed-pipeline} gives the full online pipeline of BriskSeed, including seed retrieval, bounded recovery, acceptance/fallback, writeback, and online budget adjustment.
-
-\begin{algorithm}[t]
-\caption{BriskSeed Online Pipeline}
-\label{alg:briskseed-pipeline}
-\begin{algorithmic}[1]
-\Require Query $q$, graph index $G$, hot layer $\mathcal{H}$, semantic layer $\mathcal{S}$, and parameters $(P,m,\tau_{\mathrm{qual}},\tau_{\mathrm{cons}})$
-\State $r \gets \emptyset$
-\If{$g(q) \in \mathcal{H}$}
-	\State $r \gets \mathcal{H}[g(q)]$
-\Else
-	\State Retrieve candidate seeds from $\mathcal{N}(q)$ with probing width $P$ and per-slot cap $m$
-	\State Score each seed by $u(r)=\lambda\,\mathrm{sim}(\phi(q),\beta)+(1-\lambda)\,\rho$
-	\State $r \gets$ top-ranked seed; if no seed is found, keep $r=\emptyset$
-\EndIf
-\If{$r \neq \emptyset$}
-	\State Recover candidates from seed anchors $\mathbf{z}$ by one-hop expansion
-	\If{$r$ is semantic-shared and one-hop evidence is weak}
-		\State Continue to two-hop expansion
-	\EndIf
-	\State Rank recovered candidates and form provisional set $\hat{\mathbf{z}}$
-	\State Compute $\mathrm{qual}(q)$ and $\mathrm{cons}(q)$
-	\If{$\mathrm{qual}(q) \ge \tau_{\mathrm{qual}} \land \mathrm{cons}(q) \ge \tau_{\mathrm{cons}}$}
-		\State Accept $\hat{\mathbf{z}}$ as final output
-		\State Increase successful-reuse count $\rho$ for seed $r$
-	\Else
-		\State Run native graph search on $G$ and output top-$k$
-	\EndIf
-\Else
-	\State Run native graph search on $G$ and output top-$k$
-\EndIf
-\State Write back final top-$k$ result as a new/updated seed record
-\State If a target slot is full, evict by $\mathrm{keep}(r)=\xi\rho-(1-\xi)\,\mathrm{age}_n(r)$
-\State Every $T$ rounds, update $(H,S,m,P)$ from moving-average hit/acceptance/cost statistics
-\end{algorithmic}
-\end{algorithm}
-
-The logic is interpreted as follows.
-Line 1 defines all runtime inputs and control parameters.
-Lines 2--7 perform two-tier seed retrieval: first exact hot lookup, then bounded semantic probing and seed ranking.
-Lines 8--18 execute the seed-guided path, including bounded expansion, provisional top-$k$ construction, and two-signal acceptance/fallback decision.
-Line 19 guarantees correctness when no reusable seed is available by directly invoking native graph search.
-Lines 20--21 perform online writeback and eviction, so seed memory stays bounded and utility-aware.
-Line 22 periodically updates hot/semantic budget and probing settings using recent telemetry, making the controller adaptive under drift.
-
-\subsection{Implementation for Design Aspect I: Workload-Aligned Reuse under Drift}
-To complement the pipeline in Section~3.2, we expose concrete decision thresholds and update rules in implementation.
-The goal is to keep reuse decisions stable and reproducible under drift, rather than tuning behavior implicitly.
-
-\noindent\textbf{Acceptance thresholds.}
-BriskSeed accepts a provisional result only when both quality and consistency pass fixed gates.
-In our default setup, we use $\tau_{\mathrm{qual}}=0.08$ and $\tau_{\mathrm{cons}}=0.30$.
-The first filters weak winners, and the second prevents low-overlap reuse from replacing native search.
-
-\noindent\textbf{Expansion trigger for semantic seeds.}
-Semantic seeds use one-hop expansion by default and escalate to two-hop only when one-hop evidence is insufficient.
-Operationally, two-hop is triggered if one-hop fails either acceptance gate, i.e.,
-$\mathrm{qual}(q)<\tau_{\mathrm{qual}}$ or $\mathrm{cons}(q)<\tau_{\mathrm{cons}}$.
-This keeps most queries on low-cost one-hop recovery while reserving deeper expansion for hard cases.
-
-\noindent\textbf{Bounded retrieval budget.}
-We enforce the semantic probing budget through the hard cap $Pm\le K_{\max}$.
-In experiments, we set $K_{\max}=32$ and use $(P,m)=(4,8)$ by default, which bounds retrieval overhead while preserving slot diversity.
-
-\noindent\textbf{Promotion and demotion rule.}
-Tier movement is evaluated only when a seed is used.
-We promote a semantic seed if it has sufficiently high reuse count and low age, and demote a hot seed when reuse utility stays low over recent accesses.
-To avoid oscillation, a moved seed is frozen for one update interval before becoming eligible for the next movement.
-
-\noindent\textbf{Periodic parameter refresh.}
-Every $T$ rounds (default $T=10$), BriskSeed refreshes $(H,S,m,P)$ using moving averages of hot-hit rate, semantic-hit rate, acceptance rate, and observed query cost.
-Only candidate settings satisfying the recall constraint and $Pm\le K_{\max}$ are considered, so adaptation remains safe by construction.
-
-\subsection{Implementation for Design Aspect II: Backend-Decoupled Control Interface}
-To operationalize the second design aspect, BriskSeed is integrated into CANDOR-Bench as a pluginized module with explicit separation between policy and backend mechanics.
-The implementation is organized into three cooperating layers:
-\begin{itemize}
-	\item \textbf{Policy layer}: AQHC state machine, hint scoring, gating, and eviction.
-	\item \textbf{Adapter layer}: translation between backend-agnostic hints and backend-native index operations.
-	\item \textbf{Runtime layer}: runbook-driven scheduling, maintenance orchestration, and statistics logging.
-\end{itemize}
-
-This interface-first structure preserves existing experiment entry points while allowing backend-specific optimizations to evolve independently.
-Major controls (hint budget, gating thresholds, refresh aggressiveness, and maintenance cadence) are exposed through runbook and algorithm configuration files to ensure reproducibility.
-Consequently, the same policy implementation can be compared across event rates, datasets, and dynamic backends under consistent instrumentation.
+\subsection{Limitations}
+The current implementation still leaves some limitations.
+First, \system works best in common dynamic ANNS scenarios where the indexed database is large and each update batch modifies only a small fraction of it, such as online recommendation.
+When updates are large relative to the existing data, seed effectiveness may be significantly weakened, causing more fallbacks and limited speedups.
+Second, the current prototype maintains seeds in memory and updates them online, but does not persist seed states across process restarts.
+After a restart, previously accumulated seed statistics are not retained.
+Finally, \system currently targets single-node deployments; distributed seed placement and consistency across index partitions are left for future work.

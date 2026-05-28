@@ -5,12 +5,34 @@ glove:
   2:
     operation: "initial"
     start: 0
-    end: 50000
+    end: 500000
   3:
     operation: "batch_insert"
-    start: 50000
+    start: 500000
     end: 1192514
-    batchSize: 2500
+    batchSize: 10000
+    eventRate: 10000
+  4:
+    operation: "waitPending"
+  5:
+    operation: "search"
+  6:
+    operation: "endHPC"
+  gt_url: "none"
+
+openimages:
+  max_pts: 1000000
+  1:
+    operation: "startHPC"
+  2:
+    operation: "initial"
+    start: 0
+    end: 500000
+  3:
+    operation: "batch_insert"
+    start: 500000
+    end: 1000000
+    batchSize: 10000
     eventRate: 10000
   4:
     operation: "waitPending"
@@ -27,12 +49,12 @@ msong:
   2:
     operation: "initial"
     start: 0
-    end: 50000
+    end: 500000
   3:
     operation: "batch_insert"
-    start: 50000
+    start: 500000
     end: 992272
-    batchSize: 2500
+    batchSize: 10000
     eventRate: 10000
   4:
     operation: "waitPending"
@@ -49,12 +71,12 @@ sift:
   2:
     operation: "initial"
     start: 0
-    end: 10000
+    end: 500000
   3:
     operation: "batch_insert"
-    start: 10000
-    end: 500000
-    batchSize: 2500
+    start: 500000
+    end: 1000000
+    batchSize: 10000
     eventRate: 10000
   4:
     operation: "waitPending"

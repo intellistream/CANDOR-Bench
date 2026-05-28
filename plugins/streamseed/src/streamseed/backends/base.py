@@ -11,10 +11,18 @@ import numpy as np
 class StreamSeedConfig:
     ef_search: int = 120
     streamseed_mode: int | str = 1
+    hint_level1_only: int | bool = 0
+    hint_adaptive_gate_mode: int = 0
     hint_hops: int = 1
     hint_max_candidates: int = 256
     hint_gate: float = -1.0
+    hint_qual_gate: float = -1.0
+    hint_cons_gate: float = -1.0
+    hint_gate_m_quantile: float = 0.25
+    hint_gate_o_quantile: float = 0.30
+    hint_gate_min_samples: int = 128
     hint_table_slots: int = 1024
+    hint_slot_capacity: int = 2
 
 
 class StreamSeedBackend(ABC):

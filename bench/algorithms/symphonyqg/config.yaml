@@ -1,0 +1,24 @@
+random-xs:
+  symphonyqg:
+    module: benchmark_anns.bench.algorithms.symphonyqg.symphonyqg
+    constructor: Symphonyqg
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"index_type": "QG", "degree_bound": 32, "efConstruction": 200, "num_iter": 2, "rebuild_every_n_updates": 4, "rebuild_on_query_if_dirty": true}]
+        query-args: |
+          [{"ef": 80}]
+
+sift:
+  symphonyqg:
+    module: benchmark_anns.bench.algorithms.symphonyqg.symphonyqg
+    constructor: Symphonyqg
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"index_type": "QG", "degree_bound": 32, "efConstruction": 120, "num_iter": 3, "rebuild_every_n_updates": 4, "rebuild_on_query_if_dirty": false}]
+        query-args: |
+          [{"ef": 40}]
+

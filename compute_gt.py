@@ -477,10 +477,14 @@ def main():
     distance = ds.distance()
     if distance == 'euclidean':
         common_cmd += 'l2'
+    elif distance == 'angular':
+        # DiskANN's compute_groundtruth supports l2/mips; angular datasets
+        # in this benchmark are handled via l2 in existing pipelines.
+        common_cmd += 'l2'
     elif distance == 'ip':
         common_cmd += 'mips'
     else:
-        raise RuntimeError('Invalid metric')
+        raise RuntimeError(f"Invalid metric: {distance}")
     
     # Map data type
     common_cmd += ' --data_type '

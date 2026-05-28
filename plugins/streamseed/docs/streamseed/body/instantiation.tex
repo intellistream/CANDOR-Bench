@@ -1,0 +1,144 @@
+\section{Instantiation of BriskSeed}
+Implementing \system requires instantiating the parameters that govern the efficiency-recall trade-off under dynamic updates.
+Since the expansion depth is fixed by design (no more than two hops), we focus on three storage parameters:
+\begin{equation}
+\mathbf{x}=(H,S,m),
+\end{equation}
+where $H$ is the capacity of the high-utility layer, and $S$ and $m$ are the number of semantic-shared buckets and the per-bucket seed capacity, respectively.
+
+Our objective is to maximize end-to-end query throughput under a recall constraint, which is equivalent to minimizing the expected per-query time cost:
+\begin{equation}
+\max_{\mathbf{x}} \frac{\mathrm{QPS}_{\mathrm{BriskSeed}}(\mathbf{x})}{\mathrm{QPS}_{\mathrm{baseline}}}
+=
+\frac{T_b}{\mathbb{E}[T](\mathbf{x})}
+\quad \Longleftrightarrow \quad
+\min_{\mathbf{x}} \mathbb{E}[T](\mathbf{x}),
+\end{equation}
+where $T_b$ is the average query latency of the baseline.
+
+\subsection{Performance Model}
+
+For each query, \system first attempts high-utility reuse.
+If this attempt is not accepted, it attempts semantic-shared reuse; if that also fails, the query falls back to the baseline search.
+Let $p_h(H)$ denote the probability that the high-utility reuse succeeds, and let $p_s(m)$ denote the probability that the semantic-shared reuse is accepted.
+Let $T_h$ and $T_s$ denote the time costs of attempting high-utility and semantic-shared reuses, respectively.
+The expected per-query latency is
+\begin{equation}
+\mathbb{E}[T]
+=
+T_h
++
+\bigl(1-p_h(H)\bigr)\Bigl(T_s+\bigl(1-p_s(m)\bigr)T_b\Bigr).
+\label{eq:exp-latency}
+\end{equation}
+
+Both reuse attempts consist of seed retrieval, bounded expansion, and validation.
+Since validation only compares the provisional top-$k$ result with the seed and checks the top-$k$ boundary, its cost is marginal compared with seed inspection and local expansion; we absorb it into the constant terms.
+
+
+
+
+For high-utility reuse, exact-key lookup incurs $O(1)$ cost, while signature-based matching may scan up to $H$ seeds. The subsequent one-hop expansion visits at most $kM$ neighbors, where $M$ is the graph degree bound.
+Let $T_{\mathrm{io}}$, $T_{\mathrm{score}}$, and $T_{\mathrm{comp}}$ denote the calibrated cost of one memory access, one seed scoring operation, and one distance computation, respectively. We use a conservative upper-bound approximation
+\begin{equation}
+T_h \approx H (T_{\mathrm{io}}+T_{\mathrm{score}}) + kM(T_{\mathrm{io}}+T_{\mathrm{comp}}).
+\label{eq:hot-latency}
+\end{equation}
+
+For semantic-shared reuse, with a fixed probing width $P_0$, at most $P_0m$ seeds are inspected.
+Since semantic-shared seeds may trigger guarded two-hop expansion, we approximate
+\begin{equation}
+T_s \approx P_0m(T_{\mathrm{io}}+T_{\mathrm{score}})+ kM^2 (T_{\mathrm{io}}+T_{\mathrm{comp}}).
+\label{eq:semantic-latency}
+\end{equation}
+
+Following the empirical observation that semantic-shared acceptance increases and then saturates as more seeds are inspected, we model
+\begin{equation}
+p_s(m)=1-e^{-\gamma m}, \qquad \gamma>0.
+\end{equation}
+Substituting Equations~\eqref{eq:hot-latency} and~\eqref{eq:semantic-latency} into Equation~\eqref{eq:exp-latency} yields
+\begin{equation}
+\mathbb{E}[T]
+\approx
+aH+\bigl(1-p_h(H)\bigr)\bigl(bm+ce^{-\gamma m}+d\bigr),
+\label{eq:compact-objective}
+\end{equation}
+where $a,b,c,d>0$ are calibrated constants, and terms independent of $H$ and $m$ are absorbed into the constant part.
+
+\subsection{Analytical Instantiation}
+We model the skewed workload using a Zipf distribution over $Q$ query groups, where each group represents recurring or similar queries that can potentially share seeds.
+Let $f_r$ denote the fraction of queries belonging to the $r$-th most frequent group:
+\begin{equation}
+f_r=\frac{r^{-\zeta}}{\sum_{u=1}^{Q}u^{-\zeta}}, \qquad \zeta>0.
+\end{equation}
+where $\zeta$ controls the skewness of the workload.
+
+The cumulative mass of the top-$H$ ranks provides a simple approximation of the high-utility acceptance probability:
+\begin{equation}
+p_h(H)=\sum_{r=1}^{H}f_r
+=
+\frac{\sum_{r=1}^{H}r^{-\zeta}}{\sum_{u=1}^{Q}u^{-\zeta}}.
+\label{eq:ph-exact}
+\end{equation}
+Using the standard integral approximation, we further obtain
+\begin{equation}
+p_h(H)\approx\frac{H^{1-\zeta}-1}{Q^{1-\zeta}-1}.
+\label{eq:ph-approx}
+\end{equation}
+This approximation captures the main effect of increasing $H$: a larger high-utility layer covers more head queries, but also increases scan cost.
+
+
+
+
+Let $B$ be the total seed-storage budget.
+With $S$ fixed, the budget constraint is
+\begin{equation}
+H+Sm=B,
+\qquad
+H,m \in\mathbb{Z}_{+}.
+\label{eq:budget}
+\end{equation}
+Hence the instantiation problem reduces to
+\begin{equation}
+\min_{H,m}\ \mathbb{E}[T](H,m)
+\quad
+\text{s.t.}\quad
+H+Sm=B.
+\label{eq:opt-problem}
+\end{equation}
+
+Since the feasible integer set induced by $H+Sm=B$ is finite, the exact optimum can be obtained by enumeration.
+For deployment, however, we derive a continuous initializer from a local first-order Taylor expansion approximation, and then evaluate only a small integer neighborhood around it.
+Around an operating point $H_0$, we linearize the high-utility acceptance probability as
+\begin{equation}
+\begin{aligned}
+p_h(H) &\approx \beta_0+\beta_1 H,\\
+\beta_0 = p_h(H_0)-&H_0p_h'(H_0), \beta_1 = p_h'(H_0)>0 .
+\end{aligned}
+\end{equation}
+Similarly, around $m_0$, we linearize
+\begin{equation}
+e^{-\gamma m}\approx e^{-\gamma m_0}-\gamma e^{-\gamma m_0}(m-m_0).
+\end{equation}
+These approximations are used in a neighborhood of $(H_0,m_0)$ to obtain a tractable local model.
+Substituting $H=B-Sm$ from Equation~\eqref{eq:budget} into Equation~\eqref{eq:compact-objective} yields a quadratic surrogate in $m$:
+\begin{equation}
+\widetilde{\mathbb{E}}[T](m)=C_2m^2+C_1m+C_0,
+\label{eq:quadratic-surrogate}
+\end{equation}
+where
+\begin{equation}
+\begin{aligned}
+C_2=S\beta_1&\bigl(b-c\gamma e^{-\gamma m_0}\bigr),\\
+C_1=-aS+\bigl(1-&\beta_0-\beta_1B\bigr)\bigl(b-c\gamma e^{-\gamma m_0}\bigr)\\
++\,\beta_1&S\Bigl(d+c\bigl(1+\gamma m_0\bigr)e^{-\gamma m_0}\Bigr).
+\end{aligned}
+\end{equation}
+
+If $b>c\gamma e^{-\gamma m_0}$, the surrogate is strictly convex and its continuous minimizer is
+\begin{equation}
+m_{\mathrm{cont}}^{\star}=-\frac{C_1}{2C_2},
+\qquad
+H_{\mathrm{cont}}^{\star}=B-Sm_{\mathrm{cont}}^{\star}.
+\end{equation}
+In practice, we project $(H_{\mathrm{cont}}^{\star},m_{\mathrm{cont}}^{\star})$ to feasible integers and evaluate a small neighborhood to obtain final configurations.

@@ -104,10 +104,18 @@ std::vector<faiss::idx_t> index_search_warm(
         faiss::idx_t k,
         int ef_search,
   int streamseed_mode,
+  int hint_level1_only,
+  int hint_adaptive_gate_mode,
   int hint_hops,
   int hint_max_candidates,
   float hint_gate,
-  int hint_table_slots) {
+  float hint_qual_gate,
+  float hint_cons_gate,
+  float hint_gate_m_quantile,
+  float hint_gate_o_quantile,
+  int hint_gate_min_samples,
+  int hint_table_slots,
+  int hint_slot_capacity) {
   py::buffer_info x_info = x.request();
   const float* x_ptr = static_cast<const float*>(x_info.ptr);
     std::vector<float> distances(n * k);
@@ -117,10 +125,18 @@ std::vector<faiss::idx_t> index_search_warm(
         faiss::SearchParametersHNSWIncremental params;
         params.efSearch = ef_search;
         params.streamseed_mode = streamseed_mode;
+        params.hint_level1_only = hint_level1_only;
+        params.hint_adaptive_gate_mode = hint_adaptive_gate_mode;
         params.hint_hops = hint_hops;
         params.hint_max_candidates = hint_max_candidates;
         params.hint_gate = hint_gate;
+        params.hint_qual_gate = hint_qual_gate;
+        params.hint_cons_gate = hint_cons_gate;
+        params.hint_gate_m_quantile = hint_gate_m_quantile;
+        params.hint_gate_o_quantile = hint_gate_o_quantile;
+        params.hint_gate_min_samples = hint_gate_min_samples;
         params.hint_table_slots = hint_table_slots;
+        params.hint_slot_capacity = hint_slot_capacity;
          auto search_t0 = std::chrono::steady_clock::now();
      inc->search(n, x_ptr, k, distances.data(), labels.data(), &params);
          auto search_t1 = std::chrono::steady_clock::now();
@@ -462,10 +478,18 @@ PYBIND11_MODULE(PyCANDYAlgo, m) {
           .def("search_warm", &index_search_warm,
                    py::arg("n"), py::arg("x"), py::arg("k"), py::arg("ef_search"),
                    py::arg("streamseed_mode") = 1,
+                 py::arg("hint_level1_only") = 0,
+                 py::arg("hint_adaptive_gate_mode") = 0,
                  py::arg("hint_hops") = 1,
                  py::arg("hint_max_candidates") = 256,
                  py::arg("hint_gate") = -1.0f,
+                 py::arg("hint_qual_gate") = -1.0f,
+                 py::arg("hint_cons_gate") = -1.0f,
+                 py::arg("hint_gate_m_quantile") = 0.25f,
+                 py::arg("hint_gate_o_quantile") = 0.30f,
+                 py::arg("hint_gate_min_samples") = 128,
                  py::arg("hint_table_slots") = 1024,
+                 py::arg("hint_slot_capacity") = 2,
                "Search k nearest neighbors with efSearch and StreamSeed-Core hint control")
           .def("train",&faiss::Index::train_arrays)
           .def("add_with_ids", &faiss::Index::add_arrays_with_ids)

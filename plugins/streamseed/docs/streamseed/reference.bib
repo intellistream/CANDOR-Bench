@@ -1,0 +1,385 @@
+@article{Zhong20255017,
+author = {Zhong, Xiaoyao and Li, Haotian and Jin, Jiabao and Yang, Mingyu and Chu, Deming and Wang, Xiangyu and Shen, Zhitao and Jia, Wei and Gu, George and Xie, Yi and Lin, Xuemin and Shen, Heng Tao and Song, Jingkuan and Cheng, Peng},
+title = {VSAG: An Optimized Search Framework for Graph-Based Approximate Nearest Neighbor Search},
+year = {2025},
+volume = {18},
+number = {12},
+doi = {10.14778/3750601.3750624},
+journal = {Proc. VLDB Endow.},
+pages = {5017--5030},
+numpages = {14}
+}
+
+@inproceedings{Jayaram2019,
+ author = {Jayaram Subramanya, Suhas and Devvrit, Fnu and Simhadri, Harsha Vardhan and Krishnawamy, Ravishankar and Kadekodi, Rohan},
+ booktitle = {Advances in Neural Information Processing Systems},
+ pages = {},
+ title = {DiskANN: Fast Accurate Billion-point Nearest Neighbor Search on a Single Node},
+ volume = {32},
+ year = {2019}
+}
+
+@ARTICLE{Malkov2020824,
+  author={Malkov, Yu A. and Yashunin, D. A.},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence}, 
+  title={Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs}, 
+  year={2020},
+  volume={42},
+  number={4},
+  pages={824-836},
+  keywords={Routing;Complexity theory;Search problems;Data models;Approximation algorithms;Biological system modeling;Brain modeling;Graph and tree search strategies;artificial intelligence;information search and retrieval;information storage and retrieval;information technology and systems;search process;graphs and networks;data structures;nearest neighbor search;big data;approximate search;similarity search},
+  doi={10.1109/TPAMI.2018.2889473}}
+
+@article{Gou2025,
+author = {Gou, Yutong and Gao, Jianyang and Xu, Yuexuan and Long, Cheng},
+title = {SymphonyQG: Towards Symphonious Integration of Quantization and Graph for Approximate Nearest Neighbor Search},
+year = {2025},
+issue_date = {February 2025},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {3},
+number = {1},
+url = {https://doi.org/10.1145/3709730},
+doi = {10.1145/3709730},
+abstract = {Approximate nearest neighbor (ANN) search in high-dimensional Euclidean space has a broad range of applications. Among existing ANN algorithms, graph-based methods have shown superior performance in terms of the time-accuracy trade-off. However, they face performance bottlenecks due to the random memory accesses caused by the searching process on the graph indices and the costs of computing exact distances to guide the searching process. To relieve the bottlenecks, a recent method named NGT-QG makes an attempt by integrating quantization and graph. It (1) replicates and stores the quantization codes of a vertex's neighbors compactly so that they can be accessed sequentially, and (2) uses a SIMD-based implementation named FastScan to efficiently estimate distances based on the quantization codes in batch for guiding the searching process. While NGT-QG achieves promising improvements over the vanilla graph-based methods, it has not fully unleashed the potential of integrating quantization and graph. For instance, it entails a re-ranking step to compute exact distances at the end, which introduces extra random memory accesses; its graph structure is not jointly designed considering the in-batch nature of FastScan, which causes wastes of computation in searching. In this work, following NGT-QG, we present a new method named SymphonyQG, which achieves more symphonious integration of quantization and graph (e.g., it avoids the explicit re-ranking step and refines the graph structure to be more aligned with FastScan). Based on extensive experiments on real-world datasets, SymphonyQG establishes the new state-of-the-art in terms of the time-accuracy trade-off: at 95\% recall, SymphonyQG achieves 1.5x-4.5x QPS compared with the most competitive baselines and achieves 3.5x-17x QPS compared with the classical library HNSWlib across all tested datasets. At the same time, its indexing is at least 8x faster than NGT-QG.},
+journal = {Proc. ACM Manag. Data},
+month = feb,
+articleno = {80},
+numpages = {26},
+keywords = {approximate nearest neighbor search, high-dimensional vector, vector quantization}
+}
+
+@article{Wang2025,
+author = {Wang, Mengzhao and Wu, Haotian and Ke, Xiangyu and Gao, Yunjun and Zhu, Yifan and Zhou, Wenchao},
+title = {Accelerating Graph Indexing for ANNS on Modern CPUs},
+year = {2025},
+issue_date = {June 2025},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {3},
+number = {3},
+url = {https://doi.org/10.1145/3725260},
+doi = {10.1145/3725260},
+abstract = {In high-dimensional vector spaces, Approximate Nearest Neighbor Search (ANNS) is a key component in database and artificial intelligence infrastructures. Graph-based ANNS methods, particularly HNSW, have emerged as leading solutions, offering an impressive trade-off between search efficiency and accuracy. Many vector databases utilize graph indexes as their core algorithms, benefiting from various optimizations to enhance search performance. However, the high indexing time associated with graph algorithms poses a significant challenge, especially given the increasing volume of data, query processing complexity, and dynamic index maintenance demand. This has rendered indexing time a critical performance metric for users.In this paper, we comprehensively analyze the underlying causes of the low graph indexing efficiency on modern CPUs, identifying that distance computation dominates indexing time, primarily due to high memory access latency and suboptimal arithmetic operation efficiency. We demonstrate that distance comparisons during index construction can be effectively performed using compact vector codes at an appropriate compression error. Drawing from insights gained through integrating existing compact coding methods in the graph indexing process, we propose a novel compact coding strategy, named Flash, designed explicitly for graph indexing and optimized for modern CPU architectures. By minimizing random memory accesses and maximizing the utilization of SIMD (Single Instruction, Multiple Data) instructions, Flash significantly enhances cache hit rates and arithmetic operations. Extensive experiments conducted on eight real-world datasets, ranging from ten million to one billion vectors, exhibit that Flash achieves a speedup of 10.4\texttimes{} to 22.9\texttimes{} in index construction efficiency, while maintaining or improving search performance.},
+journal = {Proc. ACM Manag. Data},
+month = jun,
+articleno = {123},
+numpages = {29},
+keywords = {approximate nearest neighbor search, graph-based vector index, vector compression}
+}
+
+
+
+
+
+
+@article{Song2025,
+author = {Song, Ziwen and Wang, Bin and Yang, Xiaochun},
+title = {Accelerating High-Dimensional ANN Search via Skipping Redundant Distance Computations},
+year = {2025},
+issue_date = {December 2025},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {3},
+number = {6},
+url = {https://doi.org/10.1145/3769753},
+doi = {10.1145/3769753},
+abstract = {Graph-based methods for high-dimensional Approximate Nearest Neighbor (ANN) search have achieved remarkable success. Recent studies have revealed that DCO (distance comparison operation) is a bottleneck in graph-based methods due to distance computations. Optimizations such as ADSampling, DDC and DADE are employed to alleviate this issue by terminating the distance computation early. Although these optimizations achieve significant speedup, they rely on an estimation-and-testing process for early termination. Their effectiveness diminishes when SIMD (Single Instruction Multiple Data) acceleration is enabled in distance computation, the cost introduced in estimation-and-testing process may outweigh the benefit of early termination, leading to performance degradation. Furthermore, the best-first-search strategy employed in graph-based methods requires DCO for all neighboring points, incurring redundant distance computation. To address these issues, in this paper, we first perform a cost analysis to reveal the inefficiency of existing DCO optimizations under SIMD-enabled setting. We then analyze the current search strategy to demonstrate that not all neighboring nodes require DCO. Based on these analyses, we present SkipComputing to accelerate the ANN search. Specifically, we first propose a subspace-based candidate search strategy to identify promising points for DCO, thereby eliminating the reliance on estimation-and-testing based DCO optimization for low potential points. We then develop a lower-bound pruning method based on distance decomposition to enable early termination of distance computations in DCO. Finally, we optimize the data layout to reduce the overhead of random memory access during candidate search. When SIMD is enabled, experimental results show that SkipComputing substantially outperforms HNSW, achieving up to 6x performance improvement. Furthermore, it achieves up to 2.7x speedup over state-of-the-art optimization methods while maintaining competitive space efficiency.},
+journal = {Proc. ACM Manag. Data},
+month = dec,
+articleno = {288},
+numpages = {29},
+keywords = {approximate nearest neighbor search, distance comparison operation, graph-based method, high-dimensional data, vector search}
+}
+
+@misc{TweetPerSecond,
+    author = {MARISA MURGATROYD},
+    title = {X/Twitter Statistics},
+    year = {2025},
+    note = {\url{https://liveyourmessage.com/twitter-statistics/}}
+}
+
+@misc{microsoft2025fraud,
+  author       = {Microsoft},
+  title        = {Real-Time Credit Card Fraud Detection with Vector Search},
+  howpublished = {Azure Cosmos DB Samples},
+  year         = {2025},
+  note         = {Accessed: 2025-04-13},
+  url          = {https://learn.microsoft.com/en-us/samples/azurecosmosdb/cosmos-fabric-samples/fraud-detection/}
+}
+
+@misc{aws2024memorydbvector,
+  author       = {Amazon Web Services},
+  title        = {Power real-time vector search capabilities with Amazon MemoryDB},
+  howpublished = {AWS Database Blog},
+  year         = {2024},
+  note         = {Accessed: 2025-04-13},
+  url          = {https://aws.amazon.com/blogs/database/power-real-time-vector-search-capabilities-with-amazon-memorydb/}
+}
+
+@inproceedings{Coleman202238488,
+ author = {Coleman, Benjamin and Segarra, Santiago and Smola, Alexander J and Shrivastava, Anshumali},
+ booktitle = {Advances in Neural Information Processing Systems},
+ editor = {S. Koyejo and S. Mohamed and A. Agarwal and D. Belgrave and K. Cho and A. Oh},
+ pages = {38488--38500},
+ publisher = {Curran Associates, Inc.},
+ title = {Graph Reordering for Cache-Efficient Near Neighbor Search},
+ volume = {35},
+ year = {2022}
+}
+
+@article{Gao202327,
+author = {Gao, Jianyang and Long, Cheng},
+title = {High-Dimensional Approximate Nearest Neighbor Search: with Reliable and Efficient Distance Comparison Operations},
+year = {2023},
+issue_date = {June 2023},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {1},
+number = {2},
+url = {https://doi.org/10.1145/3589282},
+doi = {10.1145/3589282},
+abstract = {Approximate K nearest neighbor (AKNN) search in the high-dimensional Euclidean vector space is a fundamental and challenging problem. We observe that in high-dimensional space, the time consumption of nearly all AKNN algorithms is dominated by that of the distance comparison operations (DCOs). For each operation, it scans full dimensions of an object and thus, runs in linear time wrt the dimensionality. To speed it up, we propose a randomized algorithm named ADSampling which runs in logarithmic time wrt the dimensionality for the majority of DCOs and succeeds with high probability. In addition, based on ADSampling we develop one generic and two algorithm-specific techniques as plugins to enhance existing AKNN algorithms. Both theoretical and empirical studies confirm that: (1) our techniques introduce nearly no accuracy loss and (2) they consistently improve the efficiency.},
+journal = {Proc. ACM Manag. Data},
+month = jun,
+articleno = {137},
+numpages = {27},
+keywords = {distance comparison operation, high-dimensional nearest neighbor search, random projection}
+}
+
+@INPROCEEDINGS{Yang20251098,
+  author={Yang, Mingyu and Li, Wentao and Jin, Jiabao and Zhong, Xiaoyao and Wang, Xiangyu and Shen, Zhitao and Jia, Wei and Wang, Wei},
+  booktitle={2025 IEEE 41st International Conference on Data Engineering (ICDE)}, 
+  title={Effective and General Distance Computation for Approximate Nearest Neighbor Search}, 
+  year={2025},
+  volume={},
+  number={},
+  pages={1098-1110},
+  keywords={Estimation error;Accuracy;Runtime;Databases;Nearest neighbor methods;Search engines;Search problems;Vectors;Computational efficiency;Principal component analysis;Approximate Nearest Neighbor Search;Distance Computation;Data-Driven;Vector Databases},
+  doi={10.1109/ICDE65448.2025.00087}}
+
+@article{Deng2024812,
+author = {Deng, Liwei and Chen, Penghao and Zeng, Ximu and Wang, Tianfu and Zhao, Yan and Zheng, Kai},
+title = {Efficient Data-Aware Distance Comparison Operations for High-Dimensional Approximate Nearest Neighbor Search},
+year = {2024},
+issue_date = {November 2024},
+publisher = {VLDB Endowment},
+volume = {18},
+number = {3},
+issn = {2150-8097},
+url = {https://doi.org/10.14778/3712221.3712244},
+doi = {10.14778/3712221.3712244},
+abstract = {High-dimensional approximate K nearest neighbor search (AKNN) is a fundamental task for various applications, including information retrieval. Most existing algorithms for AKNN can be decomposed into two main components, i.e., candidate generation and distance comparison operations (DCOs). While different methods have unique ways of generating candidates, they all share the same DCO process. In this study, we focus on accelerating the process of DCOs that dominates the time cost in most existing AKNN algorithms. To achieve this, we propose an Data-Aware Distance Estimation approach, called DADE, which approximates the exact distance in a lower-dimensional space. We theoretically prove that the distance estimation in DADE is unbiased in terms of data distribution. Furthermore, we propose an optimized estimation based on the unbiased distance estimation formulation. In addition, we propose a hypothesis testing approach to adaptively determine the number of dimensions needed to estimate the exact distance with sufficient confidence. We integrate DADE into widely-used AKNN search algorithms, e.g., IVF and HNSW, and conduct extensive experiments to demonstrate the superiority.},
+journal = {Proc. VLDB Endow.},
+month = nov,
+pages = {812–821},
+numpages = {10}
+}
+
+@article{Zhao20231979,
+author = {Zhao, Xi and Tian, Yao and Huang, Kai and Zheng, Bolong and Zhou, Xiaofang},
+title = {Towards Efficient Index Construction and Approximate Nearest Neighbor Search in High-Dimensional Spaces},
+year = {2023},
+issue_date = {April 2023},
+publisher = {VLDB Endowment},
+volume = {16},
+number = {8},
+issn = {2150-8097},
+url = {https://doi.org/10.14778/3594512.3594527},
+doi = {10.14778/3594512.3594527},
+abstract = {The approximate nearest neighbor (ANN) search in high-dimensional spaces is a fundamental but computationally very expensive problem. Many methods have been designed for solving the ANN problem, such as LSH-based methods and graph-based methods. The LSH-based methods can be costly to reach high query quality due to the hash-boundary issues, while the graph-based methods can achieve better query performance by greedy expansion in an approximate proximity graph (APG). However, the construction cost of these APGs can be one or two orders of magnitude higher than that for building hash-based indexes. In addition, they fail short in incrementally maintaining APGs as the underlying dataset evolves. In this paper, we propose a novel approach named LSH-APG to build APGs and facilitate fast ANN search using a lightweight LSH framework. LSH-APG builds an APG via consecutively inserting points based on their nearest neighbor relationship with an efficient and accurate LSH-based search strategy. A high-quality entry point selection technique and an LSH-based pruning condition are developed to accelerate index construction and query processing by reducing the number of points to be accessed during the search. LSH-APG supports fast maintenance of APGs in lieu of building them from scratch as dataset evolves. Its maintenance cost and query cost for a point is proven to be less affected by dataset cardinality. Extensive experiments on real-world and synthetic datasets demonstrate that LSH-APG incurs significantly less construction cost but achieves better query performance than existing graph-based methods.},
+journal = {Proc. VLDB Endow.},
+month = apr,
+pages = {1979–1991},
+numpages = {13}
+}
+
+@inproceedings{Chung20252418,
+author = {Chung, Jun Woo and Lin, Huawei and Zhao, Weijie},
+title = {Locality-Sensitive Indexing for Graph-Based Approximate Nearest Neighbor Search},
+year = {2025},
+isbn = {9798400715921},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3726302.3730028},
+doi = {10.1145/3726302.3730028},
+abstract = {The burgeoning size of modern text datasets has heightened the need for efficient text retrieval systems. For such applications, Approximate Nearest Neighbor (ANN) search algorithms, and in particular graph-based methods have long been established as the leading approach in terms of recall and search speed. However, the data and execution dependencies of vertices increase the construction workload and complicate maintenance processes for the constructed index. In this paper, we present Locality-Sensitive Indexing for Graph-Based Search (or LIGS), which utilizes independent locality-sensitive hashing algorithms to simulate a proximity graph, on which a standard graph search can be performed. We show that LIGS offers substantially faster maintenance (insertion/deletion) speeds and better conservation of graph quality compared to state-of-the-art graph-based ANN methods, demonstrating LIGS as a promising alternative for maintenance-heavy scenarios.},
+booktitle = {Proceedings of the 48th International ACM SIGIR Conference on Research and Development in Information Retrieval},
+pages = {2418–2428},
+numpages = {11},
+keywords = {approximate nearest neighbor search, databases, information retrieval, recommender systems},
+location = {Padua, Italy},
+series = {SIGIR '25}
+}
+
+@article{Ma2024986,
+author = {Ma, Ruiyao and Zhu, Yifan and Zheng, Baihua and Chen, Lu and Ge, Congcong and Gao, Yunjun},
+title = {GTI: Graph-Based Tree Index with Logarithm Updates for Nearest Neighbor Search in High-Dimensional Spaces},
+year = {2024},
+issue_date = {December 2024},
+publisher = {VLDB Endowment},
+volume = {18},
+number = {4},
+issn = {2150-8097},
+url = {https://doi.org/10.14778/3717755.3717760},
+doi = {10.14778/3717755.3717760},
+abstract = {Nearest neighbor search (NNS) is fundamental for high-dimensional space retrieval and impacts various fields, such as pattern recognition, information retrieval, recommendation systems, and vector database management. Among existing NNS methods, graph-based methods often excel in query accuracy and efficiency. However, these methods face significant challenges, including high construction costs and difficulties with dynamic data updates. Recent efforts have focused on combining graph methods with hashing, quantization, and tree-based approaches to address these issues, but problems with large index sizes and update performance remain unresolved. In response, this paper proposes GTI, a novel, lightweight, and dynamic graph-based tree index for high-dimensional NNS. GTI constructs a tree index built across the entire dataset and employs a lightweight graph index at the level 1 of the tree to significantly reduce graph construction costs. It also features effective data insertion and deletion algorithms that enable logarithmic real-time updates. Additionally, we have developed an effective NNS algorithm for GTI, which not only achieves approximate search performance on par with SOTA graph-based methods but also supports exact NNS. Extensive experiments on six real-world datasets demonstrate that GTI achieves an approximately 10\texttimes{} improvement in update efficiency compared to SOTA tree-based methods, while achieving search effectiveness comparable to SOTA approximate NNS methods. These results underscore the potential of GTI for effective application in dynamic and evolving scenarios.},
+journal = {Proc. VLDB Endow.},
+month = dec,
+pages = {986–999},
+numpages = {14}
+}
+
+
+@article{Yang20251825,
+author = {Yang, Shuo and Xie, Jiadong and Liu, Yingfan and Yu, Jeffrey Xu and Gao, Xiyue and Wang, Qianru and Peng, Yanguo and Cui, Jiangtao},
+title = {Revisiting the Index Construction of Proximity Graph-Based Approximate Nearest Neighbor Search},
+year = {2025},
+issue_date = {February 2025},
+publisher = {VLDB Endowment},
+volume = {18},
+number = {6},
+issn = {2150-8097},
+url = {https://doi.org/10.14778/3725688.3725709},
+doi = {10.14778/3725688.3725709},
+abstract = {Proximity graphs (PG) have gained increasing popularity as the state-of-the-art solutions to k-approximate nearest neighbor (k-ANN) search on high-dimensional data, which serves as a fundamental function in various fields, e.g., retrieval-augmented generation. Although PG-based approaches have the best k-ANN search performance, their index construction cost is superlinear to the number of points. Such superlinear cost substantially limits their scalability in the era of big data. Hence, the goal of this paper is to accelerate the construction of PG-based methods without compromising their k-ANN search performance.To achieve this goal, two mainstream categories of PG are revisited: relative neighborhood graph (RNG) and navigable small world graph (NSWG). By revisiting their construction process, we find the issues of construction efficiency. To address these issues, we propose a new construction framework with a novel pruning strategy for edge selection, which accelerates RNG construction while keeping its k-ANN search performance. Then, we integrate this framework into NSWG construction to enhance both the construction efficiency and k-ANN search performance of NSWG. Extensive experiments are conducted to validate our construction framework for both RNG and NSWG, and that it significantly reduces the PG construction cost, achieving up to 5.6x speedup, while not compromising the k-ANN search performance.},
+journal = {Proc. VLDB Endow.},
+month = feb,
+pages = {1825–1838},
+numpages = {14}
+}
+
+
+@inproceedings{Ono20231659,
+author = {Ono, Naoki and Matsui, Yusuke},
+title = {Relative NN-Descent: A Fast Index Construction for Graph-Based Approximate Nearest Neighbor Search},
+year = {2023},
+isbn = {9798400701085},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3581783.3612290},
+doi = {10.1145/3581783.3612290},
+abstract = {Approximate Nearest Neighbor Search (ANNS) is the task of finding the database vector that is closest to a given query vector. Graph-based ANNS is the family of methods with the best balance of accuracy and speed for million-scale datasets. However, graph-based methods have the disadvantage of long index construction time. Recently, many researchers have improved the tradeoff between accuracy and speed during a search. However, there is little research on accelerating index construction. We propose a fast graph construction algorithm, Relative NN-Descent (RNN-Descent). RNN-Descent combines NN-Descent, an algorithm for constructing approximate K-nearest neighbor graphs (K-NN graphs), and RNG Strategy, an algorithm for selecting edges effective for search. This algorithm allows the direct construction of graph-based indexes without ANNS. Experimental results demonstrated that the proposed method had the fastest index construction speed, while its search performance is comparable to existing state-of-the-art methods such as NSG. For example, in experiments on the GIST1M dataset, the construction of the proposed method is 2x faster than NSG. Additionally, it was even faster than the construction speed of NN-Descent.},
+booktitle = {Proceedings of the 31st ACM International Conference on Multimedia},
+pages = {1659–1667},
+numpages = {9},
+keywords = {approximate nearest neighbor search, graph-based index},
+location = {Ottawa ON, Canada},
+series = {MM '23}
+}
+
+
+@article{Voruganti2025,
+author = {Voruganti, Sairaj and \"{O}zsu, M. Tamer},
+title = {MIRAGE-ANNS: Mixed Approach Graph-based Indexing for Approximate Nearest Neighbor Search},
+year = {2025},
+issue_date = {June 2025},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {3},
+number = {3},
+url = {https://doi.org/10.1145/3725325},
+doi = {10.1145/3725325},
+abstract = {Approximate nearest neighbor search (ANNS) on high dimensional vectors is important for numerous applications, such as search engines, recommendation systems, and more recently, large language models (LLMs), where Retrieval Augmented Generation (RAG) is used to add context to an LLM query. Graph-based indexes built on these vectors have been shown to perform best but have challenges. These indexes can either employ refinement-based construction strategies such as K-Graph and NSG, or increment-based strategies such as HNSW. Refinement-based approaches have fast construction times, but worse search performance and do not allow for incremental inserts, requiring a full reconstruction each time new vectors are added to the index. Increment-based approaches have good search performance and allow for incremental inserts, but suffer from slow construction. This work presents MIRAGE-ANNS (Mixed Incremental Refinement Approach Graph-based Exploration for Approximate Nearest Neighbor Search) that constructs the index as fast as refinement-based approaches while retaining search performance comparable or better than increment-based ones. It also allows incremental inserts. We show that MIRAGE achieves state of the art construction and query performance, outperforming existing methods by up to 2x query throughput on real-world datasets.},
+journal = {Proc. ACM Manag. Data},
+month = jun,
+articleno = {188},
+numpages = {27},
+keywords = {graph-based index, nearest neighbor search, vector search}
+}
+
+
+@article{Yue20254337,
+author = {Yue, Ziyang and Zheng, Bolong and Xu, Ling and Xu, Kanru and Zhang, Shuhao and Du, Yajuan and Gao, Yunjun and Zhou, Xiaofang and Jensen, Christian S.},
+title = {Select Edges Wisely: Monotonic Path Aware Graph Layout Optimization for Disk-Based ANN Search},
+year = {2025},
+issue_date = {July 2025},
+publisher = {VLDB Endowment},
+volume = {18},
+number = {11},
+issn = {2150-8097},
+url = {https://doi.org/10.14778/3749646.3749697},
+doi = {10.14778/3749646.3749697},
+abstract = {Approximate nearest neighbor (ANN) search is a critical problem in various real-world applications. However, as one of the most promising solutions to ANN search, graph-based indexes often suffer from high memory consumption. Although a few studies attempt to alleviate this issue by storing the index on inexpensive disk storage, they still face challenges such as insufficient data locality and low efficiency when optimizing the graph layout on disk. Therefore, we propose MARGO, a monotonic path-aware graph layout optimization method for disk-based ANN search. First, we present the essence of graph layout optimization in disk-based ANN search, and design a monotonic path-aware objective function that weighs the edges based on their importance in monotonic paths, supported by rigorous theoretical analysis. Second, we propose a greedy algorithm that prioritizes high-weight edges to accommodate more monotonic paths. To enhance efficiency, MARGO introduces a two stage decoupling method that processes intra-cluster edges in parallel first, followed by inter-cluster edges. Third, we develop a weight computation strategy that computes edge weights on-the-fly during index construction with almost no additional overhead. A comprehensive experimental study demonstrates that MARGO improves search efficiency by up to 26.6\% while maintaining the same recall, and accelerates the graph layout optimization by up to 5.5\texttimes{}.},
+journal = {Proc. VLDB Endow.},
+month = jul,
+pages = {4337–4349},
+numpages = {13}
+}
+
+
+@article{Liu20252268,
+author = {Liu, Dawei and Zheng, Bolong and Yue, Ziyang and Ruan, Fuhao and Zhou, Xiaofang and Jensen, Christian S.},
+title = {Wolverine: Highly Efficient Monotonic Search Path Repair for Graph-Based ANN Index Updates},
+year = {2025},
+issue_date = {March 2025},
+publisher = {VLDB Endowment},
+volume = {18},
+number = {7},
+issn = {2150-8097},
+url = {https://doi.org/10.14778/3734839.3734860},
+doi = {10.14778/3734839.3734860},
+abstract = {Approximate nearest neighbor (ANN) search on high-dimensional vector data is core functionality in an increasing number of real-world applications. However, most existing methods only focus on accelerating search by means of indexing that assumes that the data is static. The few methods capable of contending with dynamic data often face challenges such as decreased query accuracy following updates and low update efficiency. In this study, we propose Wolverine, the first proposal that, to our knowledge, enables efficient monotonic search path repair, thereby solving the graph-based ANN index update problem. Wolverine repairs disrupted monotonic search paths by adding in-edges to the out-neighbors of a point to be deleted. To improve efficiency, Wolverine+ restricts the search space to be within the 2-hop neighbors of the point to be deleted. In addition, Wolverine++ employs a sophisticated candidate selection policy to find high-quality candidates in the reduced search space, simultaneously improving accuracy and efficiency. An experimental study on 9 real-world datasets demonstrates that Wolverine is capable of accelerating the deletion throughput by up to 11X and achieving more stable recall during updates compared to the state-of-the-art dynamic ANN search method.},
+journal = {Proc. VLDB Endow.},
+month = mar,
+pages = {2268–2280},
+numpages = {13}
+}
+
+@INPROCEEDINGS{Pan20235987,
+  author={Pan, Yu and Sun, Jianxin and Yu, Hongfeng},
+  booktitle={2023 IEEE International Conference on Big Data (BigData)}, 
+  title={LM-DiskANN: Low Memory Footprint in Disk-Native Dynamic Graph-Based ANN Indexing}, 
+  year={2023},
+  volume={},
+  number={},
+  pages={5987-5996},
+  keywords={Technological innovation;Scalability;Memory management;Routing;Big Data applications;Search problems;Natural language processing;Approximate Nearest Neighbor;Graph Index;Memory Footprint},
+  doi={10.1109/BigData59044.2023.10386517}}
+
+@misc{Singh2021,
+      title={FreshDiskANN: A Fast and Accurate Graph-Based ANN Index for Streaming Similarity Search}, 
+      author={Aditi Singh and Suhas Jayaram Subramanya and Ravishankar Krishnaswamy and Harsha Vardhan Simhadri},
+      year={2021},
+      eprint={2105.09613},
+      archivePrefix={arXiv},
+      primaryClass={cs.IR},
+      url={https://arxiv.org/abs/2105.09613}, 
+}
+
+
+@article{Wang202627,
+author = {Wang, Mingqi and Dong, Junyao and Wu, Zhuoyan and Liu, Jun and Zhang, Ruicheng and Zhao, Jianjun and Wan, Ruipeng and Lei, Xinyan and Zhang, Shuhao and Zheng, Bolong and Liu, Haikun and Liao, Xiaofei and Jin, Hai},
+title = {CANDOR-Bench: Benchmarking In-Memory Continuous ANNS under Dynamic Open-World Streams [Experiments \& Analysis]},
+year = {2026},
+issue_date = {February 2026},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {4},
+number = {1},
+url = {https://doi.org/10.1145/3786630},
+doi = {10.1145/3786630},
+abstract = {Continuous Approximate Nearest Neighbor Search (ANNS) over real-time vector data streams is an increasingly critical yet underexplored problem. In open-world settings—where data distributions shift, noise accumulates, and concurrent access is common—existing ANNS algorithms, originally designed for static or simplified streaming scenarios, struggle to balance ingestion latency, retrieval quality, and update efficiency. While benchmarks such as ANN-Benchmarks and Big-ANN-Benchmarks have standardized evaluation in static or large-scale settings, they fail to capture the nuanced, high-churn dynamics of real-world streams. We introduce CANDOR-Bench (Continuous Approximate Nearest neighbor search under Dynamic Open-woRld Streams, a benchmarking framework built on Big-ANN-Benchmark to evaluate in-memory ANNS under dynamic, open-world conditions. CANDOR-Bench supports high-frequency ingestion (up to hundreds of thousands of vectors per second), adaptive drift modeling (including modality shifts), stochastic noise injection, and concurrent query-update execution—all without requiring modifications to algorithm code. Across 12 datasets and 19 representative ANNS algorithms, our evaluation reveals that no single ANNS algorithm consistently delivers high recall, throughput, and update efficiency across dynamic open-world scenarios, which challenges assumptions drawn from static benchmarks. This variability reflects deeper trade-offs inherent to streaming settings. For example, smaller update batches improve data freshness but can introduce higher insertion overhead and reduce accuracy. We further observe that throughput in concurrent settings is often constrained by insertion overhead rather than query latency, which highlights a mismatch between streaming workloads and designs originally tuned for offline construction.},
+journal = {Proc. ACM Manag. Data},
+month = apr,
+articleno = {16},
+numpages = {27},
+keywords = {approximate nearest neighbor search, vector database, data streams, benchmarking}
+}
+
+@inproceedings{Chen20233225,
+author = {Chen, Patrick and Chang, Wei-Cheng and Jiang, Jyun-Yu and Yu, Hsiang-Fu and Dhillon, Inderjit and Hsieh, Cho-Jui},
+title = {FINGER: Fast Inference for Graph-based Approximate Nearest Neighbor Search},
+year = {2023},
+isbn = {9781450394161},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3543507.3583318},
+doi = {10.1145/3543507.3583318},
+booktitle = {Proceedings of the ACM Web Conference 2023},
+pages = {3225–3235},
+numpages = {11},
+keywords = {Approximate K-Nearest Neighbor Search (AKNNS), Graph-based Approximate K-Nearest Neighbor Search., Similarity Search},
+location = {Austin, TX, USA},
+series = {WWW '23}
+}

@@ -95,10 +95,18 @@ class FaissHnswStreamSeedBackend(StreamSeedBackend):
                 k,
                 self.config.ef_search,
                 int(self.config.streamseed_mode),
+                int(self.config.hint_level1_only),
+                int(self.config.hint_adaptive_gate_mode),
                 self.config.hint_hops,
                 self.config.hint_max_candidates,
                 self.config.hint_gate,
+                self.config.hint_qual_gate,
+                self.config.hint_cons_gate,
+                self.config.hint_gate_m_quantile,
+                self.config.hint_gate_o_quantile,
+                int(self.config.hint_gate_min_samples),
                 self.config.hint_table_slots,
+                self.config.hint_slot_capacity,
             )
         )
 
