@@ -1,0 +1,8 @@
+/.vscode
+/build
+/backup
+*/sift
+*.tar.gz
+*.fvecs
+!data/**/*.sh
+!data/**/README.md

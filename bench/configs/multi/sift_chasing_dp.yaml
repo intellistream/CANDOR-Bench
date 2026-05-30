@@ -1,0 +1,36 @@
+data:
+  dataset_name: sift
+  max_elements: -1
+  begin_num: 500000
+  data_type: float
+  data_path: ../data/sift/sift_base.bin
+  incr_query_path: ../data/sift/sift_base.bin
+  overall_query_path: ../data/sift/sift_query.bin
+  overall_gt_path: ../data/sift/sift_base.gt20
+
+index:
+  index_type: annchor
+  m: 16
+  ef_construction: 200
+
+search:
+  recall_at: 10
+  ef_search: [64]
+  enable_mvcc: [true]
+
+workload:
+  batch_size: [20]
+  num_threads: 32
+  queue_size: 0
+  with_external_rw_lock: false
+  query_mode: chasing
+  rate_groups(r/w):
+    - {read: 999999999, write: 999999999}
+
+result:
+  output_dir: ./result/multi_sift_chasing_dp
+
+compare:
+  enabled: false
+  simulate:
+    enabled: false

@@ -1,0 +1,47 @@
+data:
+  dataset_name: sift
+  max_elements: 1000000
+  begin_num: 50000
+  data_type: float
+  data_path: ../data/sift/sift_base.bin
+  incr_query_path: ../data/sift/sift_query_stream.bin
+  incr_gt_path: ../data/sift/sift_stream_i20_offset_index.txt
+  overall_query_path: ../data/sift/sift_query.bin
+  overall_gt_path: ../data/sift/sift_base.gt20
+
+index:
+  index_type: annchor
+  m: 16
+  ef_construction: 200
+
+search:
+  recall_at: 10
+  ef_search: 35
+  enable_mvcc: [true, false]
+
+workload:
+  batch_size: 20
+  num_threads: [8, 16, 32, 64]
+  queue_size: 0
+  rate_groups(r/w):
+    # balanced workloads
+    - [20000, 20000]
+    # read-heavy workloads  
+    - [4000, 36000]
+    # write-heavy workloads
+    - [36000, 4000]
+
+  with_external_rw_lock: false
+  query_mode: chasing
+
+compare:
+  enabled: false
+  simulate:
+    enabled: false
+
+result:
+  output_dir: ./result/sigmod_2026_02_16
+
+profile:
+  memory_monitor_interval: 100
+  enable_memory_profile: true

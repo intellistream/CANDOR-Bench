@@ -1,0 +1,14 @@
+[submodule "bench/algorithms/hnsw/hnswlib"]
+	path = bench/algorithms/hnsw/hnswlib
+	url = https://github.com/intellistream/hnswlib.git
+	branch = master
+
+[submodule "bench/algorithms/parlayann/parlayann"]
+	path = bench/algorithms/parlayann/parlayann
+	url = https://github.com/Kwan-Yiu/ParlayANN.git
+	branch = debug
+
+[submodule "bench/algorithms/vamana/diskann"]
+	path = bench/algorithms/vamana/diskann
+	url = https://github.com/Kwan-Yiu/DiskANN.git
+	branch = pic

@@ -1,0 +1,28 @@
+build*/
+__pycache__/
+.vscode/
+data/*
+!data/*.py
+!data/*.md
+*.so
+bench/bench
+bench/algorithms/parlayann/parlayann/*
+bench/algorithms/hnsw/hnswlib/*
+result/
+result_lag/
+plot/
+output/
+.cache/
+proof/
+
+*.out
+*.csv
+*.png
+result*/
+*.log
+
+# local secrets
+.env
+
+# third-party submodules (tracked via .gitmodules, contents not vendored)
+bench/algorithms/vamana/diskann/*

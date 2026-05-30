@@ -1,0 +1,40 @@
+data:
+  dataset_name: deep1M
+  max_elements: 1000000
+  begin_num: 50000
+  data_type: float
+  data_path: ../data/deep1M/deep1M_base.bin
+  incr_query_path: ../data/deep1M/deep1M_query_stream.bin
+  overall_query_path: ../data/deep1M/deep1M_query.bin
+  overall_gt_path: ../data/deep1M/deep1M_base.gt20
+
+index:
+  index_type: annchor-dev
+  m: 16
+  ef_construction: 200
+
+search:
+  recall_at: 10
+  ef_search: 35
+  enable_mvcc: true
+  lazy_recovery_ratio: [1.0, 0.5]
+
+workload:
+  batch_size: 20
+  num_threads: 32
+  queue_size: 0
+  rate_groups(r/w):
+    - [999999, 999999]
+  with_external_rw_lock: false
+  query_mode: chasing
+
+compare:
+  enabled: false
+  simulate:
+    enabled: false
+
+result:
+  output_dir: ./result/m2_deep1m
+
+profile:
+  enable_memory_profile: false

@@ -1,0 +1,42 @@
+data:
+  dataset_name: sift
+  max_elements: 1000000
+  begin_num: 500000
+  data_type: float
+  data_path: ../data/sift/sift_base.bin
+  incr_query_path: ../data/sift/sift_query_stream.bin
+  overall_query_path: ../data/sift/sift_query.bin
+  overall_gt_path: ../data/sift/sift_base.gt20
+
+index:
+  index_type: annchor
+  m: 16
+  ef_construction: 200
+
+search:
+  recall_at: 10
+  ef_search: 64
+  use_node_lock: false
+  enable_mvcc: [true, false]
+  enable_s3: false
+  enable_search_sharing: false
+  enable_warm_start: false
+
+workload:
+  batch_size: 2000
+  num_threads: 32
+  queue_size: 0
+  rate_groups(r/w):
+    - [999999, 999999]
+  with_external_rw_lock: false
+  query_mode: round_robin
+
+compare:
+  enabled: false
+
+result:
+  output_dir: /home/junyao/code/ANN-CC-bench/bench/result/mvcc_vs_nolock_b2000
+
+profile:
+  memory_monitor_interval: 100
+  enable_memory_profile: false

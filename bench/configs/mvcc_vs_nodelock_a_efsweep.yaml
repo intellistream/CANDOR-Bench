@@ -1,0 +1,39 @@
+data:
+  dataset_name: sift
+  max_elements: 1000000
+  begin_num: 500000
+  data_type: float
+  data_path: ../data/sift/sift_base.bin
+  incr_query_path: ../data/sift/sift_query_stream.bin
+  overall_query_path: ../data/sift/sift_query.bin
+  overall_gt_path: ../data/sift/sift_base.gt20
+
+index:
+  index_type: hnsw
+  m: 16
+  ef_construction: 200
+
+search:
+  recall_at: 10
+  ef_search: [10, 35, 50, 100, 200, 500]
+  use_node_lock: [true, false]
+  enable_search_sharing: false
+
+workload:
+  batch_size: 20
+  num_threads: [32]
+  queue_size: 0
+  rate_groups(r/w):
+    - [999999, 999999]
+  with_external_rw_lock: false
+  query_mode: chasing
+
+compare:
+  enabled: false
+
+result:
+  output_dir: /home/junyao/code/ANN-CC-bench/experiments/helping/build/results/mvcc_vs_nodelock/a_efsweep
+
+profile:
+  memory_monitor_interval: 100
+  enable_memory_profile: true

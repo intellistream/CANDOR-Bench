@@ -1,0 +1,38 @@
+data:
+  dataset_name: sift
+  max_elements: 1000000
+  begin_num: 50000
+  data_type: float
+  data_path: ../data/sift/sift_base.bin
+  incr_query_path: ../data/sift/sift_query_stream.bin
+  overall_query_path: ../data/sift/sift_query.bin
+  overall_gt_path: ../data/sift/sift_base.gt20
+
+index:
+  index_type: hnsw
+  m: 16
+  ef_construction: 200
+
+search:
+  recall_at: 10
+  ef_search: 35
+  use_node_lock: false
+
+workload:
+  batch_size: 20
+  num_threads: [1, 2, 4, 8, 16, 32, 48, 64]
+  queue_size: 0
+  rate_groups(r/w):
+    - [20000, 20000]
+  with_external_rw_lock: false
+  query_mode: chasing
+
+compare:
+  enabled: false
+
+result:
+  output_dir: ./result/thread_scalability_1M_mvcc
+
+profile:
+  memory_monitor_interval: 100
+  enable_memory_profile: false
