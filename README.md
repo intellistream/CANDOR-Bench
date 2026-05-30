@@ -1,4 +1,4 @@
-# CANDOR-Bench-CC
+# CANDOR-Bench CC Track
 
 A benchmark harness for **concurrent** approximate-nearest-neighbor (ANN) vector
 indexes. It drives mixed insert + search workloads against graph-based ANN
