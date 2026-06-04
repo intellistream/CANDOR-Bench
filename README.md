@@ -4,6 +4,29 @@
 
 Streaming vector index benchmarking framework.
 
+## Publication
+
+This repository accompanies the following paper:
+
+- Mingqi Wang et al. "CANDOR-Bench: Benchmarking In-Memory Continuous ANNS under Dynamic Open-World Streams." SIGMOD 2026.
+
+## Table of Contents
+- [Quick Start Guide](#quick-start-guide)
+  - [Build With Docker](#Build-With-Docker)
+  - [Example](#Example)
+  - [Usage](#More-Usage)
+- [Project Structure](#Project-Structure)
+- [Datasets and Algorithms](#Datasets-and-Algorithms)
+  - [Summary of Datasets](#Summary-of-Datasets)
+  - [Summary of Algorithms](#Summary-of-Algorithms)
+<!--   - [Docker Support](#docker-support)
+  - [Build Without Docker](#build-without-docker)
+    - [Build with CUDA Support](#build-with-cuda-support)
+    - [Build without CUDA (CPU-Only Version)](#build-without-cuda-cpu-only-version)
+  - [Installing PyCANDY](#installing-pycandy)
+  - [CLion Configuration](#clion-configuration)
+- [Evaluation Scripts](#evaluation-scripts) -->
+
 ## 1. One-click deployment
 
 ```bash
