@@ -49,3 +49,5 @@ PyCANDYAlgo.egg-info/
 dist/
 commit_info
 commit.sh
+refman.pdf
+__pycache__/

@@ -73,10 +73,10 @@ RUN sh -c "python3 setup.py install && \
 
 #RUN sh -c "python3 setup.py build_ext && python3 setup.py install"
 
-WORKDIR /app/GTI/GTI/extern_libraries/n2
+WORKDIR /app/thirdparty/GTI/GTI/extern_libraries/n2
 RUN mkdir -p build && make shared_lib
 
-WORKDIR /app/GTI/GTI
+WORKDIR /app/thirdparty/GTI/GTI
 RUN mkdir -p bin build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j && make install
 
 # WORKDIR /app/DiskANN

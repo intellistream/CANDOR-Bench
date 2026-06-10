@@ -1,0 +1,5 @@
+# dataset payloads are local; keep only the prep scripts in git
+*
+!*.py
+!.gitignore
+!README.md

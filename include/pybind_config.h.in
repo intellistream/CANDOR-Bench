@@ -2,7 +2,7 @@
 // Created by tony on 04/06/22.
 //
 
-#ifndef CANDY_PYBIND_CONFIG_H_IN_H_
-#define CANDY_PYBIND_CONFIG_H_IN_H_
-#define CANDY_PYBIND @CANDY_PYBIND@
+#ifndef CANDOR_PYBIND_CONFIG_H_IN_H_
+#define CANDOR_PYBIND_CONFIG_H_IN_H_
+#define CANDOR_PYBIND @CANDOR_PYBIND@
 #endif

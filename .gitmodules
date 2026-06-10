@@ -3,30 +3,22 @@
 	url = https://github.com/intellistream/big-ann-benchmarks.git
 	branch = feature/cache-miss
 [submodule "GTI"]
-	path = GTI
+	path = thirdparty/GTI
 	url = https://github.com/MingqiWang-coder/GTI-Graph-based-Tree-Index.git
 	branch = main
-[submodule "DiskANN"]
-	path = DiskANN
-	url = https://github.com/MingqiWang-coder/DiskANN.git
-	branch = diskv2
 [submodule "IP-DiskANN"]
-	path = IP-DiskANN
+	path = thirdparty/IP-DiskANN
 	url = https://github.com/intellistream/IP-DiskANN.git
 	branch = main
 [submodule "PLSH"]
-	path = PLSH
+	path = thirdparty/PLSH
 	url = https://github.com/Kwan-Yiu/PLSH.git
 	branch = master
-[submodule "src/CANDY/ConcurrentIndex/hnsw/hnswlib"]
-	path = src/CANDY/ConcurrentIndex/hnsw/hnswlib
-	url = https://github.com/intellistream/hnswlib.git
-	branch = instr
-[submodule "src/CANDY/ConcurrentIndex/parlayann/parlayann"]
-	path = src/CANDY/ConcurrentIndex/parlayann/parlayann
+[submodule "concurrency/index/parlayann/parlayann"]
+	path = src/index/concurrent/parlayann/parlayann
 	url = https://github.com/Kwan-Yiu/ParlayANN.git
 	branch = debug
-[submodule "src/CANDY/ConcurrentIndex/vamana/diskann"]
-	path = src/CANDY/ConcurrentIndex/vamana/diskann
+[submodule "concurrency/index/vamana/diskann"]
+	path = src/index/concurrent/vamana/diskann
 	url = https://github.com/Kwan-Yiu/DiskANN.git
 	branch = pic

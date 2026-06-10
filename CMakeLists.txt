@@ -3,7 +3,7 @@
 #set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
 #cmake_minimum_required(VERSION 3.27)
 cmake_minimum_required(VERSION 3.14)
-project(CANDYBENCH CXX)
+project(CANDORBENCH CXX)
 
 #option(ENABLE_CUDA "Enable cuda" ON)
 #message(STATUS "1.0 CUDA enabled: ${ENABLE_CUDA}")
@@ -58,7 +58,7 @@ set(LIBRARIES ${LIBRARIES} ${TORCH_LIBRARIES})
 
 # Set Optimization Flags
 set(CMAKE_CXX_FLAGS "-std=c++20 -Wall -Werror=return-type -Wno-interference-size")
-set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DNO_RACE_CHECK -DCANDY_DEBUG_MODE=1")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DNO_RACE_CHECK -DCANDOR_DEBUG_MODE=1")
 set(CMAKE_CXX_FLAGS_RELEASE "-Wno-ignored-qualifiers -Wno-sign-compare -O3")
 set(PROJECT_BINARY_DIR_RAW ${PROJECT_BINARY_DIR})
 
@@ -68,18 +68,18 @@ detect_avx512_support(AVX512_AVAILABLE)
 # Use AVX-512 based on the result
 if(AVX512_AVAILABLE)
     message(STATUS "AVX-512 support detected.")
-    set(CANDY_AVX512 1)
-    set(CANDY_AVX2 1)
+    set(CANDOR_AVX512 1)
+    set(CANDOR_AVX2 1)
 else()
     message(STATUS "AVX-512 support NOT detected.")
     detect_avx2_support(AVX2_AVAILABLE)
     if(AVX2_AVAILABLE)
         message(STATUS "AVX-2 support detected.")
-        set(CANDY_AVX2 1)
+        set(CANDOR_AVX2 1)
     else ()
         message(STATUS "AVX-2 support not detected.")
-        set(CANDY_AVX2 0)
-        set(CANDY_AVX512 0)
+        set(CANDOR_AVX2 0)
+        set(CANDOR_AVX512 0)
     endif ()
 endif()
 configure_file(
@@ -109,7 +109,7 @@ option(ENABLE_PUCK
 )
 
 option(ENABLE_PYBIND
-        "Enable original pybind and build CANDYBENCH python"
+        "Enable original pybind and build CANDORBENCH python"
         OFF
 )
 option(ENABLE_DiskANN
@@ -136,9 +136,9 @@ add_compile_options(-march=native -Wall -fno-builtin-malloc -fno-builtin-calloc 
 #OPTIONAL OPENCL
 if (NOT ENABLE_OPENCL)
     message(STATUS "I will NOT include opencl support ")
-    set(CANDY_CL 0)
+    set(CANDOR_CL 0)
 else ()
-    set(CANDY_CL 1)
+    set(CANDOR_CL 1)
     message(STATUS "I will include opencl support, pls make sure you have corresponding libs")
     set(LIBRARIES ${LIBRARIES} OpenCL)
 endif ()
@@ -153,9 +153,9 @@ option(ENABLE_PAPI
 # OPTIONAL PAPI
 if (NOT ENABLE_PAPI)
     message(STATUS "I will NOT use PAPI ")
-    set(CANDY_PAPI 0)
+    set(CANDOR_PAPI 0)
 else ()
-    set(CANDY_PAPI 1)
+    set(CANDOR_PAPI 1)
     message(STATUS "I will try to use PAPI for HW counters, pls make sure your arch supports it")
     option(REBUILD_PAPI
             "Rebuild the papi lib"
@@ -179,9 +179,9 @@ configure_file(
 #options of ray
 if (NOT ENABLE_RAY)
     message(STATUS "I will NOT include ray or distributed features ")
-    set(CANDY_RAY 0)
+    set(CANDOR_RAY 0)
 else ()
-    set(CANDY_RAY 1)
+    set(CANDOR_RAY 1)
     message(STATUS "I will include ray and distributed computing support, pls make sure you have corresponding libs")
     if (NOT DEFINED ENV{RAYPATH})
         set(ENV{RAYPATH} '/usr/lib')
@@ -191,7 +191,7 @@ else ()
     set(LIBRARIES ${LIBRARIES} ${RAY_DIR}/libray_api.so)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/rayHeader)
 endif ()
-set(CANDY_HDF5 0)
+set(CANDOR_HDF5 0)
 configure_file(
         "${PROJECT_SOURCE_DIR}/include/ray_config.h.in"
         "${PROJECT_BINARY_DIR}/include/ray_config.h"
@@ -214,9 +214,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SPTAG_BUILD_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${SPTAG_BUILD_DIR}/lib)
 if (NOT ENABLE_SPTAG)
     message(STATUS "I will NOT include SPTAG LIBS")
-    set(CANDY_SPTAG 0)
+    set(CANDOR_SPTAG 0)
 else ()
-    set(CANDY_SPTAG 1)
+    set(CANDOR_SPTAG 1)
     message(STATUS "I will include support for SPTAG")
     add_subdirectory(thirdparty/SPTAG)
     set(LIBRARIES ${LIBRARIES}  SPTAGLib)
@@ -235,9 +235,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${DiskANN_BUILD_DIR}/lib)
 
 if (NOT ENABLE_DiskANN)
     message(STATUS "I will NOT include diskann LIBS")
-    set(CANDY_DiskANN 0)
+    set(CANDOR_DiskANN 0)
 else ()
-    set(CANDY_DiskANN 1)
+    set(CANDOR_DiskANN 1)
     file(GLOB_RECURSE DISKANN_SRC_FILES
             "thirdparty/DiskANN/src/*.cpp"
             "thirdparty/DiskANN/python/src/*.cpp"
@@ -272,9 +272,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PUCK_BUILD_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PUCK_BUILD_DIR}/lib)
 if (NOT ENABLE_PUCK)
     message(STATUS "I will NOT include PUCK LIBS")
-    set(CANDY_PUCK 0)
+    set(CANDOR_PUCK 0)
 else ()
-    set(CANDY_PUCK 1)
+    set(CANDOR_PUCK 1)
 
     message(STATUS "I will include support for PUCK")
     set(CMAKE_PREFIX_PATH "/usr/local/lib/cmake/gflags" ${CMAKE_PREFIX_PATH})
@@ -332,7 +332,7 @@ foreach (dir ${dirs})
 endforeach ()
 
 
-#add_subdirectory(pytorchNN)
+#add_subdirectory(pytorch_nn)
 # Add Source Code
 
 
@@ -341,30 +341,30 @@ add_subdirectory(src)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/)
 
 # Add Library
-get_sources(CANDY_SOURCE_FILES)
-get_headers(CANDY_HEADER_FILES)
-add_library(CANDYBENCH SHARED ${CANDY_SOURCE_FILES} ${CANDY_HEADER_FILES} ${CMAKE_CURRENT_BINARY_DIR})
+get_sources(CANDOR_SOURCE_FILES)
+get_headers(CANDOR_HEADER_FILES)
+add_library(CANDORBENCH SHARED ${CANDOR_SOURCE_FILES} ${CANDOR_HEADER_FILES} ${CMAKE_CURRENT_BINARY_DIR})
 #if (ENABLE_CUDA)
-#    set_source_files_properties(src/CANDY/IndexTable.cpp
+#    set_source_files_properties(src/index/index_table.cpp
 #            PROPERTIES
 #            LANGUAGE CUDA
 #    )
 #endif ()
 #
-#add_library(CANDYBENCH SHARED ${CANDY_SOURCE_FILES} ${CANDY_HEADER_FILES} ${CMAKE_CURRENT_BINARY_DIR}
-#        src/CANDY/IndexTable.cpp)
+#add_library(CANDORBENCH SHARED ${CANDOR_SOURCE_FILES} ${CANDOR_HEADER_FILES} ${CMAKE_CURRENT_BINARY_DIR}
+#        src/index/index_table.cpp)
 
-set_property(TARGET CANDYBENCH PROPERTY CXX_STANDARD 20)
-target_include_directories(CANDYBENCH PUBLIC "include")
+set_property(TARGET CANDORBENCH PROPERTY CXX_STANDARD 20)
+target_include_directories(CANDORBENCH PUBLIC "include")
 
 #if (ENABLE_CUDA)
 #    set(LIBRARIES ${LIBRARIES} cublas cudart)
-#    set_target_properties(CANDYBENCH PROPERTIES
+#    set_target_properties(CANDORBENCH PROPERTIES
 #            CUDA_STANDARD 20
 #            CXX_STANDARD 20
 #    )
 #else ()
-#    set_target_properties(CANDYBENCH PROPERTIES
+#    set_target_properties(CANDORBENCH PROPERTIES
 #            CXX_STANDARD 20
 #    )
 #endif ()
@@ -387,16 +387,16 @@ set(MKL_LIBRARIES
         "${MKL_LIB_DIR}/libmkl_sequential.so"
         "${MKL_LIB_DIR}/libmkl_core.so"
 )
-target_include_directories(CANDYBENCH PUBLIC ${MKL_INCLUDE_DIR})
+target_include_directories(CANDORBENCH PUBLIC ${MKL_INCLUDE_DIR})
 # MKL 和其他库的链接
-target_link_libraries(CANDYBENCH PUBLIC
+target_link_libraries(CANDORBENCH PUBLIC
         ${MKL_LIBRARIES}
         iomp5
         pthread
         m
         dl
 )
-target_compile_options(CANDYBENCH PUBLIC
+target_compile_options(CANDORBENCH PUBLIC
         -m64
         -DUSE_MKL
         -I${MKL_INCLUDE_DIR}
@@ -405,42 +405,44 @@ link_directories(${MKL_LIB_DIR})
 
 #these 2 ugly lines are for puck
 #add_definitions(-DFINTEGER=int)
-#target_include_directories(CANDYBENCH PUBLIC "/usr/include/mkl")
+#target_include_directories(CANDORBENCH PUBLIC "/usr/include/mkl")
 
-target_include_directories(CANDYBENCH PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
-target_include_directories(CANDYBENCH PUBLIC "thirdparty/papi_build/include")
-target_include_directories(CANDYBENCH PUBLIC "thirdparty/")
+target_include_directories(CANDORBENCH PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
+target_include_directories(CANDORBENCH PUBLIC "thirdparty/papi_build/include")
+target_include_directories(CANDORBENCH PUBLIC "thirdparty/")
 if (ENABLE_PUCK)
-    target_include_directories(CANDYBENCH PUBLIC "thirdparty/puck")
-    target_include_directories(CANDYBENCH PUBLIC "thirdparty/puck/puck")
+    target_include_directories(CANDORBENCH PUBLIC "thirdparty/puck")
+    target_include_directories(CANDORBENCH PUBLIC "thirdparty/puck/puck")
 endif ()
 if (ENABLE_SPTAG)
-    target_include_directories(CANDYBENCH PUBLIC "thirdparty/SPTAG")
-    target_include_directories(CANDYBENCH PUBLIC "thirdparty/SPTAG/AnnService")
+    target_include_directories(CANDORBENCH PUBLIC "thirdparty/SPTAG")
+    target_include_directories(CANDORBENCH PUBLIC "thirdparty/SPTAG/AnnService")
 endif ()
 if (ENABLE_DiskANN)
-    target_include_directories(CANDYBENCH PUBLIC "thirdparty/DiskANN")
-    target_include_directories(CANDYBENCH PUBLIC "thirdparty/DiskANN/python/include")
-    target_include_directories(CANDYBENCH PUBLIC "thirdparty/DiskANN/include")
-    target_sources(CANDYBENCH PUBLIC ${DISKANN_SRC_FILES})
-    target_sources(CANDYBENCH PUBLIC thirdparty/DiskANN/python/src/dynamic_memory_index.cpp)
+    target_include_directories(CANDORBENCH PUBLIC "thirdparty/DiskANN")
+    target_include_directories(CANDORBENCH PUBLIC "thirdparty/DiskANN/python/include")
+    target_include_directories(CANDORBENCH PUBLIC "thirdparty/DiskANN/include")
+    target_sources(CANDORBENCH PUBLIC ${DISKANN_SRC_FILES})
+    target_sources(CANDORBENCH PUBLIC thirdparty/DiskANN/python/src/dynamic_memory_index.cpp)
 endif ()
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(CANDYBENCH PRIVATE OpenMP::OpenMP_CXX)
+    target_link_libraries(CANDORBENCH PRIVATE OpenMP::OpenMP_CXX)
 endif()
-target_link_options(CANDYBENCH PUBLIC "-Wl,-rpath,./")
-target_link_options(CANDYBENCH PUBLIC "-Wl,-rpath,./")
-message(WARNING "CANDY GFLAGS_LIBRARY_DIR: ${GFLAGS_LIBRARIES}")
-message(WARNING "CANDY GLOG_LIBRARY_DIR: ${GLOG_LIBRARIES}")
-#target_link_libraries(CANDYBENCH PUBLIC  ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES})
-target_link_libraries(CANDYBENCH PUBLIC ${LIBRARIES})
-install(TARGETS CANDYBENCH LIBRARY DESTINATION .)
+target_link_options(CANDORBENCH PUBLIC "-Wl,-rpath,./")
+target_link_options(CANDORBENCH PUBLIC "-Wl,-rpath,./")
+message(WARNING "CANDOR GFLAGS_LIBRARY_DIR: ${GFLAGS_LIBRARIES}")
+message(WARNING "CANDOR GLOG_LIBRARY_DIR: ${GLOG_LIBRARIES}")
+#target_link_libraries(CANDORBENCH PUBLIC  ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES})
+target_link_libraries(CANDORBENCH PUBLIC ${LIBRARIES})
+install(TARGETS CANDORBENCH LIBRARY DESTINATION .)
 find_library(LIBAIO_LIBRARIES NAMES aio)
 message(STATUS "LIBAIO_LIBRARIES: ${LIBAIO_LIBRARIES}")
-target_link_libraries(CANDYBENCH PUBLIC ${LIBAIO_LIBRARIES})
-#add_subdirectory(test)
+target_link_libraries(CANDORBENCH PUBLIC ${LIBAIO_LIBRARIES})
+if (ENABLE_UNIT_TESTS)
+    add_subdirectory(test)
+endif ()
 #Add benchmarks with command
-add_subdirectory(benchmark)
+add_subdirectory(src/benchmarks)
 #Add tests (based on GTest suits)
 #include(GoogleTest)
 
@@ -449,31 +451,27 @@ if (ENABLE_UNIT_TESTS)
 endif ()
 
 if (NOT ENABLE_PYBIND)
-    message(STATUS "I will NOT build original python package PyCANDYAlgo")
-    set(CANDY_PYBIND 0)
+    message(STATUS "I will NOT build original python package PyCANDORAlgo")
+    set(CANDOR_PYBIND 0)
 else ()
-    message(STATUS "I will  build original python package PyCANDYAlgo")
+    message(STATUS "I will  build original python package PyCANDORAlgo")
     add_subdirectory(thirdparty/pybind11)
-    pybind11_add_module(PyCANDYAlgo ${PROJECT_SOURCE_DIR}/src/PyCANDY.cpp)
+    pybind11_add_module(PyCANDORAlgo ${PROJECT_SOURCE_DIR}/src/bindings/py_candor.cpp)
     find_library(TORCH_PYTHON_LIBRARY torch_python PATH "${TORCH_INSTALL_PREFIX}/lib")
-    #target_link_libraries(PyCANDYAlgo PRIVATE gflags glog)
-    target_link_libraries(PyCANDYAlgo PUBLIC ${LIBRARIES} CANDYBENCH ${TORCH_PYTHON_LIBRARY})
-    install(TARGETS PyCANDYAlgo LIBRARY DESTINATION .)
+    #target_link_libraries(PyCANDORAlgo PRIVATE gflags glog)
+    target_link_libraries(PyCANDORAlgo PUBLIC ${LIBRARIES} CANDORBENCH ${TORCH_PYTHON_LIBRARY})
+    install(TARGETS PyCANDORAlgo LIBRARY DESTINATION .)
     message(STATUS "Additional include torch_python: ${TORCH_PYTHON_LIBRARY}")
-    set(CANDY_PYBIND 1)
-    set_property(TARGET PyCANDYAlgo  PROPERTY CXX_STANDARD 20)
+    set(CANDOR_PYBIND 1)
+    set_property(TARGET PyCANDORAlgo  PROPERTY CXX_STANDARD 20)
 endif ()
 configure_file(
         "${PROJECT_SOURCE_DIR}/include/pybind_config.h.in"
         "${PROJECT_BINARY_DIR}/include/pybind_config.h"
 )
-install(DIRECTORY "include" DESTINATION "/CANDY" COMPONENT CANDYBENCH)
-# copy scripts
-file(GLOB allCopyFiles "${PROJECT_SOURCE_DIR}/scripts/*")
-file(COPY ${allCopyFiles} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/benchmark/scripts)
-file(COPY ${allCopyFiles} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/benchmark/scripts)
+install(DIRECTORY "include" DESTINATION "/CANDOR" COMPONENT CANDORBENCH)
 message(STATUS "build path:" ${CMAKE_CURRENT_BINARY_DIR})
 # copy files needed for real world matrix loader
-set(source_directory "${CMAKE_SOURCE_DIR}/benchmark/datasets/")
+set(source_directory "${CMAKE_SOURCE_DIR}/data/benchmark/")
 set(destination_directory "${CMAKE_BINARY_DIR}/benchmark/datasets/")
 file(COPY ${source_directory} DESTINATION ${destination_directory})

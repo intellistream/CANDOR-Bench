@@ -1,14 +1,14 @@
-add_subdirectory(Utils)
+add_subdirectory(utils)
 
-add_subdirectory(CANDY)
-#add_subdirectory(DataLoader)
+add_subdirectory(index)
+#add_subdirectory(data_loader)
 #gcc options
-if (DEFINED ENV{CANDY_CL})
+if (DEFINED ENV{CANDOR_CL})
     add_sources(
-            CLContainer.cpp
+            cl/cl_container.cpp
     )
 endif ()
 add_sources(
-        #torchBounds.cpp
+        #bindings/torch_bounds.cpp
 )
 include_directories("../include/")

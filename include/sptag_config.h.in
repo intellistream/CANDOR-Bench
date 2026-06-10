@@ -2,7 +2,7 @@
 // Created by tony on 04/06/22.
 //
 
-#ifndef CANDY_SPTAG_CONFIG_H_IN_H_
-#define CANDY_SPTAG_CONFIG_H_IN_H_
-#define CANDY_SPTAG @CANDY_SPTAG@
+#ifndef CANDOR_SPTAG_CONFIG_H_IN_H_
+#define CANDOR_SPTAG_CONFIG_H_IN_H_
+#define CANDOR_SPTAG @CANDOR_SPTAG@
 #endif

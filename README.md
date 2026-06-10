@@ -4,8 +4,8 @@ CANDOR-Bench (Continuous Approximate Nearest Neighbor Search under Dynamic Open-
 
 This repository now brings together two closely related benchmark stacks:
 
-- **CANDY benchmark stack** — the original stream-oriented ANN evaluation framework
-- **ccANN-Bench concurrency-control benchmark stack** — focused on read/write concurrency experiments
+- **CANDOR benchmark stack** — the original stream-oriented ANN evaluation framework
+- **Concurrency benchmark stack** — focused on read/write concurrency experiments
 
 ---
 
@@ -26,8 +26,8 @@ This repository now brings together two closely related benchmark stacks:
   - [Summary of Datasets](#summary-of-datasets)
   - [Summary of Algorithms](#summary-of-algorithms)
 - [Quick Start](#quick-start)
-- [ccANN Track (Merged ccANN-Bench)](#ccann-track-merged-ccann-bench)
-- [CANDY Track Usage (big-ann-benchmarks)](#candy-track-usage-big-ann-benchmarks)
+- [Concurrency Track](#concurrency-track)
+- [CANDOR Track Usage (big-ann-benchmarks)](#candy-track-usage-big-ann-benchmarks)
 - [Output Layout](#output-layout)
 - [Repository Map](#repository-map)
 - [Common Pitfalls](#common-pitfalls)
@@ -47,22 +47,22 @@ It is designed for scenarios such as:
 
 At a high level, the repository now has **two primary user-facing tracks**:
 
-- **Track A: CANDY Track** — core C++ / Python-oriented benchmark stack, with paper-facing scripts living under `big-ann-benchmarks/`
-- **Track B: ccANN Track** — merged concurrency-control benchmark runner and configs
+- **Track A: CANDOR Track** — core C++ / Python-oriented benchmark stack, with paper-facing scripts living under `big-ann-benchmarks/`
+- **Track B: Concurrency Track** — concurrency-control benchmark runner and configs
 
 ## Track Overview
 
 | Track | Purpose | Main entry |
 | --- | --- | --- |
-| CANDY Track | Stream-oriented ANN indexing library + paper-facing benchmark scripts | `src/CANDY/`, `include/CANDY/`, `big-ann-benchmarks/scripts/` |
-| ccANN Track | Read/write concurrency, MVCC, search-sharing, workload-mode studies | `src/CANDY/ConcurrentIndex/`, `include/CANDY/ConcurrentIndex/`, `benchmark/concurrent/`, `benchmark/configs/concurrent/` |
+| CANDOR Track | Stream-oriented ANN indexing library + paper-facing benchmark scripts | `src/index/`, `include/index/`, `big-ann-benchmarks/scripts/` |
+| Concurrency Track | Read/write concurrency, MVCC, search-sharing, workload-mode studies | `src/concurrency/`, `src/index/concurrent/`, `configs/` |
 | big-ann-benchmarks (submodule) | Additional benchmark framework integration and original benchmark scripts | `big-ann-benchmarks/` |
 
 **Notes**
 
 - `big-ann-benchmarks/` is a git submodule and appears empty until submodules are initialized.
-- The merged ccANN backends live under `src/CANDY/ConcurrentIndex/`, while the runner remains under `benchmark/concurrent/`.
-- The original CANDY concurrent prototype is retained as `LegacyConcurrentIndex` and is **not** the default path.
+- Concurrency-track pieces by function: concurrent index engine in `src/index/concurrent/`, python harness in `src/concurrency/`, run configs in `configs/`, ground-truth tools in `tools/`, dataset scripts in `data/`.
+- The original CANDOR concurrent prototype is retained as `LegacyConcurrentIndex` and is **not** the default path.
 
 ## Original CANDOR Benchmark Tracks
 
@@ -144,56 +144,104 @@ docker run -it candor-bench
 #### Option B: Local CPU build helper
 
 ```bash
-bash buildCPUOnly.sh
+bash build_cpu_only.sh
 ```
 
 #### Option C: Local CUDA build helper
 
 ```bash
-bash buildWithCuda.sh
+bash build_with_cuda.sh
 ```
 
 ### 3. Choose a track
 
-#### Track A: CANDY Track
+#### Track A: CANDOR Track
 
 Build the core library / Python bindings:
 
 ```bash
 # CPU
-bash buildCPUOnly.sh
+bash build_cpu_only.sh
 
 # or CUDA
-bash buildWithCuda.sh
+bash build_with_cuda.sh
 ```
 
-#### Track B: ccANN Track
+#### Track B: Concurrency Track
 
-Build and run the merged ccANN runner:
+Build the native module (needs pybind11: `pip install pybind11`), then run
+a config:
 
 ```bash
-cd benchmark/concurrent
-./build.sh
-./cc-bench -config ../configs/concurrent/round_robin_baseline_sift.yaml
+cd src/index/concurrent
+mkdir -p build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -Dpybind11_DIR=$(python3 -m pybind11 --cmakedir)
+make -j$(nproc) concurrency_native
+
+cd ../../../..
+PYTHONPATH=src python3 -m concurrency.runner --config configs/round_robin_baseline_sift.yaml
 ```
 
-## ccANN Track (Merged ccANN-Bench)
+## Concurrency Track
 
-This track combines:
+Architecture notes: [docs/architecture.md](docs/architecture.md). Usage guides: [docs/concurrent_benchmark.md](docs/concurrent_benchmark.md) and
+[docs/incremental_groundtruth.md](docs/incremental_groundtruth.md).
 
-- C++ index backends in `src/CANDY/ConcurrentIndex/`
-- a Go runner in `benchmark/concurrent/`
-- YAML sweep / variant configs in `benchmark/configs/concurrent/`
+The track measures index behavior under concurrent inserts and searches:
+rate-limited producers feed insert/search worker pools, searches run
+against the committed snapshot, and recall is scored against incremental
+ground truth captured per committed offset.
+
+Layout:
+
+- `src/index/concurrent/` — index backends (hnswlib, ParlayANN,
+  DiskANN) plus the benchmark driver in `driver/`. The driver owns the
+  whole hot path: producers, queues, token-bucket rate limiters, worker
+  pools, latency capture. It runs entirely in C++ threads; the Python
+  layer is not involved while a benchmark is running (the GIL is released
+  for the whole call — `test/concurrency/test_gil_isolation.py` checks this).
+- `src/index/concurrent/python/` — the `concurrency_native` module:
+  index construction, build/insert/search, snapshot/restore, and
+  `run_benchmark`, which executes a full concurrent run and returns stats
+  plus per-query search records.
+- `src/concurrency/*.py` — everything offline, in Python: config loading and
+  variant expansion, recall evaluation, incremental ground truth, result
+  files, and the sweep / compare / simulate pipelines.
+- `configs/` — YAML configs. The format is unchanged from the
+  previous releases; existing configs run as-is.
+- `tools/` — ground-truth tooling: `compute_gt`
+  (full-visibility ground truth), `compute_incr_gt` (per-offset
+  incremental ground truth splits + index file), `calc_incr_recall` /
+  `calc_recall` (recall from `.res` files), plus format debuggers.
+  Build with `cmake -B build && cmake --build build` inside that
+  directory (`-DENABLE_CUDA=OFF` for CPU-only); the dataset scripts in
+  `data/` invoke these binaries.
+- `data/` — dataset download / conversion / ground-truth scripts.
+  Dataset payloads stay out of git: place them (or a symlink) at
+  `data/data/`.
+
+Run modes, all selected from the config file:
+
+| Mode | Config switch | What it does |
+| --- | --- | --- |
+| benchmark | (default) | concurrent inserts + searches, stats CSV + `.res` files |
+| throughput sweep | `throughput_sweep.enabled` | log-spaced search rates, one fresh run per step, latency curve CSV |
+| compare | `compare.enabled` | run A records its search schedule, run B replays it at identical committed offsets (insert gating, shared snapshot baseline) — used for e.g. external-RW-lock cost |
+| simulate | `compare.simulate.enabled` | sequential lag-timeline: a lead index and a snapshot-replaying lag index, with an optional partial-insert trial scored against incremental ground truth |
+
+Tests live in `test/concurrency/`: one smoke test per index type, replay,
+GIL isolation, ground-truth loader, runner end-to-end and
+sweep/compare/simulate.
 
 ### Example configs
 
-- `benchmark/configs/concurrent/round_robin_baseline_{sift,gist}.yaml`
-- `benchmark/configs/concurrent/round_robin_search_sharing_{sift,gist}.yaml`
-- `benchmark/configs/concurrent/chasing_warm_start_{sift,gist}.yaml`
+- `configs/round_robin_baseline_{sift,gist}.yaml`
+- `configs/round_robin_search_sharing_{sift,gist}.yaml`
+- `configs/chasing_warm_start_{sift,gist}.yaml`
 
 ### Config cheat sheet
 
-Example config: `benchmark/configs/concurrent/round_robin_baseline_sift.yaml`
+Example config: `configs/round_robin_baseline_sift.yaml`
 
 | Section | Key fields | Meaning |
 | --- | --- | --- |
@@ -210,6 +258,18 @@ Current documented `index_type` values in this merged track:
 - `vamana`
 - `parlayhnsw`
 - `parlayvamana`
+- `segmented` (sealed-segment index; `index.sealed_type` picks the
+  sealed backend, `index.seal_threshold` the segment size)
+
+Notes: `parlayhnsw`/`parlayvamana` need explicit `search.beam_width` and
+`search.visit_limit` (plus `index.level_m` for parlayhnsw); `hnsw` is the
+only type supporting snapshots, so compare and simulate require it.
+`workload.queue_size: 0` means an unbuffered handoff between producers
+and workers, matching the previous runner. The hnswlib fork under
+`src/index/concurrent/hnsw/hnswlib/` is vendored (not a submodule),
+so the search-feature flags (`search.enable_s3`,
+`enable_search_sharing`, `enable_path_skip`,
+`enable_candidate_injection`) work out of the box on the `hnsw` type.
 
 Current supported `query_mode` values in code:
 
@@ -218,7 +278,7 @@ Current supported `query_mode` values in code:
 - `peeking`
 - `zipfian`
 
-## CANDY Track Usage (big-ann-benchmarks)
+## CANDOR Track Usage (big-ann-benchmarks)
 
 All commands below are meant to be run inside `big-ann-benchmarks/` unless stated otherwise.
 
@@ -257,7 +317,7 @@ python3 run.py \
 python3 benchmark/congestion/compute_gt.py \
   --runbook "$PATH" \
   --dataset "$DS" \
-  --gt_cmdline_tool ./DiskANN/build/apps/utils/compute_groundtruth
+  --gt_cmdline_tool ./thirdparty/DiskANN/build/apps/utils/compute_groundtruth
 ```
 
 ### Exporting results
@@ -282,20 +342,26 @@ Common `--out` values include:
 
 ## Output Layout
 
-### ccANN Track outputs
+### Concurrency Track outputs
 
-ccANN runs write results under `result.output_dir` from the YAML config, typically including:
+Concurrency-track runs write results under `result.output_dir` from the YAML config:
 
-- summary CSV: `benchmark_results.csv`
+- summary CSV: `benchmark_results.csv` (one row per variant, appended)
 - per-experiment files: `result.output_dir/<index>/<dataset>/<query>/files/*.res`
-- optional recall files: `*.rc`
-- optional throughput sweep curve: `throughput_latency_curve.csv`
+  (binary search records; simulate adds `*_incr_lag.res` / `*_incr_partial.res`)
+- throughput sweep curve: `throughput_latency_curve.csv`
+- compare summary: `compare_stats.csv`
+- partial-insert recall diff: `<index>_partial_diff.csv`
 
-### CANDY Track outputs
+Recall (overall and incremental) is computed by the runner itself and
+lands in the summary CSV; the separate `.rc` recall-tool files are no
+longer produced.
 
-Legacy CANDY scripts also generate outputs under locations such as:
+### CANDOR Track outputs
 
-- `benchmark/figures/`
+Legacy CANDOR scripts also generate outputs under locations such as:
+
+- `figures/benchmark/`
 - per-script `perfLists/` folders
 
 ## Repository Map
@@ -303,25 +369,25 @@ Legacy CANDY scripts also generate outputs under locations such as:
 ```text
 CANDOR-Bench/
 ├── src/
-│   └── CANDY/
-│       ├── ...
-│       ├── ConcurrentIndex/        # Merged ccANN algorithm implementations
-│       └── LegacyConcurrentIndex.cpp
-├── include/
-│   └── CANDY/
-│       ├── ConcurrentIndex/        # Merged ccANN index interfaces
-│       └── LegacyConcurrentIndex.h
-├── benchmark/
-│   ├── concurrent/                 # Go runner for ccANN track
-│   ├── configs/concurrent/         # YAML configs for ccANN experiments
-│   └── figures/                    # Generated / archived figures
+│   ├── index/                      # all ANN index implementations
+│   │   ├── ...                     # torch-based dynamic families (AbstractIndex)
+│   │   └── concurrent/             # cc-capable families + native bench engine
+│   ├── concurrency/                # concurrency benchmark harness (python package)
+│   ├── data_loader/                # streaming data loaders
+│   ├── utils/  cl/                 # shared utilities, OpenCL helpers
+│   └── bindings/                   # PyCANDOR python bindings, torch adapters
+├── docs/                           # usage guides
+├── test/                           # all tests: index/ (C++ catch), concurrency/ (python)
+├── figures/                        # paper figures (incl. figures/benchmark/)
+├── configs/                        # benchmark YAML configs
+├── data/                           # dataset prep scripts (payloads stay local)
+├── tools/                          # ground-truth C++ tools
+├── scripts/                        # frozen legacy experiment scripts (paper assets)
 ├── big-ann-benchmarks/             # Original benchmark framework (submodule)
 │   ├── scripts/                    # Paper-facing scripts
 │   └── neurips23/                  # Benchmark assets and runbooks
-├── GTI/                            # Submodule
-├── DiskANN/                        # Submodule
-├── IP-DiskANN/                     # Submodule
-├── PLSH/                           # Submodule
+├── thirdparty/                     # external algorithm libraries
+│   ├── DiskANN/  GTI/  IP-DiskANN/  PLSH/  SPTAG/  puck/  faiss/ ...
 └── Dockerfile
 ```
 
@@ -330,7 +396,7 @@ CANDOR-Bench/
 - Datasets are not bundled. Config paths must point to real `.bin` files and ground-truth files on your machine.
 - Many scripts assume Linux and native build tools such as `cmake`, `g++`, `go`, OpenMP, TBB, and Python packages.
 - If `big-ann-benchmarks/` is empty, initialize submodules first.
-- `big-ann-benchmarks/scripts` and `benchmark/concurrent` belong to different tracks. Pick one track first and follow it end to end.
+- `big-ann-benchmarks/scripts` (CANDOR track) and `src/concurrency/` (concurrency track) belong to different tracks. Pick one track first and follow it end to end.
 
 ## Citation
 
