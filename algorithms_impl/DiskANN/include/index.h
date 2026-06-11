@@ -138,6 +138,9 @@ template <typename T, typename TagT = uint32_t, typename LabelT = uint32_t> clas
     // Initialize space for res_vectors before calling.
     DISKANN_DLLEXPORT size_t search_with_tags(const T *query, const uint64_t K, const uint32_t L, TagT *tags,
                                               float *distances, std::vector<T *> &res_vectors);
+    DISKANN_DLLEXPORT size_t search_with_tags_warm(const T *query, const uint64_t K, const uint32_t L,
+                                                   const std::vector<TagT> &seed_tags, const uint32_t hint_hops,
+                                                   const uint32_t hint_max_candidates, TagT *tags, float *distances);
 
     // Filter support search
     template <typename IndexType>
@@ -182,6 +185,7 @@ template <typename T, typename TagT = uint32_t, typename LabelT = uint32_t> clas
 
     // memory should be allocated for vec before calling this function
     DISKANN_DLLEXPORT int get_vector_by_tag(TagT &tag, T *vec);
+    DISKANN_DLLEXPORT int get_neighbours_by_tag(const TagT &tag, std::vector<TagT> &neighbours);
 
     DISKANN_DLLEXPORT void print_status();
 

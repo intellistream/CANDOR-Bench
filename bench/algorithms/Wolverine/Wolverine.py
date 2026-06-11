@@ -30,7 +30,13 @@ class _WolverineLib:
         so_path = wolverine_dir / "libwolverine_capi.so"
         cpp_path = wolverine_dir / "wolverine_c_api.cpp"
 
-        if not so_path.exists():
+        needs_build = (
+            not so_path.exists()
+            or (cpp_path.exists() and cpp_path.stat().st_mtime > so_path.stat().st_mtime)
+        )
+        if needs_build:
+            if not cpp_path.exists():
+                raise RuntimeError(f"Wolverine C API source not found: {cpp_path}")
             compile_cmd = [
                 "g++",
                 "-std=c++17",
@@ -46,7 +52,15 @@ class _WolverineLib:
                 "-o",
                 str(so_path),
             ]
-            subprocess.run(compile_cmd, check=True, capture_output=True, text=True)
+            try:
+                subprocess.run(compile_cmd, check=True, capture_output=True, text=True)
+            except subprocess.CalledProcessError as exc:
+                raise RuntimeError(
+                    "Failed to build Wolverine C API shared library:\n"
+                    f"cmd: {' '.join(compile_cmd)}\n"
+                    f"stdout:\n{exc.stdout}\n"
+                    f"stderr:\n{exc.stderr}"
+                ) from exc
 
         lib = ctypes.CDLL(str(so_path))
 
@@ -94,6 +108,7 @@ class _WolverineLib:
                 ctypes.c_size_t,
                 ctypes.c_size_t,
                 ctypes.c_size_t,
+                ctypes.c_int,
                 ctypes.POINTER(ctypes.c_uint64),
                 ctypes.POINTER(ctypes.c_float),
             ]
@@ -229,6 +244,7 @@ class Wolverine(BaseStreamingANN):
             ctypes.c_size_t(nq),
             ctypes.c_size_t(self.ndim),
             ctypes.c_size_t(k),
+            ctypes.c_int(self.num_threads),
             out_ids.ctypes.data_as(ctypes.POINTER(ctypes.c_uint64)),
             out_dists.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
         )

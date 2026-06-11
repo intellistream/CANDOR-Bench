@@ -541,8 +541,8 @@ struct StreamSeedCoreStrategy : IHintStrategy {
             return result;
         }
 
-        if (!ctx.level1_hit) {
-            // Candidate validation is only for secondary-selected seeds.
+        if (!ctx.level1_hit && hint_qual_gate >= 0.0f) {
+            // Quality validation is only for secondary-selected seeds.
             const float eps = 1e-6f;
             float qual = std::numeric_limits<float>::infinity();
             if (topn >= 2) {
@@ -550,7 +550,13 @@ struct StreamSeedCoreStrategy : IHintStrategy {
                 const float c2 = scored[1].first;
                 qual = (c2 - c1) / (std::fabs(c1) + eps);
             }
+            if (qual < hint_qual_gate) {
+                result.rejected_by_qual = true;
+                return result;
+            }
+        }
 
+        if (hint_cons_gate >= 0.0f) {
             float cons = 0.0f;
             if (ctx.k > 0) {
                 std::unordered_set<idx_t> seed_set;
@@ -568,12 +574,7 @@ struct StreamSeedCoreStrategy : IHintStrategy {
                 }
                 cons = static_cast<float>(overlap) / static_cast<float>(ctx.k);
             }
-
-            if (hint_qual_gate >= 0.0f && qual < hint_qual_gate) {
-                result.rejected_by_qual = true;
-                return result;
-            }
-            if (hint_cons_gate >= 0.0f && cons < hint_cons_gate) {
+            if (cons < hint_cons_gate) {
                 result.rejected_by_cons = true;
                 return result;
             }

@@ -1,0 +1,7 @@
+family,metric,baseline,briskseed,max_abs_diff,max_abs_diff_abs,dataset
+FreshDiskANN,query_qps,FreshDiskANN,FreshDiskANN-BriskSeed,26934.296932124205,26934.296932124205,sift
+FreshDiskANN,recall,FreshDiskANN,FreshDiskANN-BriskSeed,-0.011798339999999907,0.011798339999999907,sift
+HNSW,query_qps,HNSW,HNSW-BriskSeed,33789.68969737722,33789.68969737722,sift
+HNSW,recall,HNSW,HNSW-BriskSeed,0.07937428571428573,0.07937428571428573,glove
+SymphonyQG,query_qps,SymphonyQG,SymphonyQG-BriskSeed,29264.441877663023,29264.441877663023,sift
+SymphonyQG,recall,SymphonyQG,SymphonyQG-BriskSeed,-0.000405714285714287,0.000405714285714287,glove

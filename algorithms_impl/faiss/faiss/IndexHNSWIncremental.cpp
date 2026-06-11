@@ -391,13 +391,17 @@ void IndexHNSWIncremental::search(
                 }
                 const uint64_t owner_signature =
                     streamseed::compute_semantic_signature(x + i * d, d);
+                const idx_t owner_query_id =
+                    (params && params->query_ids && i < params->query_ids_size)
+                    ? params->query_ids[i]
+                    : i;
 
                 HintSearchResult hint_result;
-                if (hint_strategy && seed_source->available(i, slot_key)) {
+                if (hint_strategy && seed_source->available(owner_query_id, slot_key)) {
                     bool level1_hit = false;
                     const auto& cache_ids =
                         seed_source->get(
-                            i,
+                            owner_query_id,
                             slot_key,
                             x + i * d,
                             d,
@@ -456,7 +460,7 @@ void IndexHNSWIncremental::search(
                 }
 
                 seed_source->writeback(
-                        {i, slot_key, owner_signature, used_hint, k, idxi, simi});
+                        {owner_query_id, slot_key, owner_signature, used_hint, k, idxi, simi});
             }
         }
         if (optimization_config.streamseed_enabled() && verbose) {

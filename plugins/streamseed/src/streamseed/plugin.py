@@ -31,7 +31,12 @@ class StreamSeedPlugin:
     def delete(self, ids: np.ndarray) -> None:
         self.backend.delete(ids)
 
-    def query(self, x: np.ndarray, k: int) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+    def query(self, x: np.ndarray, k: int, query_ids: Optional[np.ndarray] = None) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+        if query_ids is not None:
+            try:
+                return self.backend.query(x, k, query_ids=query_ids)
+            except TypeError:
+                pass
         return self.backend.query(x, k)
 
     def get_results(self):

@@ -10,9 +10,9 @@
 
 \newcommand{\system}{BriskSeed}
 
-\title[\system]{\system: Continuous Query Acceleration for Dynamic ANNS}
-\author{Your Name}
-\institute{Your Institution}
+\title[\system]{BriskSeed: Online History-Guided Reuse for Accelerating Dynamic Approximate Nearest Neighbor Search}
+\author{Hongru Gao}
+\institute{Huazhong University of Science and Technology (HUST)}
 \date{\today}
 
 \begin{document}
@@ -26,39 +26,48 @@
     \item What is the problem?
     \item Why it matters?
     \item Why existing work fails?
-    \item What is our key idea?
-    \item What is the key design?
+    \item What is the key idea?
+    \item What is the design?
     \item What is the experimental result?
     \item What is the takeaway?
   \end{enumerate}
 \end{frame}
 
 \begin{frame}{1) What is the Problem?}
-  \textbf{Problem setting: Dynamic ANNS under continuous updates}
+  \textbf{Problem:}
   \vspace{0.5em}
-  \begin{itemize}
-    \item Dataset evolves round by round: update batch $\mathcal{U}_r$ then query batch $\mathcal{Q}_r$.
-    \item Goal is not only low query latency, but high end-to-end throughput with maintenance cost included.
-    \item Need to maximize
+  Graph-based ANNS suffers from heavy random memory access and cache misses, which limit search efficiency. 
+  Existing acceleration techniques are mostly designed for static index snapshots and degrade under continuous 
+  updates. In dynamic settings, one-shot optimization quickly becomes stale, while frequent re-optimization 
+  introduces high maintenance overhead. Therefore, the key problem is how to sustain query acceleration continuously 
+  under updates without hurting end-to-end throughput.
+  
+  i.e., Need to maximize
     \[
       \mathrm{QPS}(R)=\frac{\sum_{r=1}^{R}|\mathcal{Q}_r|}{T_s(R)+T_m(R)}
     \]
     under a recall constraint relative to baseline.
-  \end{itemize}
 
   \vspace{0.3em}
-  \textbf{Core challenge:} keep acceleration \emph{continuously valid} as the index topology keeps changing.
 \end{frame}
 
 \begin{frame}{2) Why it Matters?}
   \begin{itemize}
     \item ANNS is a core primitive in RAG, recommendation, anomaly detection, and fraud detection.
-    \item In streaming scenarios, update rates are high and decision latency budgets are strict.
-    \item Throughput decay over time directly reduces system utility and can cause real business risk.
+    \item In streaming scenarios, updates arrive continuously while decision latency budgets remain strict.
+    \item Throughput decay is not just a systems issue; it can directly translate into business risk.
   \end{itemize}
 
-  \vspace{0.8em}
-  \textbf{Empirical motivation from your paper:}
+  \vspace{0.6em}
+  \textbf{Representative case: real-time payment fraud detection}
+  \begin{itemize}
+    \item Incoming transactions are embedded and matched against a continuously updated behavioral database via ANNS.
+    \item The index must absorb new transactions while still serving latency-critical queries under millisecond-level SLAs.
+    \item Performance degradation across updates is unacceptable because delayed retrieval can increase fraud leakage and financial loss.
+  \end{itemize}
+
+  \vspace{0.4em}
+  \textbf{Empirical motivation from the paper:}
   \begin{itemize}
     \item Cross-round top-$k$ overlap is often high.
     \item Query-hit frequencies are long-tail skewed.

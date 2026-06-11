@@ -340,6 +340,11 @@ class DynamicMemoryIndex:
             _vectors, _vector_ids, _vector_ids.shape[0], num_threads
         )
 
+    def get_neighbors(self, vector_id: VectorIdentifier):
+        """Return active one-hop graph neighbors for a vector id."""
+        _assert_is_positive_uint32(vector_id, "vector_id")
+        return self._index.get_neighbors(np.uintc(vector_id))
+
     def mark_deleted(self, vector_id: VectorIdentifier):
         """
         Mark vector for deletion. This is a soft delete that won't return the vector id in any results, but does not

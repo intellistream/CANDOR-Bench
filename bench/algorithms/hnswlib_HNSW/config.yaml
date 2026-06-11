@@ -1,0 +1,47 @@
+random-xs:
+  hnswlib_HNSW:
+    module: benchmark_anns.bench.algorithms.hnswlib_HNSW.hnswlib_HNSW
+    constructor: HnswlibHnsw
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"M": 16, "efConstruction": 120, "num_threads": 8}]
+        query-args: |
+          [{"ef": 40}]
+
+sift:
+  hnswlib_HNSW:
+    module: benchmark_anns.bench.algorithms.hnswlib_HNSW.hnswlib_HNSW
+    constructor: HnswlibHnsw
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"M": 32, "efConstruction": 120, "num_threads": 16}]
+        query-args: |
+          [{"ef": 120}]
+
+msong:
+  hnswlib_HNSW:
+    module: benchmark_anns.bench.algorithms.hnswlib_HNSW.hnswlib_HNSW
+    constructor: HnswlibHnsw
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"M": 32, "efConstruction": 120, "num_threads": 16}]
+        query-args: |
+          [{"ef": 120}]
+
+glove:
+  hnswlib_HNSW:
+    module: benchmark_anns.bench.algorithms.hnswlib_HNSW.hnswlib_HNSW
+    constructor: HnswlibHnsw
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"M": 32, "efConstruction": 120, "num_threads": 16}]
+        query-args: |
+          [{"ef": 120}]

@@ -17,6 +17,7 @@
 namespace py = pybind11;
 using py_float_array = py::array_t<float, py::array::c_style | py::array::forcecast>;
 using py_uint_array = py::array_t<uint32_t, py::array::c_style | py::array::forcecast>;
+using py_int64_array = py::array_t<int64_t, py::array::c_style | py::array::forcecast>;
 
 namespace {
 void get_arr_shape(const py::buffer_info& buffer, size_t& rows, size_t& cols) {
@@ -191,15 +192,10 @@ struct Index {
         float hint_gate_o_quantile,
         int hint_gate_min_samples,
         int hint_table_slots,
-        int hint_slot_capacity
+        int hint_slot_capacity,
+        py::object query_ids = py::none()
     ) const {
-        (void)hint_level1_only;
         (void)hint_adaptive_gate_mode;
-        (void)hint_hops;
-        (void)hint_max_candidates;
-        (void)hint_gate;
-        (void)hint_qual_gate;
-        (void)hint_cons_gate;
         (void)hint_gate_m_quantile;
         (void)hint_gate_o_quantile;
         (void)hint_gate_min_samples;
@@ -235,17 +231,37 @@ struct Index {
 
         index->set_ef(ef_search);
 
+        const int64_t* query_id_ptr = nullptr;
+        py_int64_array query_id_array;
+        if (!query_ids.is_none()) {
+            query_id_array = py_int64_array(query_ids);
+            auto id_buf = query_id_array.request();
+            if (id_buf.ndim != 1 || id_buf.shape[0] != static_cast<ssize_t>(rows)) {
+                std::cerr << "query_ids shape mismatch. Expected " << rows
+                          << " ids, got " << id_buf.shape[0] << "\n";
+                return py_uint_array(py::array::ShapeContainer({0}));
+            }
+            query_id_ptr = static_cast<const int64_t*>(id_buf.ptr);
+        }
+
         py_uint_array result(rows * static_cast<size_t>(knn));
         auto* query_ptr = static_cast<float*>(query_buf.ptr);
         auto* result_ptr = static_cast<uint32_t*>(result.request().ptr);
 
         for (size_t i = 0; i < rows; ++i) {
+            const int64_t query_id = query_id_ptr ? query_id_ptr[i] : static_cast<int64_t>(i);
             index->search_warm(
                 query_ptr + i * cols,
                 knn,
                 result_ptr + i * knn,
-                i,
+                query_id,
                 streamseed_mode,
+                hint_level1_only,
+                hint_hops,
+                hint_max_candidates,
+                hint_gate,
+                hint_qual_gate,
+                hint_cons_gate,
                 static_cast<size_t>(std::max(hint_table_slots, 0)),
                 static_cast<size_t>(std::max(hint_slot_capacity, 0))
             );
@@ -306,6 +322,7 @@ PYBIND11_MODULE(symphonyqg, m) {
             py::arg("hint_gate_o_quantile"),
             py::arg("hint_gate_min_samples"),
             py::arg("hint_table_slots"),
-            py::arg("hint_slot_capacity")
+            py::arg("hint_slot_capacity"),
+            py::arg("query_ids") = py::none()
         );
 }

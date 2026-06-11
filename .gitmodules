@@ -18,3 +18,9 @@
 	path = algorithms_impl/vsag
 	url = https://github.com/intellistream/vasg.git
 	branch = main
+[submodule "algorithms_impl/Wolverine"]
+	path = algorithms_impl/Wolverine
+	url = https://github.com/LDW2020/Wolverine
+[submodule "algorithms_impl/SymphonyQG"]
+	path = algorithms_impl/SymphonyQG
+	url = https://github.com/gouyt13/SymphonyQG

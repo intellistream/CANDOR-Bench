@@ -74,12 +74,20 @@ template <typename T> inline void add_variant(py::module_ &m, const Variant &var
         .def("load", &diskannpy::DynamicMemoryIndex<T>::load, "index_path"_a)
         .def("batch_search", &diskannpy::DynamicMemoryIndex<T>::batch_search, "queries"_a, "num_queries"_a, "knn"_a,
              "complexity"_a, "num_threads"_a)
+        .def("batch_search_warm", &diskannpy::DynamicMemoryIndex<T>::batch_search_warm,
+             "queries"_a, "num_queries"_a, "knn"_a, "complexity"_a, "num_threads"_a,
+             "streamseed_mode"_a = 1, "hint_level1_only"_a = 1, "hint_adaptive_gate_mode"_a = 1,
+             "hint_hops"_a = 1, "hint_max_candidates"_a = 4000, "hint_gate"_a = -1.0f,
+             "hint_qual_gate"_a = -1.0f, "hint_cons_gate"_a = -1.0f, "hint_gate_m_quantile"_a = 0.25f,
+             "hint_gate_o_quantile"_a = 0.30f, "hint_gate_min_samples"_a = 128,
+             "hint_table_slots"_a = 10000, "hint_slot_capacity"_a = 70, "query_ids"_a = py::none())
         .def("batch_insert", &diskannpy::DynamicMemoryIndex<T>::batch_insert, "vectors"_a, "ids"_a, "num_inserts"_a,
              "num_threads"_a)
         .def("save", &diskannpy::DynamicMemoryIndex<T>::save, "save_path"_a = "", "compact_before_save"_a = false)
         .def("insert", &diskannpy::DynamicMemoryIndex<T>::insert, "vector"_a, "id"_a)
         .def("mark_deleted", &diskannpy::DynamicMemoryIndex<T>::mark_deleted, "id"_a)
-        .def("consolidate_delete", &diskannpy::DynamicMemoryIndex<T>::consolidate_delete);
+        .def("consolidate_delete", &diskannpy::DynamicMemoryIndex<T>::consolidate_delete)
+        .def("get_neighbors", &diskannpy::DynamicMemoryIndex<T>::get_neighbors, "id"_a);
 
     py::class_<diskannpy::StaticDiskIndex<T>>(m, variant.static_disk_index_name.c_str())
         .def(py::init<const diskann::Metric, const std::string &, const uint32_t, const size_t, const uint32_t>(),

@@ -1,0 +1,3 @@
+mode,series,overall_mean_query_qps,overall_mean_recall,batches,runs
+off,HNSW,32927.44700451063,0.864043,10,4
+on,HNSW-BriskSeed,50569.5655177595,0.8752150000000001,10,4

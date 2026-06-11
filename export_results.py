@@ -164,6 +164,19 @@ def load_groundtruth_for_batch_inserts(dataset, runbook: Dict, dataset_name: str
     return true_nn_across_batches
 
 
+def _load_query_indices_from_hdf5(f: h5py.File) -> Optional[List[np.ndarray]]:
+    if 'query_indices_continuous' in f:
+        indices = np.array(f['query_indices_continuous'], dtype=np.uint32)
+        return [row for row in indices]
+
+    if 'query_indices_continuous_flat' in f and 'query_indices_continuous_offsets' in f:
+        flat = np.array(f['query_indices_continuous_flat'], dtype=np.uint32)
+        offsets = np.array(f['query_indices_continuous_offsets'], dtype=np.uint64)
+        return [flat[offsets[i]:offsets[i + 1]] for i in range(len(offsets) - 1)]
+
+    return None
+
+
 def compute_batch_recalls(result_hdf5: str, groundtruth_batches: List[List[Tuple]], 
                          k: int = 10) -> Tuple[List[float], List[List[float]]]:
     """
@@ -183,7 +196,10 @@ def compute_batch_recalls(result_hdf5: str, groundtruth_batches: List[List[Tuple
             raise ValueError("HDF5 file does not contain 'neighbors_continuous' dataset")
         
         neighbors_continuous = np.array(f['neighbors_continuous'])
+        query_indices_continuous = _load_query_indices_from_hdf5(f)
         print(f"查询结果形状: {neighbors_continuous.shape}")
+        if query_indices_continuous is not None:
+            print(f"随机查询索引批次数: {len(query_indices_continuous)}")
     
     # 展平所有真值（因为真值是按batch_insert分组的）
     all_groundtruth = []
@@ -200,7 +216,23 @@ def compute_batch_recalls(result_hdf5: str, groundtruth_batches: List[List[Tuple
     dataset_nq = None  # 每批次的查询数量
     
     for gt_idx, (true_ids, true_dists) in enumerate(all_groundtruth):
-        nq = true_ids.shape[0]
+        selected_indices = None
+        if query_indices_continuous is not None and gt_idx < len(query_indices_continuous):
+            selected_indices = query_indices_continuous[gt_idx]
+            if len(selected_indices) > 0 and int(np.max(selected_indices)) >= true_ids.shape[0]:
+                raise ValueError(
+                    f"Query index out of range for GT batch {gt_idx}: "
+                    f"max index {int(np.max(selected_indices))}, GT queries {true_ids.shape[0]}. "
+                    "Please compute GT with the full query pool used by queryFile."
+                )
+            true_ids_for_batch = true_ids[selected_indices]
+            true_dists_for_batch = true_dists[selected_indices]
+            nq = len(selected_indices)
+        else:
+            true_ids_for_batch = true_ids
+            true_dists_for_batch = true_dists
+            nq = true_ids.shape[0]
+
         if dataset_nq is None:
             dataset_nq = nq
         
@@ -212,7 +244,7 @@ def compute_batch_recalls(result_hdf5: str, groundtruth_batches: List[List[Tuple
         run_ids = neighbors_continuous[query_idx:query_idx + nq, :k]
         
         # 计算召回率
-        mean_recall, recalls = compute_recall(true_ids, true_dists, run_ids, k)
+        mean_recall, recalls = compute_recall(true_ids_for_batch, true_dists_for_batch, run_ids, k)
         mean_recalls.append(mean_recall)
         all_recalls.append(recalls.tolist())
         

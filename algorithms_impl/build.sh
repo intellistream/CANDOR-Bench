@@ -156,10 +156,20 @@ fi
 mkdir -p build
 cd build
 
+DESIRED_PYTHON_EXECUTABLE=$(which python3)
+DESIRED_PYTHON_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+
 # 检查是否需要重新配置 CMake
 NEED_CMAKE_CONFIG=false
 if [ ! -f "Makefile" ] || [ ! -f "CMakeCache.txt" ]; then
     NEED_CMAKE_CONFIG=true
+elif [ -f "CMakeCache.txt" ]; then
+    CACHED_PYTHON3_EXEC=$(grep '^Python3_EXECUTABLE:FILEPATH=' CMakeCache.txt | cut -d= -f2-)
+    CACHED_PYTHON3_INCLUDE=$(grep '^Python3_INCLUDE_DIR:PATH=' CMakeCache.txt | cut -d= -f2-)
+    if [[ "$CACHED_PYTHON3_EXEC" != "$DESIRED_PYTHON_EXECUTABLE" ]] || [[ "$CACHED_PYTHON3_INCLUDE" != *"python${DESIRED_PYTHON_VERSION}"* ]]; then
+        print_warning "检测到 CMake 缓存中的 Python 与当前环境不一致，将重新配置"
+        NEED_CMAKE_CONFIG=true
+    fi
 fi
 
 if [ "$NEED_CMAKE_CONFIG" = true ]; then
@@ -170,7 +180,10 @@ if [ "$NEED_CMAKE_CONFIG" = true ]; then
     # 构建 CMake 参数
     CMAKE_ARGS=(
         -DCMAKE_BUILD_TYPE=Release
-        -DPYTHON_EXECUTABLE=$(which python3)
+        -DPYTHON_EXECUTABLE="$DESIRED_PYTHON_EXECUTABLE"
+        -DPython3_EXECUTABLE="$DESIRED_PYTHON_EXECUTABLE"
+        -DPython3_FIND_VIRTUALENV=FIRST
+        -DPython3_FIND_STRATEGY=LOCATION
         -DFAISS_ENABLE_GPU=OFF
         -DFAISS_ENABLE_PYTHON=OFF
         -DBUILD_TESTING=OFF

@@ -115,9 +115,20 @@ std::vector<faiss::idx_t> index_search_warm(
   float hint_gate_o_quantile,
   int hint_gate_min_samples,
   int hint_table_slots,
-  int hint_slot_capacity) {
+  int hint_slot_capacity,
+  py::object query_ids_obj = py::none()) {
   py::buffer_info x_info = x.request();
   const float* x_ptr = static_cast<const float*>(x_info.ptr);
+    std::vector<faiss::idx_t> query_ids_storage;
+    if (!query_ids_obj.is_none()) {
+        py::array_t<faiss::idx_t, py::array::c_style | py::array::forcecast> query_ids_array(query_ids_obj);
+        py::buffer_info query_ids_info = query_ids_array.request();
+        if (query_ids_info.ndim != 1 || query_ids_info.shape[0] != n) {
+            throw std::runtime_error("query_ids must be a 1D array with length n");
+        }
+        const auto* query_ids_ptr = static_cast<const faiss::idx_t*>(query_ids_info.ptr);
+        query_ids_storage.assign(query_ids_ptr, query_ids_ptr + n);
+    }
     std::vector<float> distances(n * k);
     std::vector<faiss::idx_t> labels(n * k);
 
@@ -137,6 +148,10 @@ std::vector<faiss::idx_t> index_search_warm(
         params.hint_gate_min_samples = hint_gate_min_samples;
         params.hint_table_slots = hint_table_slots;
         params.hint_slot_capacity = hint_slot_capacity;
+        if (!query_ids_storage.empty()) {
+            params.query_ids = query_ids_storage.data();
+            params.query_ids_size = static_cast<faiss::idx_t>(query_ids_storage.size());
+        }
          auto search_t0 = std::chrono::steady_clock::now();
      inc->search(n, x_ptr, k, distances.data(), labels.data(), &params);
          auto search_t1 = std::chrono::steady_clock::now();
@@ -388,12 +403,20 @@ template <typename T> inline void add_variant(py::module_ &m, const Variant &var
         .def("load", &diskannpy::DynamicMemoryIndex<T>::load, "index_path"_a)
         .def("batch_search", &diskannpy::DynamicMemoryIndex<T>::batch_search, "queries"_a, "num_queries"_a, "knn"_a,
              "complexity"_a, "num_threads"_a)
+        .def("batch_search_warm", &diskannpy::DynamicMemoryIndex<T>::batch_search_warm,
+             "queries"_a, "num_queries"_a, "knn"_a, "complexity"_a, "num_threads"_a,
+             "streamseed_mode"_a = 1, "hint_level1_only"_a = 1, "hint_adaptive_gate_mode"_a = 1,
+             "hint_hops"_a = 1, "hint_max_candidates"_a = 4000, "hint_gate"_a = -1.0f,
+             "hint_qual_gate"_a = -1.0f, "hint_cons_gate"_a = -1.0f, "hint_gate_m_quantile"_a = 0.25f,
+             "hint_gate_o_quantile"_a = 0.30f, "hint_gate_min_samples"_a = 128,
+             "hint_table_slots"_a = 10000, "hint_slot_capacity"_a = 70, "query_ids"_a = py::none())
         .def("batch_insert", &diskannpy::DynamicMemoryIndex<T>::batch_insert, "vectors"_a, "ids"_a, "num_inserts"_a,
              "num_threads"_a)
         .def("save", &diskannpy::DynamicMemoryIndex<T>::save, "save_path"_a = "", "compact_before_save"_a = false)
         .def("insert", &diskannpy::DynamicMemoryIndex<T>::insert, "vector"_a, "id"_a)
         .def("mark_deleted", &diskannpy::DynamicMemoryIndex<T>::mark_deleted, "id"_a)
-        .def("consolidate_delete", &diskannpy::DynamicMemoryIndex<T>::consolidate_delete);
+        .def("consolidate_delete", &diskannpy::DynamicMemoryIndex<T>::consolidate_delete)
+        .def("get_neighbors", &diskannpy::DynamicMemoryIndex<T>::get_neighbors, "id"_a);
 
 }
 //#endif
@@ -490,6 +513,7 @@ PYBIND11_MODULE(PyCANDYAlgo, m) {
                  py::arg("hint_gate_min_samples") = 128,
                  py::arg("hint_table_slots") = 1024,
                  py::arg("hint_slot_capacity") = 2,
+                 py::arg("query_ids") = py::none(),
                "Search k nearest neighbors with efSearch and StreamSeed-Core hint control")
           .def("train",&faiss::Index::train_arrays)
           .def("add_with_ids", &faiss::Index::add_arrays_with_ids)

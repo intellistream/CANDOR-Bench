@@ -1,0 +1,13 @@
+experiment,indexkey,ef,mode,mean_recall,mean_query_qps,file
+indexkey16-ef120,16,120,StreamSeed off,0.7341584,93114.36140690763,../results/sift/streamseed_hybrid/indexkey16-ef120/indexkey16-ef120_final_results.csv
+indexkey16-ef120-on,16,120,StreamSeed on,0.7337446,129325.62268035334,../results/sift/streamseed_hybrid/indexkey16-ef120-on/indexkey16-ef120-on_final_results.csv
+indexkey16-ef40,16,40,StreamSeed off,0.7353858,90408.78617690751,../results/sift/streamseed_hybrid/indexkey16-ef40/indexkey16-ef40_final_results.csv
+indexkey16-ef40-on,16,40,StreamSeed on,0.7339980000000002,137253.1033429647,../results/sift/streamseed_hybrid/indexkey16-ef40-on/indexkey16-ef40-on_final_results.csv
+indexkey16-ef80,16,80,StreamSeed off,0.7352751999999998,86894.49526518502,../results/sift/streamseed_hybrid/indexkey16-ef80/indexkey16-ef80_final_results.csv
+indexkey16-ef80-on,16,80,StreamSeed on,0.7335684,135749.06753058019,../results/sift/streamseed_hybrid/indexkey16-ef80-on/indexkey16-ef80-on_final_results.csv
+indexkey32-ef120,32,120,StreamSeed off,0.8652864000000001,52858.21331641421,../results/sift/streamseed_hybrid/indexkey32-ef120/indexkey32-ef120_final_results.csv
+indexkey32-ef120-on,32,120,StreamSeed on,0.8862944000000001,91027.3879054818,../results/sift/streamseed_hybrid/indexkey32-ef120-on/indexkey32-ef120-on_final_results.csv
+indexkey32-ef40,32,40,StreamSeed off,0.8638695999999999,54964.90594497056,../results/sift/streamseed_hybrid/indexkey32-ef40/indexkey32-ef40_final_results.csv
+indexkey32-ef40-on,32,40,StreamSeed on,0.8855838000000001,91330.08938748827,../results/sift/streamseed_hybrid/indexkey32-ef40-on/indexkey32-ef40-on_final_results.csv
+indexkey32-ef80,32,80,StreamSeed off,0.8643062,54481.698915239416,../results/sift/streamseed_hybrid/indexkey32-ef80/indexkey32-ef80_final_results.csv
+indexkey32-ef80-on,32,80,StreamSeed on,0.8876086,92446.29993987514,../results/sift/streamseed_hybrid/indexkey32-ef80-on/indexkey32-ef80-on_final_results.csv

@@ -23,6 +23,7 @@ from .maintenance import MaintenanceState, MaintenancePolicy
 from .worker import CongestionDropWorker
 from .io_utils import save_run_results
 from .cache_profiler import CacheProfiler
+from datasets.loaders import xbin_mmap, load_fvecs
 
 
 def store_timestamps_to_csv(
@@ -233,6 +234,8 @@ class BenchmarkRunner:
             "updateMemoryFootPrint": 0,
             "searchMemoryFootPrint": 0,
             "querySize": dataset.nq,
+            "continuousQuerySizes": [],
+            "continuousQueryIndices": [],
             "insertThroughput": [],
             "batchLatency": [],
             "batchThroughput": [],
@@ -529,6 +532,78 @@ class BenchmarkRunner:
         if out_of_order:
             print(f"  ✓ 启用乱序处理")
             
+    def _resolve_query_file(self, query_file: str) -> str:
+        candidates = []
+        path = str(query_file)
+        if os.path.isabs(path):
+            candidates.append(path)
+        else:
+            candidates.extend([
+                path,
+                os.path.join(getattr(self.dataset, "basedir", ""), path),
+            ])
+
+        for candidate in candidates:
+            if candidate and os.path.exists(candidate):
+                return candidate
+        raise FileNotFoundError(f"Query file not found: {query_file}")
+
+    def _load_query_pool(self, op: Dict) -> np.ndarray:
+        query_file = op.get("queryFile") or op.get("query_file") or op.get("continuousQueryFile")
+        max_queries = op.get("queryPoolSize") or op.get("query_pool_size")
+        max_queries = int(max_queries) if max_queries is not None else None
+
+        if query_file:
+            resolved = self._resolve_query_file(str(query_file))
+            if resolved.endswith(".fvecs"):
+                queries = load_fvecs(resolved, maxn=max_queries)
+            else:
+                queries = xbin_mmap(resolved, dtype=self.dataset.dtype, maxn=max_queries)
+        else:
+            queries = self.dataset.get_queries()
+            if queries is None:
+                raise RuntimeError("Dataset returned no queries")
+            if max_queries is not None:
+                queries = queries[:max_queries]
+
+        if queries is None or len(queries) == 0:
+            raise RuntimeError("Query pool is empty")
+        if queries.shape[1] != self.dataset.d:
+            raise RuntimeError(
+                f"Query dim mismatch: dataset.d={self.dataset.d}, queries.shape={queries.shape}"
+            )
+        return queries
+
+    def _make_continuous_queries(
+        self,
+        query_pool: np.ndarray,
+        op: Dict,
+        rng: Optional[np.random.Generator],
+        fixed_indices: Optional[np.ndarray],
+    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+        sample_size = op.get("querySampleSize") or op.get("query_sample_size")
+        if sample_size is None:
+            return query_pool, None
+
+        sample_size = int(sample_size)
+        replace = bool(op.get("querySampleReplace", op.get("query_sample_replace", False)))
+        if sample_size <= 0:
+            raise ValueError("querySampleSize must be positive")
+        if sample_size > len(query_pool) and not replace:
+            raise ValueError(
+                f"querySampleSize={sample_size} exceeds query pool size {len(query_pool)} without replacement"
+            )
+
+        if fixed_indices is not None:
+            indices = fixed_indices
+        else:
+            if rng is None:
+                raise RuntimeError("Query sampler RNG was not initialized")
+            indices = rng.choice(len(query_pool), size=sample_size, replace=replace)
+
+        indices = np.asarray(indices, dtype=np.uint32)
+        return query_pool[indices], indices
+
     def _execute_batch_insert(self, op: Dict):
         """
         执行批量插入操作（支持流式模拟和连续查询）
@@ -561,10 +636,21 @@ class BenchmarkRunner:
         # 连续查询间隔：每插入总数据量的 1/100 查询一次
         continuous_query_interval = count // 100 if enable_continuous_query else 0
         
-        # 准备查询数据（如果需要连续查询）
-        queries = None
+        # 准备查询数据（如果需要连续查询）。默认仍使用 dataset.get_queries()；
+        # 只有显式配置 querySampleSize/queryFile 时才启用新的抽样路径。
+        query_pool = None
+        query_rng = None
+        fixed_query_indices = None
+        query_sample_size = op.get("querySampleSize") or op.get("query_sample_size")
+        query_sample_mode = str(op.get("querySampleMode", op.get("query_sample_mode", "per_batch"))).lower()
         if continuous_query_interval > 0:
-            queries = self.dataset.get_queries()
+            query_pool = self._load_query_pool(op)
+            self.attrs["querySize"] = int(query_sample_size) if query_sample_size is not None else len(query_pool)
+            if query_sample_size is not None:
+                seed = int(op.get("querySampleSeed", op.get("query_sample_seed", 0)))
+                query_rng = np.random.default_rng(seed)
+                if query_sample_mode in ("fixed", "once"):
+                    _, fixed_query_indices = self._make_continuous_queries(query_pool, op, query_rng, None)
         
         # 生成事件时间戳（根据 eventRate 生成理想到达时间，微秒）
         event_timestamps = generate_timestamps(count, event_rate) if event_rate > 0 else np.zeros(count, dtype=np.int64)
@@ -646,7 +732,14 @@ class BenchmarkRunner:
                 current_range_start = start_idx + batch_start
                 current_range_end = start_idx + batch_end
                 progress_pct = (inserted_count / count) * 100
-                print(f"    [{batch_idx}] {current_range_start}~{current_range_end} querying all {len(queries)} queries (进度: {progress_pct:.1f}%)")
+                queries, query_indices = self._make_continuous_queries(
+                    query_pool, op, query_rng, fixed_query_indices
+                )
+                self.attrs["continuousQuerySizes"].append(len(queries))
+                if query_indices is not None:
+                    self.attrs["continuousQueryIndices"].append(query_indices)
+
+                print(f"    [{batch_idx}] {current_range_start}~{current_range_end} querying {len(queries)} queries (进度: {progress_pct:.1f}%)")
                 # 在查询前应用优化技术（如果配置了）by ghr
                 if apply_optimized_before_query and (not opt_once or not opt_has_run):
                     opt_elapsed = self._maybe_apply_optimized_tech(opt_technique, opt_force)
@@ -661,7 +754,13 @@ class BenchmarkRunner:
                 # 时间测量在 worker.query() 内部进行，避免引入锁等待时间
                 # 查询延迟从 worker.query_timestamps 获取
                 try:
-                    results = self.algo.query(queries, self.k)
+                    if query_indices is not None:
+                        try:
+                            results = self.algo.query(queries, self.k, query_ids=query_indices)
+                        except TypeError:
+                            results = self.algo.query(queries, self.k)
+                    else:
+                        results = self.algo.query(queries, self.k)
                     
                     # 处理返回值格式
                     if isinstance(results, tuple):

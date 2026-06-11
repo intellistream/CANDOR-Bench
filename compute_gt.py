@@ -26,7 +26,7 @@ import sys
 import numpy as np
 import yaml
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 from datasets.registry import DATASETS
 
@@ -41,7 +41,35 @@ def _dtype_str_to_numpy(dtype: str):
     raise RuntimeError(f'Invalid datatype: {dtype}')
 
 
-def ensure_query_file(ds, runbook_path: str, private_query: bool = False) -> str:
+def resolve_runbook_query_file(ds, runbook: Dict, runbook_path: str) -> Optional[str]:
+    for key in sorted([k for k in runbook.keys() if isinstance(k, int)]):
+        entry = runbook[key]
+        if not isinstance(entry, dict):
+            continue
+        query_file = entry.get('queryFile') or entry.get('query_file') or entry.get('continuousQueryFile')
+        if not query_file:
+            continue
+
+        raw_path = str(query_file)
+        candidates = []
+        if os.path.isabs(raw_path):
+            candidates.append(raw_path)
+        else:
+            candidates.extend([
+                raw_path,
+                os.path.join(os.path.dirname(runbook_path), raw_path),
+                os.path.join(getattr(ds, 'basedir', ''), raw_path),
+            ])
+
+        for candidate in candidates:
+            if candidate and os.path.exists(candidate):
+                return candidate
+        raise FileNotFoundError(f"Query file not found: {query_file}")
+
+    return None
+
+
+def ensure_query_file(ds, runbook_path: str, private_query: bool = False, query_file_override: Optional[str] = None) -> str:
     """Return a query file path suitable for DiskANN compute_groundtruth.
 
     This repo's Dataset classes generally expose `get_queries()` (returns ndarray/mmap),
@@ -52,6 +80,9 @@ def ensure_query_file(ds, runbook_path: str, private_query: bool = False) -> str
     2) Otherwise, materialize `ds.get_queries()` into a binary file with header:
        [nq(uint32 little), dim(uint32 little)] + raw data.
     """
+    if query_file_override:
+        return query_file_override
+
     candidate_attrs = []
     if private_query:
         candidate_attrs += [
@@ -468,7 +499,14 @@ def main():
     max_pts, runbook = load_runbook(args.dataset, ds.nb, args.runbook_file)
     
     # Get query file (path). Some Dataset implementations don't expose `qs_fn`.
-    query_file = ensure_query_file(ds, args.runbook_file, private_query=args.private_query)
+    # If the runbook explicitly configures queryFile, use that same query pool for GT.
+    query_file_override = resolve_runbook_query_file(ds, runbook, args.runbook_file)
+    query_file = ensure_query_file(
+        ds,
+        args.runbook_file,
+        private_query=args.private_query,
+        query_file_override=query_file_override,
+    )
     
     # Build base command for compute_groundtruth
     common_cmd = args.gt_cmdline_tool + ' --dist_fn '

@@ -12,13 +12,7 @@ class SymphonyQGBackend(StreamSeedBackend):
     """
 
     _IGNORED_HINT_FIELDS = (
-        "hint_level1_only",
         "hint_adaptive_gate_mode",
-        "hint_hops",
-        "hint_max_candidates",
-        "hint_gate",
-        "hint_qual_gate",
-        "hint_cons_gate",
         "hint_gate_m_quantile",
         "hint_gate_o_quantile",
         "hint_gate_min_samples",
@@ -153,6 +147,43 @@ class SymphonyQGBackend(StreamSeedBackend):
         if self._index is not None:
             self._index.set_ef(int(self.config.ef_search))
 
+
+    def _use_hints(self) -> bool:
+        return (
+            int(self.config.streamseed_mode) != 0
+            and int(self.config.hint_table_slots) > 0
+            and int(self.config.hint_slot_capacity) > 0
+        )
+
+    def _search_one(self, query: np.ndarray, k: int) -> np.ndarray:
+        local = np.asarray(self._index.search(query, int(k)), dtype=np.int64).reshape(-1)
+        out = -1 * np.ones(int(k), dtype=np.int64)
+        n = min(out.shape[0], local.shape[0])
+        if n:
+            out[:n] = local[:n]
+        return out
+
+    def _search_batch_labels(self, q: np.ndarray, k: int) -> np.ndarray:
+        nq = int(q.shape[0])
+        topk = int(k)
+        labels = -1 * np.ones((nq, topk), dtype=np.int64)
+        if self.enable_batch_search and hasattr(self._index, "search_batch"):
+            local_all = np.asarray(self._index.search_batch(q, topk), dtype=np.int64)
+            local_all = local_all.reshape(nq, topk)
+            labels[:, :] = local_all
+            return labels
+        for qi in range(nq):
+            labels[qi] = self._search_one(q[qi], topk)
+        return labels
+
+    def _labels_to_external_ids(self, labels: np.ndarray, k: int) -> np.ndarray:
+        labels = np.asarray(labels, dtype=np.int64).reshape(labels.shape[0], int(k))
+        ids = -1 * np.ones(labels.shape, dtype=np.int64)
+        active_size = self._active_ids.shape[0]
+        valid = (labels >= 0) & (labels < active_size)
+        ids[valid] = self._active_ids[labels[valid]]
+        return ids
+
     def _rebuild_index_if_needed(self) -> None:
         if not self._dirty:
             return
@@ -231,10 +262,20 @@ class SymphonyQGBackend(StreamSeedBackend):
         self._alive[ext_ids] = False
         self._mark_dirty_and_maybe_rebuild()
 
-    def query(self, x: np.ndarray, k: int) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+    def query(
+        self,
+        x: np.ndarray,
+        k: int,
+        query_ids: Optional[np.ndarray] = None,
+    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+        query_ids_arg = None
+        if query_ids is not None:
+            query_ids_arg = np.ascontiguousarray(query_ids, dtype=np.int64).reshape(-1)
         q = self._prepare_vectors(x)
         topk = int(k)
         nq = q.shape[0]
+        if query_ids_arg is not None and query_ids_arg.shape[0] != nq:
+            raise ValueError("query_ids must have the same length as query rows")
 
         if self.rebuild_on_query_if_dirty:
             self._rebuild_index_if_needed()
@@ -244,10 +285,9 @@ class SymphonyQGBackend(StreamSeedBackend):
             self._last_result = ids
             return ids, None
 
-        active_size = self._active_ids.shape[0]
-        ids = -1 * np.ones((nq, topk), dtype=np.int64)
+        use_hints = self._use_hints()
 
-        if hasattr(self._index, "search_warm"):
+        if use_hints and hasattr(self._index, "search_warm"):
             labels = np.asarray(
                 self._index.search_warm(
                     nq,
@@ -267,27 +307,16 @@ class SymphonyQGBackend(StreamSeedBackend):
                     int(self.config.hint_gate_min_samples),
                     int(self.config.hint_table_slots),
                     int(self.config.hint_slot_capacity),
+                    query_ids_arg,
                 ),
                 dtype=np.int64,
-            )
-            labels = labels.reshape(nq, topk)
-            valid = (labels >= 0) & (labels < active_size)
-            ids[valid] = self._active_ids[labels[valid]]
+            ).reshape(nq, topk)
+            ids = self._labels_to_external_ids(labels, topk)
             self._last_result = ids
             return ids, None
 
-        if self.enable_batch_search and hasattr(self._index, "search_batch"):
-            local_all = np.asarray(self._index.search_batch(q, topk), dtype=np.int64)
-            valid = (local_all >= 0) & (local_all < active_size)
-            ids[valid] = self._active_ids[local_all[valid]]
-            self._last_result = ids
-            return ids, None
-
-        for i in range(nq):
-            local = np.asarray(self._index.search(q[i], topk), dtype=np.int64)
-            valid = (local >= 0) & (local < active_size)
-            ids[i, valid] = self._active_ids[local[valid]]
-
+        labels = self._search_batch_labels(q, topk)
+        ids = self._labels_to_external_ids(labels, topk)
         self._last_result = ids
         return ids, None
 

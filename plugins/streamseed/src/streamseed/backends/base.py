@@ -43,7 +43,7 @@ class StreamSeedBackend(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def query(self, x: np.ndarray, k: int) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+    def query(self, x: np.ndarray, k: int, query_ids: Optional[np.ndarray] = None) -> Tuple[np.ndarray, Optional[np.ndarray]]:
         raise NotImplementedError
 
     @abstractmethod

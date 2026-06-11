@@ -18,6 +18,30 @@ sift:
     run-groups:
       base:
         args: |
-          [{"M": 16, "efConstruction": 120, "delete_model": 4, "new_link_size": 16, "num_threads": 16}]
+          [{"M": 16, "efConstruction": 120, "delete_model": 4, "new_link_size": 32, "num_threads": 64}]
         query-args: |
           [{"ef": 40}]
+
+msong:
+  Wolverine:
+    module: benchmark_anns.bench.algorithms.Wolverine.Wolverine
+    constructor: Wolverine
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"M": 16, "efConstruction": 120, "delete_model": 4, "new_link_size": 32, "num_threads": 16}]
+        query-args: |
+          [{"ef": 120}]
+
+glove:
+  Wolverine:
+    module: benchmark_anns.bench.algorithms.Wolverine.Wolverine
+    constructor: Wolverine
+    base-args: ["@metric"]
+    run-groups:
+      base:
+        args: |
+          [{"M": 16, "efConstruction": 120, "delete_model": 4, "new_link_size": 32, "num_threads": 16}]
+        query-args: |
+          [{"ef": 120}]

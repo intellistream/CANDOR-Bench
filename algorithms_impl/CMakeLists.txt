@@ -18,7 +18,12 @@ set(PYBIND11_DIR ${ALGORITHMS_IMPL_DIR}/pybind11)
 set(CANDY_DIR ${ALGORITHMS_IMPL_DIR}/candy)
 
 # 查找依赖
-find_package(Python3 REQUIRED COMPONENTS Development)
+set(Python3_FIND_VIRTUALENV FIRST)
+set(Python3_FIND_STRATEGY LOCATION)
+if(DEFINED PYTHON_EXECUTABLE AND NOT DEFINED Python3_EXECUTABLE)
+    set(Python3_EXECUTABLE "${PYTHON_EXECUTABLE}" CACHE FILEPATH "Python3 executable" FORCE)
+endif()
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 find_package(Torch REQUIRED)
 find_package(gflags REQUIRED)
 

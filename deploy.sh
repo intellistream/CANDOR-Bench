@@ -152,10 +152,27 @@ if [ "$SKIP_SYSTEM_DEPS" = false ]; then
         # 安装 Intel MKL
         print_step "安装 Intel MKL..."
         if [ ! -d "/opt/intel/oneapi/mkl" ]; then
-            wget -qO - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB 2>/dev/null | sudo apt-key add - 2>/dev/null || true
-            echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list >/dev/null
-            sudo apt-get update -qq || true
-            sudo apt-get install -y intel-oneapi-mkl-devel || print_warning "Intel MKL 安装失败"
+            # 使用 keyring + signed-by，避免 apt-key 弃用导致仓库签名不被信任
+            sudo apt-get install -y ca-certificates curl gnupg >/dev/null 2>&1 || true
+            sudo mkdir -p /usr/share/keyrings
+            curl -fsSL https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
+                | gpg --dearmor \
+                | sudo tee /usr/share/keyrings/intel-oneapi-archive-keyring.gpg >/dev/null
+
+            echo "deb [signed-by=/usr/share/keyrings/intel-oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
+                | sudo tee /etc/apt/sources.list.d/oneAPI.list >/dev/null
+
+            if sudo apt-get update -qq; then
+                if apt-cache show intel-oneapi-mkl-devel >/dev/null 2>&1; then
+                    sudo apt-get install -y intel-oneapi-mkl-devel || print_warning "intel-oneapi-mkl-devel 安装失败"
+                elif apt-cache show intel-oneapi-mkl >/dev/null 2>&1; then
+                    sudo apt-get install -y intel-oneapi-mkl || print_warning "intel-oneapi-mkl 安装失败"
+                else
+                    print_warning "oneAPI 仓库可用，但未找到 MKL 包（intel-oneapi-mkl-devel / intel-oneapi-mkl）"
+                fi
+            else
+                print_warning "oneAPI 仓库更新失败（可能是网络或密钥问题）"
+            fi
         else
             print_info "Intel MKL 已安装"
         fi
@@ -174,22 +191,69 @@ fi
 print_header "步骤 2/8: 创建 Python 虚拟环境"
 
 VENV_DIR="$SCRIPT_DIR/sage-db-bench"
+ACTIVATE_SCRIPT=""
+
+create_venv() {
+    if $PYTHON_CMD -m venv "$VENV_DIR"; then
+        return 0
+    fi
+
+    print_warning "python -m venv 创建失败（可能是 ensurepip 被禁用），尝试 --without-pip 回退方案..."
+    rm -rf "$VENV_DIR"
+    $PYTHON_CMD -m venv --without-pip "$VENV_DIR"
+
+    if [ -x "$VENV_DIR/bin/python3" ]; then
+        print_step "引导安装 pip（get-pip.py）..."
+        if curl -fsSL https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py; then
+            "$VENV_DIR/bin/python3" /tmp/get-pip.py >/dev/null 2>&1 || {
+                print_error "get-pip 引导失败"
+                rm -f /tmp/get-pip.py
+                return 1
+            }
+            rm -f /tmp/get-pip.py
+            return 0
+        else
+            print_error "下载 get-pip.py 失败"
+            return 1
+        fi
+    fi
+
+    print_error "回退方案失败，未找到虚拟环境 Python"
+    return 1
+}
 
 if [ ! -d "$VENV_DIR" ]; then
     print_step "创建虚拟环境..."
-    $PYTHON_CMD -m venv "$VENV_DIR"
+    create_venv
     print_success "虚拟环境创建完成"
+elif [ ! -f "$VENV_DIR/bin/activate" ] && [ ! -f "$VENV_DIR/local/bin/activate" ]; then
+    print_warning "检测到不完整的虚拟环境（缺少 bin/activate），将重建"
+    rm -rf "$VENV_DIR"
+    print_step "重新创建虚拟环境..."
+    create_venv
+    print_success "虚拟环境重建完成"
 else
     print_info "虚拟环境已存在"
 fi
 
+# 兼容不同工具生成的目录结构（venv: bin/activate, 某些 virtualenv: local/bin/activate）
+if [ -f "$VENV_DIR/bin/activate" ]; then
+    ACTIVATE_SCRIPT="$VENV_DIR/bin/activate"
+elif [ -f "$VENV_DIR/local/bin/activate" ]; then
+    ACTIVATE_SCRIPT="$VENV_DIR/local/bin/activate"
+else
+    print_error "未找到虚拟环境激活脚本（bin/activate 或 local/bin/activate）"
+    print_info "当前目录内容:"
+    ls -la "$VENV_DIR" 2>/dev/null || true
+    exit 1
+fi
+
 # 激活虚拟环境
-source "$VENV_DIR/bin/activate"
+source "$ACTIVATE_SCRIPT"
 print_success "虚拟环境已激活: $VIRTUAL_ENV"
 
 # 配置虚拟环境的 activate 脚本，自动设置 MKL 路径
 print_step "配置虚拟环境 MKL 路径..."
-ACTIVATE_SCRIPT="$VENV_DIR/bin/activate"
 
 # 检查是否已经添加了 MKL 配置
 if ! grep -q "# MKL Library Path" "$ACTIVATE_SCRIPT" 2>/dev/null; then
@@ -240,7 +304,7 @@ pip install torch --index-url https://download.pytorch.org/whl/cpu -q
 print_success "PyTorch 安装完成"
 
 print_step "安装其他依赖..."
-pip install numpy pybind11 PyYAML pandas -q
+pip install numpy pybind11 PyYAML pandas h5py -q
 print_success "Python 依赖安装完成"
 
 # ============================================================================

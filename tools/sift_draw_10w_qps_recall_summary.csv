@@ -1,0 +1,3 @@
+mode,series,mean_query_qps,mean_recall,batches
+briskseed,HNSW-BriskSeed,26549.698161222586,0.736295,50
+hnsw,HNSW,11784.183509342181,0.714122,50

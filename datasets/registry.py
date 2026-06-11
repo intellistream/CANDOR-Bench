@@ -113,6 +113,51 @@ class SiftDataset(Dataset):
         return "euclidean"
 
 
+class Sift10MDataset(Dataset):
+    """SIFT10M dataset in xbin format"""
+
+    def __init__(self):
+        super().__init__()
+        self.nb = 10000000
+        self.nq = 10000
+        self.d = 128
+        self.basedir = "raw_data/sift10M/"
+
+    def prepare(self, skip_data: bool = False):
+        os.makedirs(self.basedir, exist_ok=True)
+
+    def get_dataset_fn(self):
+        return os.path.join(self.basedir, "data_10000000_128")
+
+    def get_dataset(self):
+        return xbin_mmap(self.get_dataset_fn(), dtype=self.dtype)
+
+    def get_dataset_iterator(self, bs: int = 512, split: Tuple[int, int] = (1, 0)):
+        data = xbin_mmap(self.get_dataset_fn(), dtype=self.dtype)
+        for i in range(0, len(data), bs):
+            yield data[i : i + bs]
+
+    def get_queries(self):
+        candidates = [
+            os.path.join(self.basedir, "queries_10000_128"),
+            os.path.join("raw_data/sift/", "queries_10000_128"),
+        ]
+        for fn in candidates:
+            if os.path.exists(fn):
+                return xbin_mmap(fn, dtype=self.dtype, maxn=self.nq)
+        return xbin_mmap(candidates[0], dtype=self.dtype, maxn=self.nq)
+
+    def get_groundtruth(self, k: Optional[int] = None):
+        # Groundtruth files are generated dynamically per runbook.
+        return None
+
+    def distance(self):
+        return "euclidean"
+
+    def short_name(self):
+        return "sift10M"
+
+
 class OpenImagesDataset(Dataset):
     """Open Images dataset"""
 
@@ -564,6 +609,7 @@ DATASETS = {
     # SIFT series
     "sift-small": SiftSmallDataset,
     "sift": SiftDataset,
+    "sift10M": Sift10MDataset,
     # Image datasets
     "openimages": OpenImagesDataset,
     "sun": SunDataset,

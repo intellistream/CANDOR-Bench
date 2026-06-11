@@ -83,11 +83,17 @@ class FaissHnswStreamSeedBackend(StreamSeedBackend):
                 if internal < self.id_map.shape[0]:
                     self.id_map[internal] = -1
 
-    def query(self, x: np.ndarray, k: int) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+    def query(self, x: np.ndarray, k: int, query_ids: Optional[np.ndarray] = None) -> Tuple[np.ndarray, Optional[np.ndarray]]:
         if self.index is None:
             raise RuntimeError("Backend index not initialized. Call setup() first.")
 
         x = np.ascontiguousarray(x, dtype=np.float32)
+        query_ids_arg = None
+        if query_ids is not None:
+            query_ids_arg = np.ascontiguousarray(query_ids, dtype=np.int64)
+            if query_ids_arg.shape[0] != x.shape[0]:
+                raise ValueError("query_ids must have the same length as query rows")
+
         labels = np.array(
             self.index.search_warm(
                 x.shape[0],
@@ -107,6 +113,7 @@ class FaissHnswStreamSeedBackend(StreamSeedBackend):
                 int(self.config.hint_gate_min_samples),
                 self.config.hint_table_slots,
                 self.config.hint_slot_capacity,
+                query_ids_arg,
             )
         )
 

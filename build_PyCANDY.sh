@@ -28,8 +28,16 @@ if [ ! -d "$VENV_DIR" ]; then
 fi
 
 # Activate venv
-# shellcheck disable=SC1090
-source "$VENV_DIR/bin/activate"
+if [ -f "$VENV_DIR/bin/activate" ]; then
+    # shellcheck disable=SC1090
+    source "$VENV_DIR/bin/activate"
+elif [ -f "$VENV_DIR/local/bin/activate" ]; then
+    # shellcheck disable=SC1090
+    source "$VENV_DIR/local/bin/activate"
+else
+    print_error "Activate script not found under $VENV_DIR"
+    exit 1
+fi
 print_success "Activated venv: $VIRTUAL_ENV"
 
 # Optional MKL env
@@ -46,7 +54,7 @@ fi
 print_info "Building PyCANDYAlgo..."
 cd "$SCRIPT_DIR/algorithms_impl"
 if [ -f "build.sh" ]; then
-    bash build.sh
+    bash build.sh --clean
     print_success "PyCANDYAlgo build finished"
 else
     print_error "build.sh not found in algorithms_impl"

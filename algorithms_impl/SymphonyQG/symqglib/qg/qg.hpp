@@ -10,6 +10,7 @@
 #include <limits>
 #include <iostream>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "../common.hpp"
@@ -61,8 +62,15 @@ class QuantizedGraph {
 
     size_t hint_table_slots_ = 0;
     size_t hint_slot_capacity_ = 0;
+    uint32_t hint_record_k_ = 0;
     std::vector<PID> hint_table_;
     std::vector<uint32_t> hint_counts_;
+    std::vector<int64_t> hint_owner_query_;
+    std::vector<uint64_t> hint_owner_signature_;
+    std::vector<float> hint_scores_;
+    std::vector<uint64_t> hint_ages_;
+    uint64_t hint_clock_ = 0;
+    uint64_t hint_round_ = 0;
 
     /*
      * Position of different data in each row
@@ -132,9 +140,17 @@ class QuantizedGraph {
 
     void update_hint_table(size_t slot, const uint32_t* results, uint32_t knn);
 
-    void ensure_hint_table(size_t slots, size_t capacity);
+    void ensure_hint_table(size_t slots, size_t capacity, uint32_t knn);
 
-    [[nodiscard]] uint64_t hash_query(const float* query) const;
+    [[nodiscard]] uint64_t compute_semantic_signature(const float* query) const;
+
+    [[nodiscard]] size_t compute_semantic_slot_key(
+        const float* query,
+        size_t hint_table_slots,
+        int64_t fallback_query_id
+    ) const;
+
+    [[nodiscard]] static float signature_similarity(uint64_t a, uint64_t b);
 
     float scan_neighbors(
         const QGQuery& q_obj,
@@ -172,8 +188,14 @@ class QuantizedGraph {
         const float* __restrict__ query,
         uint32_t knn,
         uint32_t* __restrict__ results,
-        size_t query_id,
+        int64_t query_id,
         int streamseed_mode,
+        int hint_level1_only,
+        int hint_hops,
+        int hint_max_candidates,
+        float hint_gate,
+        float hint_qual_gate,
+        float hint_cons_gate,
         size_t hint_table_slots,
         size_t hint_slot_capacity
     );
@@ -393,8 +415,14 @@ inline void QuantizedGraph::search_warm(
     const float* __restrict__ query,
     uint32_t knn,
     uint32_t* __restrict__ results,
-    size_t query_id,
+    int64_t query_id,
     int streamseed_mode,
+    int hint_level1_only,
+    int hint_hops,
+    int hint_max_candidates,
+    float hint_gate,
+    float hint_qual_gate,
+    float hint_cons_gate,
     size_t hint_table_slots,
     size_t hint_slot_capacity
 ) {
@@ -402,62 +430,264 @@ inline void QuantizedGraph::search_warm(
     this->search_pool_.clear();
 
     const bool use_hints = streamseed_mode != 0 && hint_table_slots > 0 &&
-                           hint_slot_capacity > 0;
-    bool has_history = false;
+                           hint_slot_capacity > 0 && knn > 0;
+    bool used_hint = false;
+    bool touched = false;
+    bool level1_hit = false;
+    std::vector<PID> seed_ids;
     size_t slot = 0;
+
     if (use_hints) {
-        ensure_hint_table(hint_table_slots, hint_slot_capacity);
-        if (hint_table_slots_ > 0) {
-            slot = query_id % hint_table_slots_;
-            has_history = hint_counts_[slot] > 0;
+        ensure_hint_table(hint_table_slots, hint_slot_capacity, knn);
+        if (hint_table_slots_ > 0 && hint_slot_capacity_ > 0 && hint_record_k_ == knn) {
+            slot = compute_semantic_slot_key(query, hint_table_slots_, query_id);
+            const uint32_t count = std::min<uint32_t>(
+                hint_counts_[slot], static_cast<uint32_t>(hint_slot_capacity_)
+            );
+            const uint64_t query_signature = compute_semantic_signature(query);
+            size_t selected_record = static_cast<size_t>(-1);
+
+            for (uint32_t r = 0; r < count; ++r) {
+                const size_t rec = slot * hint_slot_capacity_ + r;
+                if (hint_owner_query_[rec] == query_id) {
+                    selected_record = rec;
+                    level1_hit = true;
+                    break;
+                }
+            }
+
+            if (selected_record == static_cast<size_t>(-1) && hint_level1_only == 0 &&
+                hint_round_ > 5 && count > 0) {
+                float max_score = 1.0f;
+                for (uint32_t r = 0; r < count; ++r) {
+                    const size_t rec = slot * hint_slot_capacity_ + r;
+                    if (hint_scores_[rec] > max_score) {
+                        max_score = hint_scores_[rec];
+                    }
+                }
+
+                float best_score = -std::numeric_limits<float>::infinity();
+                size_t best_record = static_cast<size_t>(-1);
+                constexpr float alpha = 0.7f;
+                for (uint32_t r = 0; r < count; ++r) {
+                    const size_t rec = slot * hint_slot_capacity_ + r;
+                    if (hint_owner_query_[rec] < 0) {
+                        continue;
+                    }
+                    const float sim = signature_similarity(query_signature, hint_owner_signature_[rec]);
+                    const float cnt = hint_scores_[rec] / max_score;
+                    const float score = alpha * sim + (1.0f - alpha) * cnt;
+                    if (score > best_score) {
+                        best_score = score;
+                        best_record = rec;
+                    }
+                }
+                selected_record = best_record;
+            }
+
+            if (selected_record != static_cast<size_t>(-1)) {
+                const size_t begin = selected_record * static_cast<size_t>(hint_record_k_);
+                seed_ids.reserve(hint_record_k_);
+                for (uint32_t i = 0; i < hint_record_k_; ++i) {
+                    const PID seed = hint_table_[begin + i];
+                    if (seed < num_points_) {
+                        seed_ids.push_back(seed);
+                    }
+                }
+            }
         }
     }
 
-    if (!has_history) {
-        search_qg(query, knn, results);
-    } else {
-        // Warm path: build candidates from history seeds and their 1-hop neighbors.
-        buffer::ResultBuffer res_pool(knn);
-        size_t unique_candidates = 0;
+    if (!seed_ids.empty()) {
+        std::vector<PID> frontier;
+        std::vector<PID> candidates;
+        frontier.reserve(seed_ids.size());
+        candidates.reserve(seed_ids.size() * 8);
 
-        const uint32_t count = hint_counts_[slot];
-        for (uint32_t i = 0; i < count; ++i) {
-            const PID seed = hint_table_[slot * hint_slot_capacity_ + i];
+        const size_t max_candidates = hint_max_candidates > 0
+            ? static_cast<size_t>(hint_max_candidates)
+            : static_cast<size_t>(256);
+
+        for (PID seed : seed_ids) {
             if (seed >= num_points_ || visited_.get(seed)) {
                 continue;
             }
-
             visited_.set(seed);
-            ++unique_candidates;
-            res_pool.insert(seed, space::l2_sqr(query, get_vector(seed), dimension_));
-
-            const PID* neighbors = get_neighbors(seed);
-            for (uint32_t j = 0; j < degree_bound_; ++j) {
-                const PID nb = neighbors[j];
-                if (nb >= num_points_ || visited_.get(nb)) {
-                    continue;
-                }
-                visited_.set(nb);
-                ++unique_candidates;
-                res_pool.insert(nb, space::l2_sqr(query, get_vector(nb), dimension_));
+            touched = true;
+            frontier.push_back(seed);
+            candidates.push_back(seed);
+            if (candidates.size() >= max_candidates) {
+                break;
             }
         }
 
-        // Safety fallback: if warm candidates are too few, use baseline full search.
-        if (unique_candidates < static_cast<size_t>(knn)) {
-            search_qg(query, knn, results);
-        } else {
-            res_pool.copy_results(results);
+        int effective_hops = std::max(0, hint_hops);
+        if (!level1_hit) {
+            effective_hops += 1;
+        }
+
+        for (int hop = 0; hop < effective_hops && !frontier.empty() &&
+             candidates.size() < max_candidates; ++hop) {
+            std::vector<PID> next_frontier;
+            for (PID u : frontier) {
+                const PID* neighbors = get_neighbors(u);
+                for (uint32_t j = 0; j < degree_bound_; ++j) {
+                    const PID v = neighbors[j];
+                    if (v >= num_points_ || visited_.get(v)) {
+                        continue;
+                    }
+                    visited_.set(v);
+                    touched = true;
+                    next_frontier.push_back(v);
+                    candidates.push_back(v);
+                    if (candidates.size() >= max_candidates) {
+                        break;
+                    }
+                }
+                if (candidates.size() >= max_candidates) {
+                    break;
+                }
+            }
+            frontier.swap(next_frontier);
+        }
+
+        if (!candidates.empty()) {
+            std::vector<std::pair<float, PID>> scored;
+            scored.reserve(candidates.size());
+            for (PID candidate : candidates) {
+                scored.emplace_back(
+                    space::l2_sqr(query, get_vector(candidate), dimension_), candidate
+                );
+            }
+
+            const size_t topn = std::min<size_t>(static_cast<size_t>(knn), scored.size());
+            std::partial_sort(
+                scored.begin(),
+                scored.begin() + topn,
+                scored.end(),
+                [](const auto& a, const auto& b) { return a.first < b.first; }
+            );
+
+            bool accepted = topn > 0;
+            if (accepted && hint_gate >= 0.0f && scored[0].first > hint_gate) {
+                accepted = false;
+            }
+
+            if (accepted && !level1_hit && hint_qual_gate >= 0.0f) {
+                const float eps = 1e-6f;
+                float qual = std::numeric_limits<float>::infinity();
+                if (topn >= 2) {
+                    const float c1 = scored[0].first;
+                    const float c2 = scored[1].first;
+                    qual = (c2 - c1) / (std::fabs(c1) + eps);
+                }
+                if (qual < hint_qual_gate) {
+                    accepted = false;
+                }
+            }
+
+            if (accepted && hint_cons_gate >= 0.0f) {
+                std::unordered_set<PID> seed_set;
+                seed_set.reserve(seed_ids.size());
+                for (PID seed : seed_ids) {
+                    seed_set.insert(seed);
+                }
+                size_t overlap = 0;
+                for (size_t i = 0; i < topn; ++i) {
+                    if (seed_set.find(scored[i].second) != seed_set.end()) {
+                        ++overlap;
+                    }
+                }
+                const float cons = static_cast<float>(overlap) / static_cast<float>(knn);
+                const float gate = std::min(1.0f, hint_cons_gate);
+                if (cons < gate) {
+                    accepted = false;
+                }
+            }
+
+            if (accepted) {
+                for (uint32_t i = 0; i < knn; ++i) {
+                    results[i] = i < topn ? scored[i].second : static_cast<uint32_t>(num_points_);
+                }
+                used_hint = true;
+            }
         }
     }
 
-    if (use_hints && hint_table_slots_ > 0 && hint_slot_capacity_ > 0) {
-        const uint32_t store = std::min<uint32_t>(
-            static_cast<uint32_t>(hint_slot_capacity_), knn
+    if (!used_hint) {
+        if (touched) {
+            this->visited_.clear();
+            this->search_pool_.clear();
+        }
+        search_qg(query, knn, results);
+    }
+
+    if (use_hints && hint_table_slots_ > 0 && hint_slot_capacity_ > 0 &&
+        hint_record_k_ == knn && results != nullptr && results[0] < num_points_) {
+        const uint64_t query_signature = compute_semantic_signature(query);
+        const uint64_t tick = ++hint_clock_;
+        if (query_id == 0) {
+            ++hint_round_;
+        }
+
+        uint32_t count = std::min<uint32_t>(
+            hint_counts_[slot], static_cast<uint32_t>(hint_slot_capacity_)
         );
-        hint_counts_[slot] = store;
-        for (uint32_t i = 0; i < store; ++i) {
-            hint_table_[slot * hint_slot_capacity_ + i] = results[i];
+        size_t target = static_cast<size_t>(-1);
+        for (uint32_t r = 0; r < count; ++r) {
+            const size_t rec = slot * hint_slot_capacity_ + r;
+            if (hint_owner_query_[rec] == query_id) {
+                target = rec;
+                break;
+            }
+        }
+
+        const float new_score = used_hint ? 1.0f : 0.0f;
+        if (target == static_cast<size_t>(-1)) {
+            if (count < hint_slot_capacity_) {
+                target = slot * hint_slot_capacity_ + count;
+                hint_counts_[slot] = count + 1;
+            } else {
+                constexpr uint64_t stale_window = 4096;
+                constexpr float age_weight = 0.25f;
+                float victim_key = std::numeric_limits<float>::infinity();
+                size_t victim = slot * hint_slot_capacity_;
+                for (uint32_t r = 0; r < count; ++r) {
+                    const size_t rec = slot * hint_slot_capacity_ + r;
+                    uint64_t age_delta = tick > hint_ages_[rec] ? tick - hint_ages_[rec] : 0;
+                    if (age_delta > stale_window) {
+                        age_delta = stale_window;
+                    }
+                    const float age_term = static_cast<float>(age_delta) /
+                                           static_cast<float>(stale_window);
+                    const float keep_key = hint_scores_[rec] - age_weight * age_term;
+                    if (keep_key < victim_key) {
+                        victim_key = keep_key;
+                        victim = rec;
+                    }
+                }
+                const bool victim_stale = tick > hint_ages_[victim] + stale_window;
+                const bool should_replace = victim_stale ||
+                    new_score > hint_scores_[victim] || hint_scores_[victim] <= 0.0f;
+                if (should_replace) {
+                    target = victim;
+                }
+            }
+        }
+
+        if (target != static_cast<size_t>(-1)) {
+            const size_t begin = target * static_cast<size_t>(hint_record_k_);
+            for (uint32_t i = 0; i < hint_record_k_; ++i) {
+                hint_table_[begin + i] = i < knn ? results[i] : static_cast<PID>(num_points_);
+            }
+            if (hint_owner_query_[target] == query_id && used_hint) {
+                hint_scores_[target] += 1.0f;
+            } else {
+                hint_scores_[target] = new_score;
+            }
+            hint_owner_query_[target] = query_id;
+            hint_owner_signature_[target] = query_signature;
+            hint_ages_[target] = tick;
         }
     }
 }
@@ -587,49 +817,102 @@ inline void QuantizedGraph::update_hint_table(
     const uint32_t* results,
     uint32_t knn
 ) {
-    if (hint_table_slots_ == 0 || hint_slot_capacity_ == 0) {
+    if (hint_table_slots_ == 0 || hint_slot_capacity_ == 0 || hint_record_k_ == 0 ||
+        results == nullptr || slot >= hint_table_slots_) {
         return;
     }
 
-    const uint32_t store = std::min<uint32_t>(
-        static_cast<uint32_t>(hint_slot_capacity_), knn
-    );
-    hint_counts_[slot] = store;
-    for (uint32_t i = 0; i < store; ++i) {
-        hint_table_[slot * hint_slot_capacity_ + i] = results[i];
-    }
-    for (uint32_t i = store; i < static_cast<uint32_t>(hint_slot_capacity_); ++i) {
-        hint_table_[slot * hint_slot_capacity_ + i] = 0;
+    const size_t rec = slot * hint_slot_capacity_;
+    const size_t begin = rec * static_cast<size_t>(hint_record_k_);
+    hint_counts_[slot] = std::max<uint32_t>(hint_counts_[slot], 1);
+    for (uint32_t i = 0; i < hint_record_k_; ++i) {
+        hint_table_[begin + i] = i < knn ? results[i] : static_cast<PID>(num_points_);
     }
 }
 
-inline void QuantizedGraph::ensure_hint_table(size_t slots, size_t capacity) {
-    if (slots == 0 || capacity == 0) {
+inline void QuantizedGraph::ensure_hint_table(size_t slots, size_t capacity, uint32_t knn) {
+    if (slots == 0 || capacity == 0 || knn == 0) {
         hint_table_.clear();
         hint_counts_.clear();
+        hint_owner_query_.clear();
+        hint_owner_signature_.clear();
+        hint_scores_.clear();
+        hint_ages_.clear();
         hint_table_slots_ = 0;
         hint_slot_capacity_ = 0;
+        hint_record_k_ = 0;
+        hint_clock_ = 0;
+        hint_round_ = 0;
         return;
     }
 
-    if (slots != hint_table_slots_ || capacity != hint_slot_capacity_) {
+    if (slots != hint_table_slots_ || capacity != hint_slot_capacity_ || knn != hint_record_k_) {
         hint_table_slots_ = slots;
         hint_slot_capacity_ = capacity;
-        hint_table_.assign(hint_table_slots_ * hint_slot_capacity_, 0);
+        hint_record_k_ = knn;
+        const size_t records = hint_table_slots_ * hint_slot_capacity_;
+        hint_table_.assign(records * static_cast<size_t>(hint_record_k_), static_cast<PID>(num_points_));
         hint_counts_.assign(hint_table_slots_, 0);
+        hint_owner_query_.assign(records, -1);
+        hint_owner_signature_.assign(records, 0);
+        hint_scores_.assign(records, 0.0f);
+        hint_ages_.assign(records, 0);
+        hint_clock_ = 0;
+        hint_round_ = 0;
     }
 }
 
-inline uint64_t QuantizedGraph::hash_query(const float* query) const {
+inline uint64_t QuantizedGraph::compute_semantic_signature(const float* query) const {
+    if (query == nullptr || dimension_ == 0) {
+        return 0;
+    }
+
+    constexpr int sample_dims = 8;
+    constexpr float quant_scale = 16.0f;
+    uint64_t signature = 0;
+    for (int t = 0; t < sample_dims; ++t) {
+        const size_t pick = (static_cast<size_t>(t) * 9973ULL + 13ULL) % dimension_;
+        const float v = query[pick];
+        const int q = static_cast<int>(std::lrint(v * quant_scale));
+        const int clamped = std::max(-128, std::min(127, q));
+        const uint8_t packed = static_cast<uint8_t>(clamped + 128);
+        signature |= static_cast<uint64_t>(packed) << (t * 8);
+    }
+    return signature;
+}
+
+inline size_t QuantizedGraph::compute_semantic_slot_key(
+    const float* query,
+    size_t hint_table_slots,
+    int64_t fallback_query_id
+) const {
+    if (query == nullptr || dimension_ == 0 || hint_table_slots == 0) {
+        if (fallback_query_id < 0) {
+            return 0;
+        }
+        return static_cast<size_t>(fallback_query_id) % std::max<size_t>(hint_table_slots, 1);
+    }
+
+    const uint64_t signature = compute_semantic_signature(query);
     uint64_t h = 1469598103934665603ULL;
-    const size_t limit = std::min<size_t>(dimension_, 8);
-    for (size_t i = 0; i < limit; ++i) {
-        uint32_t bits = 0;
-        std::memcpy(&bits, query + i, sizeof(uint32_t));
-        h ^= bits;
+    for (int t = 0; t < 8; ++t) {
+        const uint64_t token = ((signature >> (t * 8)) & 0xFFULL) ^
+            (static_cast<uint64_t>(t + 1) * 11400714819323198485ULL);
+        h ^= token;
         h *= 1099511628211ULL;
     }
-    return h;
+    return static_cast<size_t>(h % hint_table_slots);
+}
+
+inline float QuantizedGraph::signature_similarity(uint64_t a, uint64_t b) {
+    int l1 = 0;
+    for (int t = 0; t < 8; ++t) {
+        const int av = static_cast<int>((a >> (t * 8)) & 0xFFULL);
+        const int bv = static_cast<int>((b >> (t * 8)) & 0xFFULL);
+        l1 += std::abs(av - bv);
+    }
+    constexpr float max_l1 = 8.0f * 255.0f;
+    return 1.0f - static_cast<float>(l1) / max_l1;
 }
 
 inline void QuantizedGraph::initialize() {

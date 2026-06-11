@@ -862,6 +862,37 @@ template <typename T, typename TagT, typename LabelT> int Index<T, TagT, LabelT>
     return 0;
 }
 
+template <typename T, typename TagT, typename LabelT>
+int Index<T, TagT, LabelT>::get_neighbours_by_tag(const TagT &tag, std::vector<TagT> &neighbours)
+{
+    neighbours.clear();
+    std::shared_lock<std::shared_timed_mutex> ul(_update_lock);
+    std::shared_lock<std::shared_timed_mutex> tl(_tag_lock);
+    auto tag_location = _tag_to_location.find(tag);
+    if (tag_location == _tag_to_location.end())
+    {
+        return -1;
+    }
+
+    const location_t location = tag_location->second;
+    if (location >= _final_graph.size())
+    {
+        return -1;
+    }
+
+    const auto &graph_neighbours = _final_graph[location];
+    neighbours.reserve(graph_neighbours.size());
+    for (const auto neighbour_location : graph_neighbours)
+    {
+        TagT neighbour_tag;
+        if (_location_to_tag.try_get(neighbour_location, neighbour_tag))
+        {
+            neighbours.push_back(neighbour_tag);
+        }
+    }
+    return 0;
+}
+
 template <typename T, typename TagT, typename LabelT> uint32_t Index<T, TagT, LabelT>::calculate_entry_point()
 {
     //  TODO: need to compute medoid with PQ data too, for now sample at random
@@ -2435,6 +2466,139 @@ size_t Index<T, TagT, LabelT>::search_with_tags(const T *query, const uint64_t K
         }
     }
 
+    return pos;
+}
+
+template <typename T, typename TagT, typename LabelT>
+size_t Index<T, TagT, LabelT>::search_with_tags_warm(const T *query, const uint64_t K, const uint32_t L,
+                                                     const std::vector<TagT> &seed_tags,
+                                                     const uint32_t hint_hops,
+                                                     const uint32_t hint_max_candidates,
+                                                     TagT *tags, float *distances)
+{
+    if (K > (uint64_t)L)
+    {
+        throw ANNException("Set L to a value of at least K", -1, __FUNCSIG__, __FILE__, __LINE__);
+    }
+    if (seed_tags.empty())
+    {
+        std::vector<T *> empty_vector;
+        return search_with_tags(query, K, L, tags, distances, empty_vector);
+    }
+
+    ScratchStoreManager<InMemQueryScratch<T>> manager(_query_scratch);
+    auto scratch = manager.scratch_space();
+    if (L > scratch->get_L())
+    {
+        scratch->resize_for_new_L(L);
+    }
+
+    std::shared_lock<std::shared_timed_mutex> ul(_update_lock);
+    _distance->preprocess_query(query, _data_store->get_dims(), scratch->aligned_query());
+
+    std::shared_lock<std::shared_timed_mutex> tl(_tag_lock);
+    const uint32_t max_candidates = hint_max_candidates > 0 ? hint_max_candidates : 256;
+    const uint32_t hops = hint_hops;
+    tsl::robin_set<uint32_t> seen;
+    std::vector<uint32_t> candidates;
+    std::vector<uint32_t> frontier;
+    seen.reserve(max_candidates);
+    candidates.reserve(std::min<uint32_t>(max_candidates, 4096));
+    frontier.reserve(seed_tags.size());
+
+    auto add_location = [&](uint32_t loc, std::vector<uint32_t> *next_frontier) -> bool {
+        if (loc >= _max_points || loc >= _final_graph.size())
+        {
+            return candidates.size() >= max_candidates;
+        }
+        TagT active_tag;
+        if (!_location_to_tag.try_get(loc, active_tag))
+        {
+            return candidates.size() >= max_candidates;
+        }
+        if (seen.insert(loc).second)
+        {
+            candidates.push_back(loc);
+            if (next_frontier != nullptr)
+            {
+                next_frontier->push_back(loc);
+            }
+        }
+        return candidates.size() >= max_candidates;
+    };
+
+    for (const auto &seed_tag : seed_tags)
+    {
+        auto it = _tag_to_location.find(seed_tag);
+        if (it == _tag_to_location.end())
+        {
+            continue;
+        }
+        if (add_location(it->second, &frontier))
+        {
+            break;
+        }
+    }
+
+    for (uint32_t hop = 0; hop < hops && !frontier.empty() && candidates.size() < max_candidates; ++hop)
+    {
+        std::vector<uint32_t> next_frontier;
+        for (const auto loc : frontier)
+        {
+            if (loc >= _final_graph.size())
+            {
+                continue;
+            }
+            for (const auto nbr : _final_graph[loc])
+            {
+                if (add_location(nbr, &next_frontier))
+                {
+                    break;
+                }
+            }
+            if (candidates.size() >= max_candidates)
+            {
+                break;
+            }
+        }
+        frontier.swap(next_frontier);
+    }
+
+    if (candidates.size() < K)
+    {
+        return 0;
+    }
+
+    std::vector<std::pair<float, uint32_t>> scored;
+    scored.reserve(candidates.size());
+    for (const auto loc : candidates)
+    {
+        const float dist = _data_store->get_distance(scratch->aligned_query(), loc);
+        scored.emplace_back(dist, loc);
+    }
+    const size_t topn = std::min<size_t>(K, scored.size());
+    std::partial_sort(scored.begin(), scored.begin() + topn, scored.end(),
+                      [](const auto &a, const auto &b) { return a.first < b.first; });
+
+    size_t pos = 0;
+    for (size_t i = 0; i < topn; ++i)
+    {
+        TagT tag;
+        if (!_location_to_tag.try_get(scored[i].second, tag))
+        {
+            continue;
+        }
+        tags[pos] = tag;
+        if (distances != nullptr)
+        {
+#ifdef EXEC_ENV_OLS
+            distances[pos] = scored[i].first;
+#else
+            distances[pos] = _dist_metric == INNER_PRODUCT ? -1 * scored[i].first : scored[i].first;
+#endif
+        }
+        ++pos;
+    }
     return pos;
 }
 

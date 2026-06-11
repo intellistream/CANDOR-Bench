@@ -440,6 +440,26 @@ def store_results(
                 all_continuous = np.vstack(results_continuous) if isinstance(results_continuous[0], np.ndarray) else np.array(results_continuous)
                 f.create_dataset('neighbors_continuous', data=all_continuous, compression='gzip')
                 # print(f"✓ HDF5 周期性查询结果: (shape: {all_continuous.shape})")  # 调试信息已禁用
+
+            # 1.3 可选：保存随机 query batch 的索引，旧结果没有该字段时 export 会自动走老逻辑。
+            query_indices = attrs.get('continuousQueryIndices', [])
+            if query_indices:
+                query_indices = [np.asarray(idx, dtype=np.uint32) for idx in query_indices]
+                lengths = [len(idx) for idx in query_indices]
+                f.create_dataset('query_sizes_continuous', data=np.asarray(lengths, dtype=np.uint32))
+                if len(set(lengths)) == 1:
+                    f.create_dataset('query_indices_continuous', data=np.vstack(query_indices), compression='gzip')
+                else:
+                    offsets = np.zeros(len(query_indices) + 1, dtype=np.uint64)
+                    offsets[1:] = np.cumsum(lengths, dtype=np.uint64)
+                    flat = np.concatenate(query_indices).astype(np.uint32, copy=False)
+                    f.create_dataset('query_indices_continuous_flat', data=flat, compression='gzip')
+                    f.create_dataset('query_indices_continuous_offsets', data=offsets)
+            elif attrs.get('continuousQuerySizes'):
+                f.create_dataset(
+                    'query_sizes_continuous',
+                    data=np.asarray(attrs['continuousQuerySizes'], dtype=np.uint32),
+                )
             
             if not results and not results_continuous:
                 print(f"⚠ 无查询结果，创建空 HDF5 文件: {hdf5_file}")
@@ -522,8 +542,10 @@ def store_results(
     # 优先使用 query_timestamps 中的纯查询时间（排除锁等待），更准确地反映真实查询性能
     if 'query_timestamps' in attrs and len(attrs['query_timestamps']) > 0:
         query_qps_file = result_dir / f"{base_name}_batch_query_qps.csv"
-        # 获取每批次的查询数量
+        # 获取每批次的查询数量。默认使用旧的固定 querySize；如果 runner 提供了
+        # continuousQuerySizes，则按每次连续查询的真实 query 数计算 QPS。
         queries_per_batch = attrs.get('querySize', 100)
+        continuous_query_sizes = attrs.get('continuousQuerySizes', [])
         # print(f"[DEBUG] querySize = {queries_per_batch} (from attrs, default=100)")  # 调试信息已禁用
         query_qps_list = []
         batch_indices = []
@@ -533,7 +555,8 @@ def store_results(
             pure_query_time_us = ts.get('query_time', 0)
             if pure_query_time_us > 0:
                 pure_query_time_sec = pure_query_time_us / 1e6
-                qps = queries_per_batch / pure_query_time_sec
+                query_count = continuous_query_sizes[idx] if idx < len(continuous_query_sizes) else queries_per_batch
+                qps = query_count / pure_query_time_sec
                 query_qps_list.append(qps)
                 batch_indices.append(idx)
         
@@ -549,13 +572,15 @@ def store_results(
         # 回退：使用端到端延迟（包含锁等待）
         query_qps_file = result_dir / f"{base_name}_batch_query_qps.csv"
         queries_per_batch = attrs.get('querySize', 100)
+        continuous_query_sizes = attrs.get('continuousQuerySizes', [])
         query_qps_list = []
         batch_indices = []
         
         for idx, latency_seconds in enumerate(attrs['continuousQueryLatencies']):
             # 过滤异常值：只保留正常的延迟（>0且合理范围）
             if latency_seconds > 0 and latency_seconds < 3600:  # 最多1小时
-                qps = queries_per_batch / latency_seconds
+                query_count = continuous_query_sizes[idx] if idx < len(continuous_query_sizes) else queries_per_batch
+                qps = query_count / latency_seconds
                 query_qps_list.append(qps)
                 batch_indices.append(idx)
             else:
